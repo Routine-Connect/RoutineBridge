@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.routinebridge.dev.routinebridge.mapper.RoutineLogMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO RoutineLogs (routine_id, check_date, is_completed)
+        VALUES (#{routineId}, #{checkDate}, #{isCompleted})
+    </insert>
+
+    <select id="findByRoutineIdAndDate" resultType="com.routinebridge.dev.routinebridge.domain.RoutineLog">
+        SELECT * FROM RoutineLogs
+        WHERE routine_id = #{routineId} AND check_date = #{checkDate}
+    </select>
+
+    <update id="updateCompleted">
+        UPDATE RoutineLogs
+        SET is_completed = #{isCompleted}
+        WHERE routine_id = #{routineId} AND check_date = #{checkDate}
+    </update>
+
+    <select id="findByRoutineIdAndPeriod" resultType="com.routinebridge.dev.routinebridge.domain.RoutineLog">
+        SELECT * FROM RoutineLogs
+        WHERE routine_id = #{routineId}
+          AND check_date BETWEEN #{startDate} AND #{endDate}
+    </select>
+
+</mapper>
