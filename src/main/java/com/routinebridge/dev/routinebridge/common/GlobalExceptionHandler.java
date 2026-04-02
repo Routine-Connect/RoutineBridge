@@ -13,6 +13,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ApiResponse<Void> handleException(Exception e) {
+        e.printStackTrace();
         return ApiResponse.fail(
                 ErrorCode.INTERNAL_SERVER_ERROR.getCode(),
                 ErrorCode.INTERNAL_SERVER_ERROR.getMessage()

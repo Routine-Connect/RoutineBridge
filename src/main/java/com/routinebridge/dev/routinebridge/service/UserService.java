@@ -37,11 +37,11 @@ public class UserService {
     // 로그인
     public String login(User user) {
         User existing = userMapper.findByEmail(user.getEmail());
-        if (existing != null) {
-            throw new IllegalArgumentException(ErrorCode.EMAIL_DUPLICATED.getMessage());
+        if (existing == null) {
+            throw new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage());
         }
 
-        if (!encoder.matches(user.getPassword(), user.getPassword())) {
+        if (!encoder.matches(user.getPassword(), existing.getPassword())) {
             throw new IllegalArgumentException(ErrorCode.INVALID_PASSWORD.getMessage());
         }
         return jwtUtil.generateToken(existing.getId(), existing.getEmail());

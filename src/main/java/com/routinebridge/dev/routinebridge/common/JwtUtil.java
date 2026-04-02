@@ -4,17 +4,27 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.security.Key;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
 
-    private static final String SECRET = "secret key!";
+    @Value("${jwt.secret}")
+    private String secret;
+
+    private Key key;
+
     private static final long EXPRIATION = 1000L * 60 * 60 * 24 * 7; // 7일
-    private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
+
+    @PostConstruct
+    public void init() {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+    }
 
 
     // 토큰 발급
