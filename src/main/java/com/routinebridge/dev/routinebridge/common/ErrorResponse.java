@@ -1,4 +1,4 @@
-package com.routinebridge.dev.routinebridge.response;
+package com.routinebridge.dev.routinebridge.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

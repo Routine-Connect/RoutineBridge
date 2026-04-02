@@ -1,4 +1,4 @@
-package com.routinebridge.dev.routinebridge.response;
+package com.routinebridge.dev.routinebridge.common;
 
 
 public enum ErrorCode {
