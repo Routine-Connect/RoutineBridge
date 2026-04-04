@@ -1,13 +1,14 @@
 package com.routinebridge.dev.routinebridge.mapper;
 
 import com.routinebridge.dev.routinebridge.domain.RoutineLog;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
 
 public interface RoutineLogMapper {
     void insert(RoutineLog log);
-    RoutineLog findByRoutineIdAndDate(Long routineId, String checkDate);
-    void updateCompleted(Long routineId, String checkDate, boolean isCompleted);
-    List<RoutineLog> findByRoutineIdAndPeriod(Long routineId, String startDate, String endDate);    // 통계용
+    RoutineLog findByRoutineIdAndDate(@Param("routineId") Long routineId, @Param("checkDate") String checkDate);
+    void updateCompleted(@Param("routineId") Long routineId, @Param("checkDate") String checkDate, @Param("isCompleted") boolean isCompleted);
+    List<RoutineLog> findByRoutineIdAndPeriod(@Param("routineId") Long routineId, @Param("startDate") String startDate, @Param("endDate") String endDate);  // 통계용
 }

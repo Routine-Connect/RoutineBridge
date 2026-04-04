@@ -1,6 +1,7 @@
 package com.routinebridge.dev.routinebridge.mapper;
 
 import com.routinebridge.dev.routinebridge.domain.Routine;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -10,5 +11,5 @@ public interface RoutineMapper {
     Routine findById(Long id);
     void delete(Long id);
     void update(Routine routine);
-    List<Routine> findTodayRoutines(Long userId, String dayOfWeek); // 오늘 루틴 조회
+    List<Routine> findTodayRoutines(@Param("userId") Long userId, @Param("dayOfWeek") String dayOfWeek); // 오늘 루틴 조회
 }
