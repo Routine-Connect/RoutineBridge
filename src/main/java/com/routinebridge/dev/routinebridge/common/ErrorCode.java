@@ -11,6 +11,7 @@ public enum ErrorCode {
     // 루틴
     ROUTINE_NOT_FOUND("R001", "존재하지 않는 루틴입니다"),
     ROUTINE_UNAUTHORIZED("R002", "본인의 루틴만 수정할 수 있습니다"),
+    ROUTINE_FORBBIDEN("R003", "본인의 루틴만 접근할 수 있습니다."),
 
     // 인증
     TOKEN_EXPIRED("A001", "토큰이 만료되었습니다"),
