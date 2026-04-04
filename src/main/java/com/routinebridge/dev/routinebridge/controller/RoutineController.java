@@ -29,8 +29,9 @@ public class RoutineController {
 
     @ApiOperation(value = "루틴 단건 조회", notes = "루틴 ID로 단건 조회")
     @GetMapping("/{id}")
-    public ApiResponse<Routine> getOne(@PathVariable Long id) {
-        return ApiResponse.success(routineService.getOne(id));
+    public ApiResponse<Routine> getOne(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return ApiResponse.success(routineService.getOne(id, userId));
     }
 
     @ApiOperation(value = "루틴 목록 조회", notes = "유저의 전체 루틴 조회")
@@ -45,7 +46,7 @@ public class RoutineController {
         Long userId = (Long) request.getAttribute("userId");
         routine.setId(id);
         routine.setUserId(userId);  // 클라이언트 값 무시 후, 토큰 값 사용
-        routineService.update(routine);
+        routineService.update(routine, userId);
         return ApiResponse.success(null);
     }
 

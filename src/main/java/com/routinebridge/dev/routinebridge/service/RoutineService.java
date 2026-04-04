@@ -27,24 +27,28 @@ public class RoutineService {
     }
 
     // 루틴 단건 조회
-    public Routine getOne(Long id) {
+    public Routine getOne(Long id, Long userid) {
         Routine routine = routineMapper.findById(id);
         if (routine == null) {
             throw new IllegalArgumentException(ErrorCode.ROUTINE_NOT_FOUND.getMessage());
+        }
+
+        if (!routine.getUserId().equals(userid)) {
+            throw new IllegalArgumentException(ErrorCode.ROUTINE_FORBBIDEN.getMessage());
         }
         return routine;
     }
 
 
     // 루틴 수정
-    public void update(Routine routine) {
+    public void update(Routine routine, Long userId) {
         Routine existing = routineMapper.findById(routine.getId());
         if (existing == null) {
             throw new IllegalArgumentException(ErrorCode.ROUTINE_NOT_FOUND.getMessage());
         }
 
-        if (!existing.getUserId().equals(routine.getUserId())) {
-            throw new IllegalArgumentException(ErrorCode.ROUTINE_UNAUTHORIZED.getMessage());
+        if (!existing.getUserId().equals(userId)) {
+            throw new IllegalArgumentException(ErrorCode.ROUTINE_FORBBIDEN.getMessage());
         }
         routineMapper.update(routine);
     }
@@ -57,7 +61,7 @@ public class RoutineService {
         }
 
         if (!existing.getUserId().equals(userid)) {
-            throw new IllegalArgumentException(ErrorCode.ROUTINE_UNAUTHORIZED.getMessage());
+            throw new IllegalArgumentException(ErrorCode.ROUTINE_FORBBIDEN.getMessage());
         }
         routineMapper.delete(id);
     }
