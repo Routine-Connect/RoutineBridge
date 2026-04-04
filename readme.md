@@ -62,38 +62,39 @@
 ```sql
 -- 1. 사용자 테이블
 CREATE TABLE `Users` (
-  `id`         BIGINT       NOT NULL AUTO_INCREMENT,
-  `email`      VARCHAR(100) NOT NULL,
-  `password`   VARCHAR(255) NOT NULL,
-  `nickname`   VARCHAR(50)  NOT NULL,
-  `created_at` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_email` (`email`)
+                         `id`         BIGINT       NOT NULL AUTO_INCREMENT,
+                         `email`      VARCHAR(100) NOT NULL,
+                         `password`   VARCHAR(255) NOT NULL,
+                         `nickname`   VARCHAR(50)  NOT NULL,
+                         `gender`     CHAR(1)      NOT NULL DEFAULT 'm', -- 'm' or 'w'
+                         `created_at` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                         PRIMARY KEY (`id`),
+                         UNIQUE KEY `uk_email` (`email`)
 );
 
 -- 2. 루틴 설정 테이블
 CREATE TABLE `Routines` (
-  `id`           BIGINT       NOT NULL AUTO_INCREMENT,
-  `user_id`      BIGINT       NOT NULL,
-  `title`        VARCHAR(100) NOT NULL,
-  `days_of_week` VARCHAR(20)  NOT NULL,  -- 예: "MON,TUE,WED"
-  `alarm_time`   TIME,
-  `is_active`    BOOLEAN      NOT NULL DEFAULT TRUE,
-  `created_at`   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_routines_user_id`
-    FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`) ON DELETE CASCADE
+                            `id`           BIGINT       NOT NULL AUTO_INCREMENT,
+                            `user_id`      BIGINT       NOT NULL,
+                            `title`        VARCHAR(100) NOT NULL,
+                            `days_of_week` VARCHAR(20)  NOT NULL,  -- 예: "MON,TUE,WED"
+                            `alarm_time`   TIME,
+                            `is_active`    BOOLEAN      NOT NULL DEFAULT TRUE,
+                            `created_at`   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            PRIMARY KEY (`id`),
+                            CONSTRAINT `fk_routines_user_id`
+                                FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`) ON DELETE CASCADE
 );
 
 -- 3. 루틴 수행 기록 테이블
 CREATE TABLE `RoutineLogs` (
-  `id`           BIGINT  NOT NULL AUTO_INCREMENT,
-  `routine_id`   BIGINT  NOT NULL,
-  `check_date`   DATE    NOT NULL,
-  `is_completed` BOOLEAN NOT NULL DEFAULT FALSE,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_routinelogs_routine_id`
-    FOREIGN KEY (`routine_id`) REFERENCES `Routines` (`id`) ON DELETE CASCADE
+                               `id`           BIGINT  NOT NULL AUTO_INCREMENT,
+                               `routine_id`   BIGINT  NOT NULL,
+                               `check_date`   DATE    NOT NULL,
+                               `is_completed` BOOLEAN NOT NULL DEFAULT FALSE,
+                               PRIMARY KEY (`id`),
+                               CONSTRAINT `fk_routinelogs_routine_id`
+                                   FOREIGN KEY (`routine_id`) REFERENCES `Routines` (`id`) ON DELETE CASCADE
 );
 ```
 
