@@ -13,6 +13,6 @@ public class Routine {
     private String title;
     private String daysOfWeek;
     private String alarmTime;
-    private boolean isActive;
+    private Boolean isActive;
     private String createdAt;
 }
