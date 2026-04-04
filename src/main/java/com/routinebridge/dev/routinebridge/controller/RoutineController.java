@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @RestController
@@ -26,6 +27,12 @@ public class RoutineController {
         return ApiResponse.success(null);
     }
 
+    @ApiOperation(value = "루틴 단건 조회", notes = "루틴 ID로 단건 조회")
+    @GetMapping("/{id}")
+    public ApiResponse<Routine> getOne(@PathVariable Long id) {
+        return ApiResponse.success(routineService.getOne(id));
+    }
+
     @ApiOperation(value = "루틴 목록 조회", notes = "유저의 전체 루틴 조회")
     @GetMapping
     public ApiResponse<List<Routine>> getAll(@RequestParam Long userId) {
@@ -34,16 +41,19 @@ public class RoutineController {
 
     @ApiOperation(value = "루틴 수정", notes = "루틴 정보 수정")
     @PutMapping("/{id}")
-    public ApiResponse<Void> update(@PathVariable Long id, @RequestBody Routine routine) {
+    public ApiResponse<Void> update(@PathVariable Long id, @RequestBody Routine routine, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
         routine.setId(id);
+        routine.setUserId(userId);  // 클라이언트 값 무시 후, 토큰 값 사용
         routineService.update(routine);
         return ApiResponse.success(null);
     }
 
     @ApiOperation(value = "루틴 삭제", notes = "루틴 삭제")
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable Long id) {
-        routineService.delete(id);
+    public ApiResponse<Void> delete(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        routineService.delete(id, userId);
         return ApiResponse.success(null);
     }
 

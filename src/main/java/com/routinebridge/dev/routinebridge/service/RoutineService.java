@@ -26,6 +26,16 @@ public class RoutineService {
         return routineMapper.findByUserId(userid);
     }
 
+    // 루틴 단건 조회
+    public Routine getOne(Long id) {
+        Routine routine = routineMapper.findById(id);
+        if (routine == null) {
+            throw new IllegalArgumentException(ErrorCode.ROUTINE_NOT_FOUND.getMessage());
+        }
+        return routine;
+    }
+
+
     // 루틴 수정
     public void update(Routine routine) {
         Routine existing = routineMapper.findById(routine.getId());
@@ -40,10 +50,14 @@ public class RoutineService {
     }
 
     // 루틴 삭제
-    public void delete(Long id) {
+    public void delete(Long id, Long userid) {
         Routine existing = routineMapper.findById(id);
         if (existing == null) {
             throw new IllegalArgumentException(ErrorCode.ROUTINE_NOT_FOUND.getMessage());
+        }
+
+        if (!existing.getUserId().equals(userid)) {
+            throw new IllegalArgumentException(ErrorCode.ROUTINE_UNAUTHORIZED.getMessage());
         }
         routineMapper.delete(id);
     }
@@ -54,4 +68,5 @@ public class RoutineService {
         String day = dayOfWeek.name().substring(0, 3); // MON , TUE, WED
         return routineMapper.findTodayRoutines(userid, day);
     }
+
 }
