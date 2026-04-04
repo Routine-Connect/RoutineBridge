@@ -4,8 +4,8 @@
 <mapper namespace="com.routinebridge.dev.routinebridge.mapper.UserMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO Users (email, password, nickname)
-        VALUES (#{email}, #{password}, #{nickname})
+        INSERT INTO Users (email, password, nickname, gender)
+        VALUES (#{email}, #{password}, #{nickname}, #{gender})
     </insert>
 
     <select id="findByEmail" resultType="com.routinebridge.dev.routinebridge.domain.User">

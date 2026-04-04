@@ -12,5 +12,6 @@ public class User {
     private String email;
     private String password;
     private String nickname;
+    private String gender;      // 'm' or 'w'
     private String createdAt;
 }
