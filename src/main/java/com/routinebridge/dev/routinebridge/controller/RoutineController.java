@@ -36,7 +36,8 @@ public class RoutineController {
 
     @ApiOperation(value = "루틴 목록 조회", notes = "유저의 전체 루틴 조회")
     @GetMapping
-    public ApiResponse<List<Routine>> getAll(@RequestParam Long userId) {
+    public ApiResponse<List<Routine>> getAll(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
         return ApiResponse.success(routineService.getAll(userId));
     }
 
@@ -60,7 +61,8 @@ public class RoutineController {
 
     @ApiOperation(value = "오늘의 루틴 조회", notes = "오늘 요일에 해당하는 루틴만 조회")
     @GetMapping("/today")
-    public ApiResponse<List<Routine>> getToday(@RequestParam Long userId) {
+    public ApiResponse<List<Routine>> getToday(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
         return ApiResponse.success(routineService.getToday(userId));
     }
 }
