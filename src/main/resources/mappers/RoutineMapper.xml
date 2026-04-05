@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.routinebridge.dev.routinebridge.mapper.RoutineMapper">
+<mapper namespace="com.doday.dev.doday.mapper.RoutineMapper">
 
-    <resultMap id="RoutineResultMap" type="com.routinebridge.dev.routinebridge.domain.Routine">
+    <resultMap id="RoutineResultMap" type="com.doday.dev.doday.domain.Routine">
         <id property="id" column="id"/>
         <result property="userId" column="user_id"/>
         <result property="title" column="title"/>
@@ -13,11 +13,11 @@
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
-    <select id="findByUserId" resultType="com.routinebridge.dev.routinebridge.domain.Routine">
+    <select id="findByUserId" resultType="com.doday.dev.doday.domain.Routine">
         SELECT * FROM Routines WHERE user_id = #{userId}
     </select>
 
-    <select id="findById" resultType="com.routinebridge.dev.routinebridge.domain.Routine">
+    <select id="findById" resultType="com.doday.dev.doday.domain.Routine">
         SELECT * FROM Routines WHERE id = #{id}
     </select>
 
@@ -37,7 +37,7 @@
         DELETE FROM Routines WHERE id = #{id}
     </delete>
 
-    <select id="findTodayRoutines" resultType="com.routinebridge.dev.routinebridge.domain.Routine">
+    <select id="findTodayRoutines" resultType="com.doday.dev.doday.domain.Routine">
         SELECT * FROM Routines
         WHERE user_id = #{userId}
           AND is_active = TRUE

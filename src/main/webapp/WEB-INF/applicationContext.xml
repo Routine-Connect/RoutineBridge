@@ -10,7 +10,7 @@
                            http://www.springframework.org/schema/mvc
                            http://www.springframework.org/schema/mvc/spring-mvc.xsd">
 
-    <context:component-scan base-package="com.routinebridge.dev.routinebridge" />
+    <context:component-scan base-package="com.doday.dev.doday" />
 
     <mvc:annotation-driven />
 
@@ -39,7 +39,7 @@
     </bean>
 
     <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
-        <property name="basePackage" value="com.routinebridge.dev.routinebridge.mapper" />
+        <property name="basePackage" value="com.doday.dev.doday.mapper" />
     </bean>
 
 </beans>
