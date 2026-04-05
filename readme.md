@@ -1,13 +1,13 @@
-# 🌉 Routine Bridge — Backend
+# 📅 DoDay — Backend
 
 > **"작은 습관이 내일의 나를 만든다"**
-> 루틴 관리 앱의 백엔드 서버 레포지토리입니다.
+> 두데이(DoDay) 루틴 관리 앱의 백엔드 서버 레포지토리입니다.
 
 ---
 
 ## 📌 프로젝트 소개
 
-**루틴 브릿지(Routine Bridge)** 는 매일의 작은 습관을 기록하고 시각화하는 개인화 루틴 관리 서비스입니다.
+**두데이(DoDay)** 는 매일의 작은 습관을 기록하고 시각화하는 개인화 루틴 관리 서비스입니다.
 
 작심삼일에 그치는 대학생, 취준생을 위해 루틴 설정 → 데일리 체크 → 성취도 리포트까지
 하나의 앱에서 경험할 수 있도록 설계했습니다.
@@ -66,7 +66,7 @@ CREATE TABLE `Users` (
   `email`      VARCHAR(100) NOT NULL,
   `password`   VARCHAR(255) NOT NULL,
   `nickname`   VARCHAR(50)  NOT NULL,
-  `gender`     CHAR(1)      NOT NULL DEFAULT 'm',
+  `gender`     CHAR(1)      NOT NULL DEFAULT 'm', -- 'm' or 'w'
   `created_at` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_email` (`email`)
@@ -77,7 +77,7 @@ CREATE TABLE `Routines` (
   `id`           BIGINT       NOT NULL AUTO_INCREMENT,
   `user_id`      BIGINT       NOT NULL,
   `title`        VARCHAR(100) NOT NULL,
-  `days_of_week` VARCHAR(20)  NOT NULL,
+  `days_of_week` VARCHAR(20)  NOT NULL,  -- 예: "MON,TUE,WED"
   `alarm_time`   TIME,
   `is_active`    BOOLEAN      NOT NULL DEFAULT TRUE,
   `created_at`   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -96,6 +96,15 @@ CREATE TABLE `RoutineLogs` (
   CONSTRAINT `fk_routinelogs_routine_id`
     FOREIGN KEY (`routine_id`) REFERENCES `Routines` (`id`) ON DELETE CASCADE
 );
+
+-- 4. 인덱스
+CREATE INDEX idx_routinelogs_routine_date
+ON RoutineLogs (routine_id, check_date);
+
+-- 5. 한글 인코딩 설정
+ALTER TABLE Users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE Routines CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE RoutineLogs CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 ---
@@ -105,12 +114,13 @@ CREATE TABLE `RoutineLogs` (
 ```
 src/
 └── main/
-    ├── java/com/routinebridge/dev/routinebridge/
+    ├── java/com/doday/dev/doday/
     │   ├── config/          # SwaggerConfig 등 설정 클래스
     │   ├── controller/      # REST API 컨트롤러
     │   ├── service/         # 비즈니스 로직
     │   ├── mapper/          # MyBatis Mapper 인터페이스
-    │   └── domain/          # VO (User, Routine, RoutineLog)
+    │   ├── domain/          # VO (User, Routine, RoutineLog)
+    │   └── common/          # ApiResponse, ErrorCode, JwtUtil 등
     └── resources/
         ├── mappers/         # MyBatis Mapper XML (SQL)
         └── db.properties    # DB 접속 정보 (gitignore 처리)
@@ -127,14 +137,16 @@ src/
 | POST | `/api/users/signup` | 회원가입 |
 | POST | `/api/users/login` | 로그인 (JWT 반환) |
 | PUT | `/api/users/me` | 프로필 수정 |
-| POST | `/api/routines` | 루틴 생성 |
 | GET | `/api/routines` | 루틴 목록 조회 |
+| GET | `/api/routines/{id}` | 루틴 단건 조회 |
+| POST | `/api/routines` | 루틴 생성 |
 | PUT | `/api/routines/{id}` | 루틴 수정 |
 | DELETE | `/api/routines/{id}` | 루틴 삭제 |
 | GET | `/api/routines/today` | 오늘의 루틴 조회 |
 | POST | `/api/routines/{id}/check` | 루틴 완료 체크 |
 | GET | `/api/stats/monthly` | 월간 통계 |
 | GET | `/api/stats/weekly` | 주간 통계 |
+| GET | `/api/stats/streak` | 스트릭 조회 |
 
 ---
 
@@ -142,10 +154,10 @@ src/
 
 ```
 ✅ 1주차  환경 세팅, DB 연결, ngrok, Swagger 구성
-✅ 2주차  회원가입 / 로그인 / JWT 인증
-✅ 3주차  루틴 CRUD
+✅ 2주차  회원가입 / 로그인 / JWT 인증 / JWT 검증 필터
+✅ 3주차  루틴 CRUD / JWT 권한 체크
 ✅ 4주차  데일리 체크리스트
-✅ 5주차  성취도 리포트 (잔디 + 스트릭)
+✅ 5주차  성취도 리포트 (월간/주간 통계, 스트릭)
 🔄 6주차  예외처리 고도화 / 프로필 수정
 ⬜ 7주차  Docker + AWS EC2 배포
 ⬜ 8주차  마무리 / 포트폴리오 정리
@@ -157,17 +169,18 @@ src/
 
 ### 1. 레포 클론
 ```bash
-git clone https://github.com/{username}/routinebridge.git
-cd routinebridge
+git clone https://github.com/{username}/doday.git
+cd doday
 git checkout backend
 ```
 
 ### 2. DB 설정
 `src/main/resources/db.properties` 파일 생성 후 아래 내용 입력:
 ```properties
-db.url=jdbc:mysql://localhost:3306/routinebridge?serverTimezone=UTC&useSSL=false
+db.url=jdbc:mysql://localhost:3306/doday?serverTimezone=UTC&useSSL=false&characterEncoding=UTF-8&useUnicode=true
 db.username=your_username
 db.password=your_password
+jwt.secret=your_jwt_secret_key
 ```
 
 ### 3. MySQL 테이블 생성
@@ -186,7 +199,7 @@ http://localhost:8080/swagger-ui.html
 ## 🔐 보안 주의사항
 
 - `db.properties` 는 `.gitignore` 에 등록되어 있으며 **절대 커밋하지 않습니다**
-- JWT Secret Key는 환경변수로 관리합니다
+- JWT Secret Key는 `db.properties` 에서 관리합니다
 
 ---
 
@@ -207,5 +220,5 @@ chore:    빌드/설정 변경
 ---
 
 <div align="center">
-  <sub>Built with ☕ and 💪 | Routine Bridge Backend</sub>
+  <sub>Built with ☕ and 💪 | DoDay Backend</sub>
 </div>
