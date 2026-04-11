@@ -15,4 +15,5 @@ public class Routine {
     private String alarmTime;
     private Boolean isActive;
     private String createdAt;
+    private Integer iconId;
 }
