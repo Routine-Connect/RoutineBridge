@@ -21,7 +21,7 @@ public class RoutineService {
         routineMapper.insert(routine);
     }
 
-    // 루틴 목록 조회
+    // 루틴 목록 조회 (활성만)
     public List<Routine> getAll(Long userid) {
         return routineMapper.findByUserId(userid);
     }

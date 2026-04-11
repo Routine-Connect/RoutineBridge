@@ -8,10 +8,8 @@ import com.doday.dev.doday.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -45,5 +43,13 @@ public class UserController {
         Long userId = (Long) request.getAttribute("userId");
         userService.updateProfile(userId, dto);
         return ApiResponse.success(null);
+    }
+
+    @ApiOperation(value = "프로필 이미지 업로드", notes = "프로필 이미지 업로드")
+    @PostMapping("/me/image")
+    public ApiResponse<String> uploadImage(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        String imageUrl = userService.uploadProfileImage(userId, file);
+        return ApiResponse.success(imageUrl);
     }
 }

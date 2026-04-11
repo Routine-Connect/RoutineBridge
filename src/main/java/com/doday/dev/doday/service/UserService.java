@@ -8,8 +8,13 @@ import com.doday.dev.doday.dto.SignupRequestDto;
 import com.doday.dev.doday.dto.UpdateProfileRequestDto;
 import com.doday.dev.doday.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
 
 @Service
 public class UserService {
@@ -19,6 +24,9 @@ public class UserService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Value("${upload.dir}")
+    private String uploadDir;
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
@@ -65,5 +73,34 @@ public class UserService {
             existing.setPassword(encoder.encode(dto.getPassword()));
         }
         userMapper.update(existing);
+    }
+
+    // 프로필 이미지 업로드
+    public String uploadProfileImage(Long userId, MultipartFile file) {
+        try {
+            // 저장 경로 설정
+            File dir = new File(uploadDir);
+            if (!dir.exists()) dir.mkdirs();
+
+            // 파일명 고유하게 설정 (userId + 확장자)
+            String originalName = file.getOriginalFilename();
+            String ext = originalName.substring(originalName.lastIndexOf("."));
+            String fileName = "user_" + userId + ext;
+
+
+            // 파일 저장
+            File dest = new File(uploadDir + fileName);
+            file.transferTo(dest);
+
+            // DB에 경로 저장
+            String imagePath = "/uploads/profile/" + fileName;
+            User user = userMapper.findById(userId);
+            user.setProfileImage(imagePath);
+            userMapper.update(user);
+
+            return imagePath;
+        } catch (IOException e) {
+            throw new RuntimeException("이미지 업로드 실패");
+        }
     }
 }

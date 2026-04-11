@@ -14,4 +14,5 @@ public class User {
     private String nickname;
     private String gender;      // 'm' or 'w'
     private String createdAt;
+    private String profileImage;
 }

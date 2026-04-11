@@ -18,7 +18,7 @@
 
     <update id="update">
         UPDATE Users
-        SET nickname = #{nickname}, password = #{password}
+        SET nickname = #{nickname}, password = #{password}, profile_image = #{profileImage}
         WHERE id = #{id}
     </update>
 
