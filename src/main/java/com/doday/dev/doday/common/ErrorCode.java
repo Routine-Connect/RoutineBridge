@@ -8,7 +8,7 @@ public enum ErrorCode {
     EMAIL_DUPLICATED("U002", "이미 사용중인 이메일입니다"),
     INVALID_PASSWORD("U003", "비밀번호가 올바르지 않습니다"),
     INVALID_FILE_TYPE("F001", "jpg, jpeg, png 파일만 업로드 가능합니다."),
-    FILE_SIZE_EXCEEDED("F002", "파일 크기는 5MB 이하여야 합니다."),
+    FILE_SIZE_EXCEEDED("F002", "파일 크기는 10MB 이하여야 합니다."),
 
     // 루틴
     ROUTINE_NOT_FOUND("R001", "존재하지 않는 루틴입니다"),

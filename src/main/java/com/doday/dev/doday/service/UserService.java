@@ -7,13 +7,20 @@ import com.doday.dev.doday.dto.LoginRequestDto;
 import com.doday.dev.doday.dto.SignupRequestDto;
 import com.doday.dev.doday.dto.UpdateProfileRequestDto;
 import com.doday.dev.doday.mapper.UserMapper;
+import com.luciad.imageio.webp.WebPWriteParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.FileImageOutputStream;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 @Service
@@ -82,15 +89,46 @@ public class UserService {
             File dir = new File(uploadDir);
             if (!dir.exists()) dir.mkdirs();
 
-            // 파일명 고유하게 설정 (userId + 확장자)
+            // 파일명 고유하게 설정
             String originalName = file.getOriginalFilename();
-            String ext = originalName.substring(originalName.lastIndexOf("."));
-            String fileName = "user_" + userId + ext;
+            if (originalName == null) {
+                throw new IllegalArgumentException(ErrorCode.INVALID_INPUT.getMessage());
+            }
+
+
+            // 확장자 검사
+            String ext = originalName.substring(originalName.lastIndexOf(".")).toLowerCase();
+            if (ext.equals("jpg") || ext.equals("png") || ext.equals("jpeg")) {
+                throw new IllegalArgumentException(ErrorCode.INVALID_FILE_TYPE.getMessage());
+            }
+
+            // 파일 크기 검사 (10MB) 제한
+            if (file.getSize() > 10 * 1024 * 1024) {
+                throw new IllegalArgumentException(ErrorCode.FILE_SIZE_EXCEEDED.getMessage());
+            }
+
+
+            // webp 파일 명
+            String fileName = "user_" + userId + ".webp";
+
+            // 기존 파일 삭제
+            File existingFile = new File(uploadDir + fileName);
+            if (existingFile.exists()) existingFile.delete();
+
+            // 이미지 읽기
+            BufferedImage image = ImageIO.read(file.getInputStream());
+
+            // webp 변환 후 저장
+            ImageWriter writer = ImageIO.getImageWritersByMIMEType("image/webp").next();
+            WebPWriteParam writeParam = new WebPWriteParam(writer.getLocale());
+            writeParam.setCompressionMode(WebPWriteParam.MODE_DEFAULT);
 
 
             // 파일 저장
             File dest = new File(uploadDir + fileName);
-            file.transferTo(dest);
+            writer.setOutput(new FileImageOutputStream(dest));
+            writer.write(null, new IIOImage(image, null, null), writeParam);
+            writer.dispose();
 
             // DB에 경로 저장
             String imagePath = "/uploads/profile/" + fileName;
@@ -98,9 +136,10 @@ public class UserService {
             user.setProfileImage(imagePath);
             userMapper.update(user);
 
+
             return imagePath;
         } catch (IOException e) {
-            throw new RuntimeException("이미지 업로드 실패");
+            throw new RuntimeException("이미지 업로드 실패: " + e.getMessage());
         }
     }
 }
