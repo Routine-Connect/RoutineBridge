@@ -36,6 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = header.substring(7); // "Bearer " 제거
+        System.out.println("토큰 : " + token);
 
         // 토큰 유효성 검사
         if (!jwtUtil.validateToken(token)) {

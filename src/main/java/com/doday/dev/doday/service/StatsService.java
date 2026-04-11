@@ -27,28 +27,43 @@ public class StatsService {
         String endDate = ym.atEndOfMonth().toString();
 
         List<Routine> routines = routineMapper.findByUserId(userId);
+        System.out.println("필터 전 루틴 개수 : " + routines.size());
+        System.out.println("userId : " + userId);
 
         // 날짜별 완료 여부 집계
-        Map<String, Boolean> dailyResult = new LinkedHashMap<>();
+        Map<String, Object> dailyResult = new LinkedHashMap<>();
 
 
         // 해당 월 날짜 전부 초기화 (false)
         for (int d= 1; d<= ym.lengthOfMonth(); d++) {
             String date = ym.atDay(d).toString();
-            dailyResult.put(date, false);
+            dailyResult.put(date, 0.0);
         }
 
-        // 루틴 로그 확인해서 하루라도 완료된 날 true
+        // 날짜 별로 루틴 총 개수 / 완료 개수 집계
+        Map<String, Integer> totalCount = new  LinkedHashMap<>();
+        Map<String, Integer> doneCount = new  LinkedHashMap<>();
+
         for (Routine routine : routines) {
             List<RoutineLog> logs = routineLogMapper.findByRoutineIdAndPeriod(
                     routine.getId(), startDate, endDate
             );
             for (RoutineLog log : logs) {
+                String date = log.getCheckDate();
+                totalCount.merge(date, 1, Integer::sum);
                 if (log.isCompleted()) {
-                    dailyResult.put(log.getCheckDate(), true);
+                    doneCount.merge(date, 1, Integer::sum);
                 }
             }
         }
+
+        // 퍼센트 계산
+        totalCount.forEach((date, total) -> {
+            int done = doneCount.getOrDefault(date, 0);
+            double pct = Math.round((done * 100.0 / total) * 10) / 10.0;
+            dailyResult.put(date, pct);
+        });
+
 
         Map<String, Object> result = new HashMap<>();
         result.put("daily", dailyResult);
@@ -63,22 +78,35 @@ public class StatsService {
 
         List<Routine> routines = routineMapper.findByUserId(userId);
 
+
         // 날짜별 완료 여부
-        Map<String, Boolean> dailyResult = new LinkedHashMap<>();
+        Map<String, Object> dailyResult = new LinkedHashMap<>();
         for (int i = 6; i >=0; i--) {
-            dailyResult.put(today.minusDays(i).toString(), false);
+            dailyResult.put(today.minusDays(i).toString(), 0.0);
         }
+
+        Map<String, Integer> totalCount = new  LinkedHashMap<>();
+        Map<String, Integer> doneCount = new  LinkedHashMap<>();
 
         for (Routine routine : routines) {
             List<RoutineLog> logs = routineLogMapper.findByRoutineIdAndPeriod(
                     routine.getId(), startDate, endDate
             );
             for (RoutineLog log : logs) {
+                String date = log.getCheckDate();
+                totalCount.merge(date, 1, Integer::sum);
                 if (log.isCompleted()) {
-                    dailyResult.put(log.getCheckDate(), true);
+                    doneCount.merge(date, 1, Integer::sum);
                 }
             }
         }
+
+        totalCount.forEach((date, total) -> {
+            int done = doneCount.getOrDefault(date, 0);
+            double pct =  Math.round((done * 100.0 / total) * 10) / 10.0;
+            dailyResult.put(date, pct);
+        });
+
 
         Map<String, Object> result = new HashMap<>();
         result.put("daily", dailyResult);

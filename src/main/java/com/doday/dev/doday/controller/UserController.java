@@ -1,6 +1,5 @@
 package com.doday.dev.doday.controller;
 
-import com.doday.dev.doday.domain.User;
 import com.doday.dev.doday.common.ApiResponse;
 import com.doday.dev.doday.dto.LoginRequestDto;
 import com.doday.dev.doday.dto.SignupRequestDto;

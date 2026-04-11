@@ -24,14 +24,14 @@ public class StatsController {
     @ApiOperation(value = "월간 통계", notes = "특정 월의 날짜별 루틴 완료 여부")
     @GetMapping("/monthly")
     public ApiResponse<Map<String, Object>> getMonthly(HttpServletRequest request, @RequestParam int year, @RequestParam int month) {
-        Long userId = (Long) request.getSession().getAttribute("userId");
+        Long userId = (Long) request.getAttribute("userId");
         return ApiResponse.success(statsService.getMonthly(userId, year, month));
     }
 
     @ApiOperation(value = "주간 통계", notes = "이번 주 루틴 완료 현황")
     @GetMapping("/weekly")
     public ApiResponse<Map<String, Object>> getWeekly(HttpServletRequest request) {
-        Long userId = (Long) request.getSession().getAttribute("userId");
+        Long userId = (Long) request.getAttribute("userId");
         return ApiResponse.success(statsService.getWeekly(userId));
     }
 
