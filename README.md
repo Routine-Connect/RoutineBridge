@@ -11,19 +11,20 @@
 ## 📁 Directory Structure
 아키텍처에 따라 기능 및 목적별로 디렉토리를 분리하여 관리합니다.
 
+```text
 lib/
- ┣ 📂 provider/         # 전역 상태 관리 (AuthProvider 등)
- ┣ 📂 screen/           # UI 화면 컴포넌트
- ┃ ┣ 📄 main_screen.dart       # 바텀 네비게이션 및 탭 관리
- ┃ ┣ 📄 home_screen.dart       # 루틴 목록 및 주간 달력
- ┃ ┣ 📄 routine_screen.dart    # 성취도 및 통계 리포트
- ┃ ┣ 📄 mypage_screen.dart     # 설정 및 프로필
- ┃ ┗ 📄 profile_edit_screen.dart
- ┣ 📂 theme/            # 공통 디자인 시스템
- ┃ ┗ 📄 app_colors.dart        # 메인 컬러(Quokka Brown, Sage Green 등) 및 테마
- ┣ 📂 utils/            # 헬퍼 함수 (아이콘 매핑, 날짜 포맷 변환 등)
- ┗ 📄 main.dart         # 앱 엔트리 포인트 및 Provider 주입
- 
+┣ 📂 provider/        # 전역 상태 관리 (AuthProvider 등)
+┣ 📂 screen/          # UI 화면 컴포넌트
+┃ ┣ 📄 main_screen.dart      # 바텀 네비게이션 및 탭 관리
+┃ ┣ 📄 home_screen.dart      # 루틴 목록 및 주간 달력
+┃ ┣ 📄 routine_screen.dart   # 성취도 및 통계 리포트
+┃ ┣ 📄 mypage_screen.dart    # 설정 및 프로필
+┃ ┗ 📄 profile_edit_screen.dart
+┣ 📂 theme/            # 공통 디자인 시스템
+┃ ┗ 📄 app_colors.dart        # 메인 컬러(Quokka Brown, Sage Green 등) 및 테마
+┣ 📂 utils/            # 헬퍼 함수 (아이콘 매핑, 날짜 포맷 변환 등)
+┗ 📄 main.dart         # 앱 엔트리 포인트 및 Provider 주입
+```
  
  
 성능 개선을 위해 앱 내에 이미지는 .webp 형식을 사용합니다.
