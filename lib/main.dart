@@ -79,9 +79,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   const SizedBox(height: 30),
                   ElevatedButton(
                     onPressed: () {
-                      // 로그인 화면으로 이동할 때는 스택에 쌓아줌 (push)
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => MainScreen()),
+                      // 💡 기존 화면을 메모리에서 완전히 날려버리고 넘어감 (메모리 폭발 방지)
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (context) => const MainScreen()),
                       );
                     },
                     style: ElevatedButton.styleFrom(
