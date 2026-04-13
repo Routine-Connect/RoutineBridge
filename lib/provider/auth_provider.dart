@@ -1,55 +1,42 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
+import '../service/auth.service.dart';
 
 class AuthProvider with ChangeNotifier {
-  // 💡 1. 영구 저장소
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final AuthService _authService = AuthService(); // 💡 통신 담당 택배기사 고용!
   
-  // 💡 2. 앱 실행 중 유지되는 메모리 (전역 변수)
   String? _token; 
 
-  // 외부에서 내 토큰 상태를 읽을 수 있게 해주는 게터(Getter)
   String? get token => _token;
   bool get isAuthenticated => _token != null;
 
-  // 🚀 앱 켤 때 딱 한 번 실행: 금고에서 토큰을 꺼내 메모리에 올림
+  // 앱 켤 때 토큰 불러오기
   Future<void> loadToken() async {
     _token = await _storage.read(key: 'jwt_token');
-    notifyListeners(); // "내 상태가 변했으니 화면들 다 새로고침 해!" 라고 방송함
+    notifyListeners(); 
   }
 
-  // 🚀 로그인 로직 (서버 통신 + 토큰 저장)
-  // 성공하면 null 반환, 실패하면 에러 메시지(String) 반환
+  // 🚀 화면(UI)에서 호출하는 로그인 로직
   Future<String?> login(String email, String password) async {
     try {
-      final url = Uri.parse('http://10.0.2.2:8080/api/users/login'); 
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      );
-
-      final responseData = jsonDecode(utf8.decode(response.bodyBytes));
-
-      if (response.statusCode == 200 && responseData['success'] == true) {
-        // 🎉 로그인 성공! 
-        _token = responseData['data']; // 1. 메모리(주머니)에 넣고
-        await _storage.write(key: 'jwt_token', value: _token); // 2. 금고에도 백업!
-        
-        notifyListeners(); // 화면 갱신 방송
-        return null; // 에러 없음(성공)
-      } else {
-        // ❌ 로그인 실패 (백엔드가 준 에러 메시지 반환)
-        return responseData['error']?['message'] ?? '로그인에 실패했습니다.';
-      }
+      // 1. Service에게 통신 심부름 시켜서 토큰 받아오기
+      final String fetchedToken = await _authService.fetchLoginToken(email, password);
+      
+      // 2. 받아온 토큰을 메모리와 금고에 저장
+      _token = fetchedToken; 
+      await _storage.write(key: 'jwt_token', value: _token); 
+      
+      notifyListeners(); // 3. 화면 갱신 방송
+      return null; // 성공했으므로 에러 메시지는 null 반환
+      
     } catch (e) {
-      return '서버와 연결할 수 없습니다.';
+      // ❌ Service에서 에러를 던지면 여기서 잡아서 화면에 보여줄 메시지만 반환
+      return e.toString().replaceAll('Exception: ', '');
     }
   }
 
-  // 🚀 로그아웃 로직 (메모리와 금고 모두 비우기)
+  // 로그아웃 로직
   Future<void> logout() async {
     _token = null;
     await _storage.delete(key: 'jwt_token');
