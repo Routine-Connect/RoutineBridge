@@ -1,11 +1,8 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import '../theme/app_style.dart';
 import 'home_screen.dart';
 import 'mypage_screen.dart';
-import 'routine_screen.dart';
-
-const double _kNavItemExtent = 80;
+import 'statistics_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -17,11 +14,15 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
+  // 💡 화면 갈아끼우기용 배열
   static const List<Widget> _pages = [
-  HomeScreen(),
-  SizedBox.shrink(), // 통계 화면 임시 차단 (범인 격리)
-  SizedBox.shrink(), // 마이페이지 임시 차단 (범인 격리)
-];
+    HomeScreen(),
+    StatisticsScreen(),
+    MyPageScreen(),
+  ];
+
+  // 💡 상단바 제목 갈아끼우기용 배열
+  final List<String> _titles = ['홈', '통계', '프로필'];
 
   void _onTap(int index) {
     setState(() => _currentIndex = index);
@@ -31,6 +32,51 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
+      backgroundColor: AppStyle.background,
+      // 상단바
+      appBar: AppBar(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: AppStyle.background.withOpacity(0.94),
+        surfaceTintColor: Colors.transparent,
+        toolbarHeight: 64,
+        leadingWidth: 72,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Center(
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppStyle.primaryContainer,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppStyle.primary.withOpacity(0.2),
+                  width: 2,
+                ),
+              ),
+              child: const Icon(Icons.person, color: AppStyle.primary, size: 22),
+            ),
+          ),
+        ),
+        centerTitle: true,
+        title: Text(
+          _titles[_currentIndex], // 💡 현재 탭에 맞춰 제목 변경 (홈/통계/프로필)
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppStyle.primary,
+          ),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.calendar_today_outlined, color: AppStyle.primary),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
@@ -43,60 +89,50 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-/// 최적화된 하단 탭: 무거운 BackdropFilter(블러)를 제거하고 솔리드 컬러로 대체하여 에뮬레이터 멈춤 방지
 class _StitchBottomNavBar extends StatelessWidget {
+  final int currentIndex;
+  final Function(int) onTap;
+
   const _StitchBottomNavBar({
     required this.currentIndex,
     required this.onTap,
   });
 
-  final int currentIndex;
-  final ValueChanged<int> onTap;
-
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    return Container(
       decoration: BoxDecoration(
-        color: AppColors.background.withOpacity(0.98), // 블러 대신 불투명도를 높여서 깔끔하게 처리
+        color: AppStyle.background.withOpacity(0.94),
         border: Border(
           top: BorderSide(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppStyle.primary.withOpacity(0.1),
+            width: 1,
           ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
-          )
-        ]
       ),
       child: SafeArea(
-        top: false,
+        top: false, // 상단은 무시
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          padding: const EdgeInsets.symmetric(vertical: 8), // 얇고 예쁜 하단바 두께 형성
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _NavItem(
-                selected: currentIndex == 0,
                 icon: Icons.home_outlined,
-                selectedIcon: Icons.home,
                 label: '홈',
+                isSelected: currentIndex == 0,
                 onTap: () => onTap(0),
               ),
               _NavItem(
-                selected: currentIndex == 1,
                 icon: Icons.bar_chart_outlined,
-                selectedIcon: Icons.bar_chart,
                 label: '통계',
+                isSelected: currentIndex == 1,
                 onTap: () => onTap(1),
               ),
               _NavItem(
-                selected: currentIndex == 2,
                 icon: Icons.person_outline,
-                selectedIcon: Icons.person,
                 label: '프로필',
+                isSelected: currentIndex == 2,
                 onTap: () => onTap(2),
               ),
             ],
@@ -108,67 +144,45 @@ class _StitchBottomNavBar extends StatelessWidget {
 }
 
 class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
   const _NavItem({
-    required this.selected,
     required this.icon,
-    required this.selectedIcon,
     required this.label,
+    required this.isSelected,
     required this.onTap,
   });
 
-  final bool selected;
-  final IconData icon;
-  final IconData selectedIcon;
-  final String label;
-  final VoidCallback onTap;
-
   @override
   Widget build(BuildContext context) {
-    final iconData = selected ? selectedIcon : icon;
-    final labelStyle = TextStyle(
-      fontSize: 11,
-      letterSpacing: 0.8,
-      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-      color: selected ? AppColors.primary : AppColors.onSurfaceVariant,
-    );
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: SizedBox(
-          width: _kNavItemExtent,
-          height: _kNavItemExtent,
-          child: AnimatedScale(
-            scale: selected ? 1.05 : 1,
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutCubic,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: selected ? AppColors.primaryContainer : Colors.transparent,
-                shape: BoxShape.circle,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    iconData,
-                    size: 26,
-                    color: selected ? AppColors.primary : AppColors.onSurfaceVariant,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    label.toUpperCase(),
-                    style: labelStyle,
-                  ),
-                ],
+    // 💡 GestureDetector 대신 InkWell을 쓰면 터치할 때 예쁜 물결 효과(Ripple)가 생깁니다.
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min, // 💡 최소 크기로 압축
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppStyle.primary : AppStyle.primary.withOpacity(0.5),
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? AppStyle.primary : AppStyle.primary.withOpacity(0.5),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
