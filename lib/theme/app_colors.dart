@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Stitch 프로젝트 시안(홈·마이페이지·성취도 리포트)에서 추출한 색상.
-abstract final class AppStyle {
+abstract final class AppColors {
   // —— Material 3 토큰 (tailwind theme.extend.colors) ——
   static const Color primary = Color(0xFFD49A6A);
   static const Color onPrimary = Color(0xFFFFFFFF);
@@ -80,13 +80,4 @@ abstract final class AppStyle {
   static const Color darkNavBar = Color(0xFF1C1917);
   static const Color darkNavHover = Color(0xFF292524);
   static const Color darkMutedText = Color(0xFFA8A29E);
-
-  // 💡 [추가됨] 앱 전체에서 공통으로 쓸 그림자 속성!
-  static List<BoxShadow> get plushShadow => [
-        BoxShadow(
-          color: primary.withOpacity(0.15), // plushShadow 컬러 대신 primary 투명도로 통합 추천
-          blurRadius: 8,
-          offset: const Offset(0, 4),
-        ),
-      ];
 }
