@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_style.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_shadow.dart';
 
 class StatisticsScreen extends StatelessWidget {
   const StatisticsScreen({super.key});
@@ -7,7 +8,7 @@ class StatisticsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppStyle.background,
+      backgroundColor: AppColors.background,
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         physics: const AlwaysScrollableScrollPhysics(),
@@ -36,9 +37,9 @@ class _MonthlySummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppStyle.primaryContainer,
+        color: AppColors.primaryContainer,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppStyle.plushShadow,
+        boxShadow: AppShadows.plushShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,7 +56,7 @@ class _MonthlySummaryCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
-                        color: AppStyle.primary,
+                        color: AppColors.primary,
                         letterSpacing: 2.0,
                       ),
                     ),
@@ -65,7 +66,7 @@ class _MonthlySummaryCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: AppStyle.onPrimaryContainer,
+                        color: AppColors.onPrimaryContainer,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -74,7 +75,7 @@ class _MonthlySummaryCard extends StatelessWidget {
                       '지난달보다 12% 더 성장했어요!',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppStyle.secondary.withOpacity(0.9),
+                        color: AppColors.secondary.withOpacity(0.9),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -102,7 +103,7 @@ class _MonthlySummaryCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
-                  color: AppStyle.primary.withOpacity(0.7),
+                  color: AppColors.primary.withOpacity(0.7),
                 ),
               ),
               Text(
@@ -110,7 +111,7 @@ class _MonthlySummaryCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
-                  color: AppStyle.primary.withOpacity(0.7),
+                  color: AppColors.primary.withOpacity(0.7),
                 ),
               ),
             ],
@@ -128,7 +129,7 @@ class _MonthlySummaryCard extends StatelessWidget {
               widthFactor: 0.85, // 85% 달성
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppStyle.primary,
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -151,9 +152,9 @@ class _StatsGrid extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppStyle.surfaceContainerLowest,
+              color: AppColors.surfaceContainerLowest,
               borderRadius: BorderRadius.circular(24),
-              boxShadow: AppStyle.plushShadow,
+              boxShadow: AppShadows.plushShadow,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,12 +163,12 @@ class _StatsGrid extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: const BoxDecoration(
-                    color: AppStyle.statYellowLight,
+                    color: AppColors.statYellowLight,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.star,
-                    color: AppStyle.statYellowDark,
+                    color: AppColors.statYellowDark,
                     size: 20,
                   ),
                 ),
@@ -177,7 +178,7 @@ class _StatsGrid extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: AppStyle.secondary,
+                    color: AppColors.secondary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -186,7 +187,7 @@ class _StatsGrid extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
-                    color: AppStyle.onSurface,
+                    color: AppColors.onSurface,
                   ),
                 ),
               ],
@@ -198,9 +199,9 @@ class _StatsGrid extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppStyle.surfaceContainerLowest,
+              color: AppColors.surfaceContainerLowest,
               borderRadius: BorderRadius.circular(24),
-              boxShadow: AppStyle.plushShadow,
+              boxShadow: AppShadows.plushShadow,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,12 +210,12 @@ class _StatsGrid extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: const BoxDecoration(
-                    color: AppStyle.statSkyLight,
+                    color: AppColors.statSkyLight,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.water_drop,
-                    color: AppStyle.statSkyDark,
+                    color: AppColors.statSkyDark,
                     size: 20,
                   ),
                 ),
@@ -224,7 +225,7 @@ class _StatsGrid extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: AppStyle.secondary,
+                    color: AppColors.secondary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -233,7 +234,7 @@ class _StatsGrid extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: AppStyle.onSurface,
+                    color: AppColors.onSurface,
                     height: 1.2,
                   ),
                 ),
@@ -267,9 +268,9 @@ class _RoutineCalendar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppStyle.surfaceContainerLowest,
+        color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppStyle.plushShadow,
+        boxShadow: AppShadows.plushShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,7 +279,7 @@ class _RoutineCalendar extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 4),
             decoration: const BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: AppStyle.primaryContainer, width: 4),
+                bottom: BorderSide(color: AppColors.primaryContainer, width: 4),
               ),
             ),
             child: const Text(
@@ -286,7 +287,7 @@ class _RoutineCalendar extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: AppStyle.onSurface,
+                color: AppColors.onSurface,
                 letterSpacing: -0.5,
               ),
             ),
@@ -304,7 +305,7 @@ class _RoutineCalendar extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
-                    color: day == 'SUN' ? AppStyle.logoutCoral : AppStyle.onSurface,
+                    color: day == 'SUN' ? AppColors.logoutCoral : AppColors.onSurface,
                   ),
                 ),
               );
@@ -364,7 +365,7 @@ class _DayCell extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: isSunday ? AppStyle.logoutCoral : AppStyle.onSurface,
+            color: isSunday ? AppColors.logoutCoral : AppColors.onSurface,
           ),
         ),
 
@@ -395,9 +396,9 @@ class _ShareStreakCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
       decoration: BoxDecoration(
-        color: AppStyle.primaryContainer,
+        color: AppColors.primaryContainer,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppStyle.plushShadow,
+        boxShadow: AppShadows.plushShadow,
       ),
       child: Column(
         children: [
@@ -406,7 +407,7 @@ class _ShareStreakCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w800,
-              color: AppStyle.secondary,
+              color: AppColors.secondary,
             ),
           ),
           const SizedBox(height: 4),
@@ -415,7 +416,7 @@ class _ShareStreakCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w900,
-              color: AppStyle.onPrimaryContainer,
+              color: AppColors.onPrimaryContainer,
               letterSpacing: -1.0,
             ),
           ),
@@ -424,11 +425,11 @@ class _ShareStreakCard extends StatelessWidget {
             width: double.infinity,
             height: 56,
             decoration: BoxDecoration(
-              color: AppStyle.primary,
+              color: AppColors.primary,
               borderRadius: BorderRadius.circular(999),
               boxShadow: [
                 BoxShadow(
-                  color: AppStyle.primary.withOpacity(0.3),
+                  color: AppColors.primary.withOpacity(0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:routine_app/screen/login_screen.dart';
-import '../theme/app_style.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_shadow.dart';
 import '../provider/auth_provider.dart';
 import 'package:provider/provider.dart';
+import '../widget/app_modal.dart';
+import '../widget/custom_snackbar.dart';
 
 class MyPageScreen extends StatelessWidget {
   const MyPageScreen({super.key});
@@ -11,7 +14,7 @@ class MyPageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppStyle.background,
+      backgroundColor: AppColors.background,
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         physics: const AlwaysScrollableScrollPhysics(),
@@ -47,13 +50,13 @@ class _ProfileSection extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: const LinearGradient(
-                  colors: [AppStyle.primary, AppStyle.primaryContainer],
+                  colors: [AppColors.primary, AppColors.primaryContainer],
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppStyle.primary.withOpacity(0.2),
+                    color: AppColors.primary.withOpacity(0.2),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -62,9 +65,9 @@ class _ProfileSection extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppStyle.surfaceContainerLowest,
+                  color: AppColors.surfaceContainerLowest,
                   border: Border.all(
-                    color: AppStyle.surfaceContainerLowest,
+                    color: AppColors.surfaceContainerLowest,
                     width: 4,
                   ),
                 ),
@@ -76,43 +79,100 @@ class _ProfileSection extends StatelessWidget {
                 ),
               ),
             ),
-            // 편집 버튼
+            // 1. 프로필 이미지 수정 버튼
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppStyle.surfaceContainerLowest,
+                color: AppColors.surfaceContainerLowest,
                 shape: BoxShape.circle,
-                boxShadow: AppStyle.plushShadow,
+                boxShadow: AppShadows.plushShadow,
                 border: Border.all(
-                  color: AppStyle.surfaceContainer,
+                  color: AppColors.surfaceContainer,
                   width: 1,
                 ),
               ),
               child: const Icon(
                 Icons.edit,
-                color: AppStyle.primary,
+                color: AppColors.primary,
                 size: 16,
               ),
             ),
           ],
         ),
         const SizedBox(height: 16),
-        const Text(
-          '행복한 쿼카',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: AppStyle.onSurface,
-            letterSpacing: -0.5,
-          ),
+        
+        // 🚀 2. 닉네임과 버튼 영역 (양팔 저울 기법으로 완벽한 중앙 정렬 + 터치 오류 해결)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 💡 [핵심] 왼쪽 빈 공간: 오른쪽(간격 8 + 버튼 약 26)과 동일한 너비를 주어 중앙 정렬을 강제함
+            const SizedBox(width: 34), 
+            
+            // 닉네임 텍스트 (완벽한 정중앙에 위치함)
+            const Text(
+              '행복한 쿼카',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurface,
+                letterSpacing: -0.5,
+              ),
+            ),
+            
+            // 오른쪽 간격 + 실제 버튼
+            const SizedBox(width: 8),
+            GestureDetector(
+              // 버튼 클릭 영역을 확실하게 넓혀주기 위해 HitTestBehavior 추가
+              behavior: HitTestBehavior.opaque, 
+              onTap: () async {
+                // 모달창 호출
+                final newNickname = await AppModals.showNicknameEditDialog(
+                  context,
+                  currentNickname: '행복한 쿼카', // 임시 텍스트
+                );
+
+                if (!context.mounted) return;
+
+                if (newNickname != null && newNickname.isNotEmpty) {
+                  // TODO: 나중에 Provider 통해서 서버 데이터 갱신 로직 추가
+                  
+                  // 스낵바 알림 호출
+                  CustomSnackBar.show(
+                    context,
+                    message: '닉네임이 성공적으로 변경되었습니다.',
+                  );
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLowest,
+                  shape: BoxShape.circle,
+                  boxShadow: AppShadows.plushShadow,
+                  border: Border.all(
+                    color: AppColors.surfaceContainer,
+                    width: 1,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.edit,
+                  color: AppColors.primary,
+                  size: 12,
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8), // 닉네임과 인사말 간격 추가
+        
+        // 3. 인사말 텍스트 (단독 배치)
         const Text(
           '오늘도 포근한 하루 보내세요!',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: AppStyle.onSurfaceVariant,
+            color: AppColors.onSurfaceVariant,
           ),
         ),
       ],
@@ -132,10 +192,10 @@ class _StatsGrid extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppStyle.surfaceContainerLowest,
+              color: AppColors.surfaceContainerLowest,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppStyle.streakOrange.withOpacity(0.1)),
-              boxShadow: AppStyle.plushShadow,
+              border: Border.all(color: AppColors.streakOrange.withOpacity(0.1)),
+              boxShadow: AppShadows.plushShadow,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,12 +204,12 @@ class _StatsGrid extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: AppStyle.streakOrange.withOpacity(0.1),
+                    color: AppColors.streakOrange.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.local_fire_department,
-                    color: AppStyle.streakOrange,
+                    color: AppColors.streakOrange,
                     size: 20,
                   ),
                 ),
@@ -159,7 +219,7 @@ class _StatsGrid extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppStyle.secondary,
+                    color: AppColors.secondary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -168,7 +228,7 @@ class _StatsGrid extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
-                    color: AppStyle.streakOrange,
+                    color: AppColors.streakOrange,
                   ),
                 ),
               ],
@@ -181,10 +241,10 @@ class _StatsGrid extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppStyle.surfaceContainerLowest,
+              color: AppColors.surfaceContainerLowest,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppStyle.primary.withOpacity(0.05)),
-              boxShadow: AppStyle.plushShadow,
+              border: Border.all(color: AppColors.primary.withOpacity(0.05)),
+              boxShadow: AppShadows.plushShadow,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,12 +253,12 @@ class _StatsGrid extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: const BoxDecoration(
-                    color: AppStyle.tertiaryFixed,
+                    color: AppColors.tertiaryFixed,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.check_circle,
-                    color: AppStyle.tertiary,
+                    color: AppColors.tertiary,
                     size: 20,
                   ),
                 ),
@@ -208,7 +268,7 @@ class _StatsGrid extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppStyle.secondary,
+                    color: AppColors.secondary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -217,7 +277,7 @@ class _StatsGrid extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
-                    color: AppStyle.onSurface,
+                    color: AppColors.onSurface,
                   ),
                 ),
               ],
@@ -244,7 +304,7 @@ class _SettingsSection extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: AppStyle.secondary,
+              color: AppColors.secondary,
               letterSpacing: 1.5,
             ),
           ),
@@ -257,7 +317,7 @@ class _SettingsSection extends StatelessWidget {
           title: '알림 설정',
           trailing: CupertinoSwitch(
             value: true,
-            activeColor: AppStyle.primary,
+            activeColor: AppColors.primary,
             onChanged: (value) {},
           ),
         ),
@@ -271,15 +331,25 @@ class _SettingsSection extends StatelessWidget {
         ),
         const SizedBox(height: 8),
 
-        // 3. 고객센터
+        // 3. 비밀번호 변경
+        const _SettingTile(
+          icon: Icons.lock,
+          title: '비밀번호 변경',
+          showChevron: true,
+          onTap: null,
+        ),
+        const SizedBox(height: 16),
+
+        // 4. 고객센터
         const _SettingTile(
           icon: Icons.support_agent,
           title: '고객센터',
           showChevron: true,
+          onTap: null, // 나중에 고객센터 페이지로 이동하는 기능 추가 예정
         ),
         const SizedBox(height: 16),
 
-        // 4. 로그아웃 (포인트 컬러 적용)
+        // 5. 로그아웃 (포인트 컬러 적용)
         _SettingTile(
           icon: Icons.logout,
           title: '로그아웃',
@@ -325,20 +395,20 @@ class _SettingTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color iconBgColor = isDestructive 
-        ? AppStyle.logoutCoral.withOpacity(0.1) 
-        : AppStyle.primaryFixed.withOpacity(0.5);
+        ? AppColors.logoutCoral.withOpacity(0.1) 
+        : AppColors.primaryFixed.withOpacity(0.5);
     final Color iconColor = isDestructive 
-        ? AppStyle.logoutCoral 
-        : AppStyle.onSurfaceVariant;
+        ? AppColors.logoutCoral 
+        : AppColors.onSurfaceVariant;
     final Color titleColor = isDestructive 
-        ? AppStyle.secondary 
-        : AppStyle.onSurface;
+        ? AppColors.secondary 
+        : AppColors.onSurface;
 
     return Container(
       decoration: BoxDecoration(
-        color: AppStyle.surfaceContainerLowest,
+        color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: AppStyle.plushShadow,
+        boxShadow: AppShadows.plushShadow,
       ),
       child: Material(
         color: Colors.transparent,
@@ -373,7 +443,7 @@ class _SettingTile extends StatelessWidget {
                 if (showChevron)
                   const Icon(
                     Icons.chevron_right,
-                    color: AppStyle.outlineVariant,
+                    color: AppColors.outlineVariant,
                   ),
               ],
             ),

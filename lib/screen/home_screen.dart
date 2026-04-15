@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_style.dart'; // 💡 전역 스타일 파일 임포트
+import '../theme/app_colors.dart';
+import '../theme/app_shadow.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -12,7 +13,7 @@ class HomeScreen extends StatelessWidget {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
-      backgroundColor: AppStyle.background,
+      backgroundColor: AppColors.background,
       // 🚨 AppBar 삭제됨: MainScreen이 이미 그려주고 있으므로 여기선 필요 없습니다!
       
       body: ListView(
@@ -32,7 +33,7 @@ class HomeScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: AppStyle.primary,
+                  color: AppColors.primary,
                 ),
               ),
               Text(
@@ -40,7 +41,7 @@ class HomeScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: AppStyle.secondary,
+                  color: AppColors.secondary,
                 ),
               ),
             ],
@@ -79,14 +80,14 @@ class HomeScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
                 boxShadow: [
                   BoxShadow(
-                    color: AppStyle.primary.withOpacity(0.2),
+                    color: AppColors.primary.withOpacity(0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 8),
                   ),
                 ],
               ),
               child: Material(
-                color: AppStyle.primary,
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(999),
                 child: InkWell(
                   onTap: () {},
@@ -140,9 +141,9 @@ class HomeWeekCalendar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: AppStyle.surfaceContainerLowest, // 💡 불필요한 ?? 구문 제거
+        color: AppColors.surfaceContainerLowest, // 💡 불필요한 ?? 구문 제거
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppStyle.plushShadow, // 💡 전역 그림자 적용!
+        boxShadow: AppShadows.plushShadow, // 💡 전역 그림자 적용!
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -173,22 +174,22 @@ class _DayColumn extends StatelessWidget {
           width: 40, height: 40,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: AppStyle.primary, 
+            color: AppColors.primary, 
             shape: BoxShape.circle, 
-            boxShadow: AppStyle.plushShadow // 💡 전역 그림자 적용!
+            boxShadow: AppShadows.plushShadow // 💡 전역 그림자 적용!
           ),
           child: Text(day, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
         );
       case _DayStyle.saturday:
-        dayChip = SizedBox(width: 40, height: 40, child: Center(child: Text(day, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppStyle.primary))));
+        dayChip = SizedBox(width: 40, height: 40, child: Center(child: Text(day, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary))));
       case _DayStyle.plain:
-        dayChip = SizedBox(width: 40, height: 40, child: Center(child: Text(day, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppStyle.onSurface))));
+        dayChip = SizedBox(width: 40, height: 40, child: Center(child: Text(day, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onSurface))));
     }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppStyle.secondary)),
+        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.secondary)),
         const SizedBox(height: 8),
         dayChip,
       ],
@@ -210,8 +211,8 @@ class HomeCheerBanner extends StatelessWidget {
             Container(
               width: double.infinity, 
               decoration: BoxDecoration(
-                color: AppStyle.primaryContainer, 
-                boxShadow: AppStyle.plushShadow // 💡 전역 그림자 적용!
+                color: AppColors.primaryContainer, 
+                boxShadow: AppShadows.plushShadow // 💡 전역 그림자 적용!
               ),
             ),
             Positioned(top: -40, right: -40, child: Container(width: 128, height: 128, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.3)))),
@@ -222,9 +223,9 @@ class HomeCheerBanner extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('오늘의 응원', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppStyle.secondary)),
+                    Text('오늘의 응원', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.secondary)),
                     SizedBox(height: 4),
-                    Text('오늘도 힘내요!\n쿼카가 응원할게요', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, height: 1.25, color: AppStyle.onPrimaryContainer)),
+                    Text('오늘도 힘내요!\n쿼카가 응원할게요', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, height: 1.25, color: AppColors.onPrimaryContainer)),
                   ],
                 ),
               ),
@@ -259,9 +260,9 @@ class _RoutineCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: completed ? AppStyle.surfaceContainerLow.withOpacity(0.3) : AppStyle.surfaceContainerLowest, // 💡 불필요한 ?? 구문 제거
+        color: completed ? AppColors.surfaceContainerLow.withOpacity(0.3) : AppColors.surfaceContainerLowest, // 💡 불필요한 ?? 구문 제거
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppStyle.plushShadow, // 💡 전역 그림자 적용!
+        boxShadow: AppShadows.plushShadow, // 💡 전역 그림자 적용!
       ),
       child: Row(
         children: [
@@ -270,14 +271,14 @@ class _RoutineCard extends StatelessWidget {
               opacity: completed ? 0.5 : 1.0,
               child: Row(
                 children: [
-                  Container(width: 48, height: 48, decoration: BoxDecoration(color: iconBackground, borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: AppStyle.primary, size: 26)),
+                  Container(width: 48, height: 48, decoration: BoxDecoration(color: iconBackground, borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: AppColors.primary, size: 26)),
                   const SizedBox(width: 16),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, decoration: completed ? TextDecoration.lineThrough : null)),
                       const SizedBox(height: 2),
-                      Text(subtitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppStyle.secondary)),
+                      Text(subtitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.secondary)),
                     ],
                   ),
                 ],
@@ -288,11 +289,11 @@ class _RoutineCard extends StatelessWidget {
           Container(
             width: 32, height: 32,
             decoration: BoxDecoration(
-              color: completed ? AppStyle.primary : Colors.transparent,
+              color: completed ? AppColors.primary : Colors.transparent,
               shape: BoxShape.circle,
-              border: completed ? null : Border.all(color: AppStyle.primary.withOpacity(0.3), width: 2),
+              border: completed ? null : Border.all(color: AppColors.primary.withOpacity(0.3), width: 2),
             ),
-            child: Icon(Icons.check, color: completed ? Colors.white : AppStyle.primary.withOpacity(0.35), size: 18),
+            child: Icon(Icons.check, color: completed ? Colors.white : AppColors.primary.withOpacity(0.35), size: 18),
           ),
         ],
       ),
