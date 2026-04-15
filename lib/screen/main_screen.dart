@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_style.dart';
+import '../theme/app_colors.dart';
 import 'home_screen.dart';
 import 'mypage_screen.dart';
 import 'statistics_screen.dart';
@@ -32,12 +32,12 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppStyle.background,
+      backgroundColor: AppColors.background,
       // 상단바
       appBar: AppBar(
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: AppStyle.background.withOpacity(0.94),
+        backgroundColor: AppColors.background.withOpacity(0.94),
         surfaceTintColor: Colors.transparent,
         toolbarHeight: 64,
         leadingWidth: 72,
@@ -48,14 +48,14 @@ class _MainScreenState extends State<MainScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppStyle.primaryContainer,
+                color: AppColors.primaryContainer,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppStyle.primary.withOpacity(0.2),
+                  color: AppColors.primary.withOpacity(0.2),
                   width: 2,
                 ),
               ),
-              child: const Icon(Icons.person, color: AppStyle.primary, size: 22),
+              child: const Icon(Icons.person, color: AppColors.primary, size: 22),
             ),
           ),
         ),
@@ -65,13 +65,13 @@ class _MainScreenState extends State<MainScreen> {
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: AppStyle.primary,
+            color: AppColors.primary,
           ),
         ),
         actions: [
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.calendar_today_outlined, color: AppStyle.primary),
+            icon: const Icon(Icons.calendar_today_outlined, color: AppColors.primary),
           ),
           const SizedBox(width: 8),
         ],
@@ -102,10 +102,10 @@ class _StitchBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppStyle.background.withOpacity(0.94),
+        color: AppColors.background.withOpacity(0.94),
         border: Border(
           top: BorderSide(
-            color: AppStyle.primary.withOpacity(0.1),
+            color: AppColors.primary.withOpacity(0.1),
             width: 1,
           ),
         ),
@@ -170,7 +170,7 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? AppStyle.primary : AppStyle.primary.withOpacity(0.5),
+              color: isSelected ? AppColors.primary : AppColors.primary.withOpacity(0.5),
               size: 24,
             ),
             const SizedBox(height: 4),
@@ -179,7 +179,7 @@ class _NavItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? AppStyle.primary : AppStyle.primary.withOpacity(0.5),
+                color: isSelected ? AppColors.primary : AppColors.primary.withOpacity(0.5),
               ),
             ),
           ],
