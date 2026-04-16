@@ -1,6 +1,7 @@
 package com.doday.dev.doday.controller;
 
 import com.doday.dev.doday.common.ApiResponse;
+import com.doday.dev.doday.domain.User;
 import com.doday.dev.doday.dto.LoginRequestDto;
 import com.doday.dev.doday.dto.SignupRequestDto;
 import com.doday.dev.doday.dto.UpdateProfileRequestDto;
@@ -51,5 +52,12 @@ public class UserController {
         Long userId = (Long) request.getAttribute("userId");
         String imageUrl = userService.uploadProfileImage(userId, file);
         return ApiResponse.success(imageUrl);
+    }
+    
+    @ApiOperation(value = "프로필 조회", notes = "내 프로필 정보 조회")
+    @GetMapping("/me")
+    public ApiResponse<User> getMe(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return ApiResponse.success(userService.getMe(userId));
     }
 }

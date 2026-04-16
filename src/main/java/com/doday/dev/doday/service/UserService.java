@@ -142,4 +142,13 @@ public class UserService {
             throw new RuntimeException("이미지 업로드 실패: " + e.getMessage());
         }
     }
+
+    public User getMe(Long userId) {
+        User user  = userMapper.findById(userId);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage());
+        }
+        user.setPassword(null);
+        return user;
+    }
 }
