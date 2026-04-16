@@ -35,6 +35,9 @@ public class UserService {
     @Value("${upload.dir}")
     private String uploadDir;
 
+    @Value("${server.url}")
+    private String serverUrl;
+
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
 
@@ -74,7 +77,11 @@ public class UserService {
         if (existing == null) {
             throw new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage());
         }
-        existing.setNickname(dto.getNickname());
+
+        // null 이면 기존값 유지
+        if (dto.getNickname() != null) {
+            existing.setNickname(dto.getNickname());
+        }
 
         if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
             existing.setPassword(encoder.encode(dto.getPassword()));
@@ -130,8 +137,8 @@ public class UserService {
             writer.write(null, new IIOImage(image, null, null), writeParam);
             writer.dispose();
 
-            // DB에 경로 저장
-            String imagePath = "/uploads/profile/" + fileName;
+            // 풀 URL로 DB에 저장
+            String imagePath = serverUrl + "/uploads/profile/" + fileName;
             User user = userMapper.findById(userId);
             user.setProfileImage(imagePath);
             userMapper.update(user);
