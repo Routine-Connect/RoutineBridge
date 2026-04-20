@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../provider/auth_provider.dart';
+import '../provider/user_provider.dart';
 import '../theme/app_colors.dart';
 import '../widget/custom_snackbar.dart';
 import 'main_screen.dart';
@@ -51,7 +52,9 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() { _isLoading = false; });
 
     if (errorMessage == null) {
-      // 성공 시에는 스낵바를 생략하고 바로 메인 화면으로 전환 (UX 최적화)
+      // 성공 시에는 유저 정보를 불러오는 로직을 실행한 후 메인 화면으로 이동
+      await Provider.of<UserProvider>(context, listen: false).loadMyProfile();
+
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const MainScreen()),
       );
