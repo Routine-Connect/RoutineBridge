@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.doday.dev.doday.mapper.NotificationSettingsMapper">
+
+    <select id="findByUserId" resultType="com.doday.dev.doday.domain.NotificationSettings">
+        SELECT * FROM NotificationSettings WHERE user_id = #{userId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO NotificationSettings (user_id, is_push_enabled, is_routine_noti_enabled, is_marketing_enabled)
+        VALUES (#{userId}, #{isPushEnabled}, #{isRoutineNotiEnabled}, #{isMarketingEnabled})
+    </insert>
+
+    <update id="update">
+        UPDATE NotificationSettings
+        SET is_push_enabled = #{isPushEnabled},
+            is_routine_noti_enabled = #{isRoutineNotiEnabled},
+            is_marketing_enabled = #{isMarketingEnabled}
+        WHERE user_id = #{userId}
+    </update>
+
+</mapper>
