@@ -16,7 +16,7 @@
 
     <mvc:resources mapping="swagger-ui.html" location="classpath:/META-INF/resources/" />
     <mvc:resources mapping="/webjars/**" location="classpath:/META-INF/resources/webjars/" />
-    <mvc:resources mapping="/uploads/**" location="file:///D:/app_development/uploads/profile/"/>
+    <mvc:resources mapping="/uploads/**" location="file:///D:/app_development/uploads/"/>
 
     <context:property-placeholder location="classpath:db.properties" />
 
