@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_shadow.dart';
+import 'custom_snackbar.dart';
+import 'package:provider/provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../provider/user_provider.dart';
 
 class AppModals {
   
@@ -254,6 +258,181 @@ class AppModals {
                       },
                       child: const Text('루틴 추가하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+  // 🚀 비밀번호 변경 모달 (Center Dialog)
+  static Future<String?> showPasswordEditDialog(BuildContext context) async {
+    final TextEditingController newPasswordController = TextEditingController();
+    final TextEditingController confirmPasswordController = TextEditingController();
+
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: AppColors.surfaceContainerLowest,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('비밀번호 변경', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.onSurface)),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: newPasswordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: '새로운 비밀번호',
+                    filled: true, fillColor: AppColors.surfaceContainer,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: confirmPasswordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: '비밀번호 확인',
+                    filled: true, fillColor: AppColors.surfaceContainer,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('취소', style: TextStyle(color: AppColors.onSurfaceVariant)),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: AppColors.onPrimary),
+                      onPressed: () {
+                        if (newPasswordController.text != confirmPasswordController.text) {
+                          CustomSnackBar.show(context, message: '비밀번호가 일치하지 않습니다.', isError: true);
+                          return;
+                        }
+                        Navigator.pop(context, newPasswordController.text);
+                      },
+                      child: const Text('저장', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // 🔔 알림 설정 메뉴를 누를 때 호출되는 함수
+  static Future<void> showNotificationSettingsBottomSheet(BuildContext context) async {
+    // 1. 바텀 시트 열기 전에 먼저 권한 상태 확인
+    PermissionStatus status = await Permission.notification.status;
+
+    if (status.isDenied) {
+      // 🚨 거부 상태라면? -> OS 권한 팝업을 다시 띄움
+      status = await Permission.notification.request();
+      // 만약 팝업 떴는데 또 거절하면 바텀 시트 안 열고 종료
+      if (!status.isGranted && !status.isPermanentlyDenied) return;
+    }
+
+    if (status.isPermanentlyDenied) {
+      // 🚨 '항상 거부' 상태라면? -> 설정창으로 유도하는 안내창 띄움
+      if (!context.mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('알림 권한 필요'),
+          content: const Text('스마트폰 설정에서 알림 권한을 허용해 주세요.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+            TextButton(
+              onPressed: () {
+                openAppSettings(); // 기기 설정창 열기
+                Navigator.pop(context);
+              }, 
+              child: const Text('설정으로 이동')
+            ),
+          ],
+        ),
+      );
+      return; // 설정창 안내를 띄웠으므로 바텀 시트는 열지 않음
+    }
+
+    // 2. 권한이 허용된 상태라면 서버에서 데이터를 불러오고 바텀 시트를 엽니다.
+    if (!context.mounted) return;
+    Provider.of<UserProvider>(context, listen: false).loadNotificationSettings();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (BuildContext context) {
+        return Consumer<UserProvider>(
+          builder: (context, userProvider, child) {
+            final settings = userProvider.notificationSettings;
+
+            if (settings == null) {
+              return const SizedBox(height: 300, child: Center(child: CircularProgressIndicator()));
+            }
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('알림 세부 설정', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 24),
+                  
+                  // 스위치 로직은 기존과 동일 (이미 위에서 권한을 받았으므로 바로 통신)
+                  SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('앱 알림 전체 켜기'),
+                    subtitle: const Text('앱에서 보내는 모든 알림을 제어합니다.'),
+                    value: settings.isPushEnabled,
+                    onChanged: (value) {
+                      final newSettings = settings.copyWith(
+                        isPushEnabled: value,
+                        isRoutineNotiEnabled: value ? settings.isRoutineNotiEnabled : false,
+                        isMarketingEnabled: value ? settings.isMarketingEnabled : false,
+                      );
+                      userProvider.updateNotification(newSettings);
+                    },
+                  ),
+                  const Divider(),
+                  SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('루틴 리마인더'),
+                    value: settings.isRoutineNotiEnabled,
+                    onChanged: settings.isPushEnabled ? (value) {
+                      userProvider.updateNotification(settings.copyWith(isRoutineNotiEnabled: value));
+                    } : null,
+                  ),
+                  SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('이벤트 및 혜택 알림'),
+                    value: settings.isMarketingEnabled,
+                    onChanged: settings.isPushEnabled ? (value) {
+                      userProvider.updateNotification(settings.copyWith(isMarketingEnabled: value));
+                    } : null,
                   ),
                   const SizedBox(height: 24),
                 ],
