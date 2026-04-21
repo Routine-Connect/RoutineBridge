@@ -1,224 +1,222 @@
-# 📅 DoDay — Backend
+# 🐾 DoDay — 백엔드 서버
 
 > **"작은 습관이 내일의 나를 만든다"**
-> 두데이(DoDay) 루틴 관리 앱의 백엔드 서버 레포지토리입니다.
+> 루틴 관리 앱 DoDay의 Spring MVC 기반 백엔드 REST API 서버입니다.
 
----
-
-## 📌 프로젝트 소개
-
-**두데이(DoDay)** 는 매일의 작은 습관을 기록하고 시각화하는 개인화 루틴 관리 서비스입니다.
-
-작심삼일에 그치는 대학생, 취준생을 위해 루틴 설정 → 데일리 체크 → 성취도 리포트까지
-하나의 앱에서 경험할 수 있도록 설계했습니다.
-
-> 🤝 **협업 구조**: 백엔드(본 레포) + Flutter 앱(별도 레포) 으로 구성된 팀 프로젝트입니다.
-
----
-
-## 👨‍💻 담당 역할
-
-| 구분 | 내용 |
-|------|------|
-| 담당자 | 백엔드 개발자 |
-| 역할 | REST API 설계 및 구현, DB 설계, 서버 배포 |
-| 협업 방식 | Swagger로 API 명세 공유, ngrok → AWS EC2 순차 배포 |
-
----
+<br />
 
 ## 🛠️ 기술 스택
 
-### Backend
-| 기술 | 버전 | 용도 |
-|------|------|------|
-| Java | 17 | 메인 언어 |
-| Spring MVC | 5.3.31 | 웹 프레임워크 (레거시) |
-| MyBatis | 3.5.13 | ORM (SQL Mapper) |
-| Spring Security | 5.x | 인증/인가 |
-| JWT | - | 토큰 기반 인증 |
-
-### Database
-| 기술 | 버전 | 용도 |
-|------|------|------|
-| MySQL | 8.x | 메인 DB |
-| commons-dbcp2 | 2.9.0 | 커넥션 풀 |
-
-### DevOps & Tools
-| 기술 | 용도 |
+| 분류 | 기술 |
 |------|------|
-| Apache Tomcat 9 | WAS |
-| Maven | 빌드 도구 |
-| ngrok | 로컬 터널링 (개발 단계) |
-| AWS EC2 | 서버 배포 (예정) |
-| Docker | 컨테이너화 (예정) |
-| Swagger (springfox 2.9.2) | API 문서화 |
-| Git / GitHub | 버전 관리 |
-| IntelliJ IDEA | IDE |
+| Language | Java 17 |
+| Framework | Spring MVC 5.3.31 |
+| ORM | MyBatis 1.3.3 |
+| Database | MySQL 8.x |
+| Auth | JWT (jjwt 0.11.5) |
+| Security | Spring Security 5.8.13 |
+| Server | Apache Tomcat 9 |
+| Build | Maven |
+| Docs | Springfox Swagger 2.9.2 |
+| Etc | Lombok, commons-fileupload, webp-imageio |
 
----
-
-## 🗄️ DB 스키마
-
-```sql
--- 1. 사용자 테이블
-CREATE TABLE `Users` (
-  `id`         BIGINT       NOT NULL AUTO_INCREMENT,
-  `email`      VARCHAR(100) NOT NULL,
-  `password`   VARCHAR(255) NOT NULL,
-  `nickname`   VARCHAR(50)  NOT NULL,
-  `gender`     CHAR(1)      NOT NULL DEFAULT 'm', -- 'm' or 'w'
-  `created_at` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_email` (`email`)
-);
-
--- 2. 루틴 설정 테이블
-CREATE TABLE `Routines` (
-  `id`           BIGINT       NOT NULL AUTO_INCREMENT,
-  `user_id`      BIGINT       NOT NULL,
-  `title`        VARCHAR(100) NOT NULL,
-  `days_of_week` VARCHAR(20)  NOT NULL,  -- 예: "MON,TUE,WED"
-  `alarm_time`   TIME,
-  `is_active`    BOOLEAN      NOT NULL DEFAULT TRUE,
-  `created_at`   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_routines_user_id`
-    FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`) ON DELETE CASCADE
-);
-
--- 3. 루틴 수행 기록 테이블
-CREATE TABLE `RoutineLogs` (
-  `id`           BIGINT  NOT NULL AUTO_INCREMENT,
-  `routine_id`   BIGINT  NOT NULL,
-  `check_date`   DATE    NOT NULL,
-  `is_completed` BOOLEAN NOT NULL DEFAULT FALSE,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_routinelogs_routine_id`
-    FOREIGN KEY (`routine_id`) REFERENCES `Routines` (`id`) ON DELETE CASCADE
-);
-
--- 4. 인덱스
-CREATE INDEX idx_routinelogs_routine_date
-ON RoutineLogs (routine_id, check_date);
-
--- 5. 한글 인코딩 설정
-ALTER TABLE Users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-ALTER TABLE Routines CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-ALTER TABLE RoutineLogs CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
----
+<br />
 
 ## 📁 프로젝트 구조
 
 ```
-src/
-└── main/
-    ├── java/com/doday/dev/doday/
-    │   ├── config/          # SwaggerConfig 등 설정 클래스
-    │   ├── controller/      # REST API 컨트롤러
-    │   ├── service/         # 비즈니스 로직
-    │   ├── mapper/          # MyBatis Mapper 인터페이스
-    │   ├── domain/          # VO (User, Routine, RoutineLog)
-    │   └── common/          # ApiResponse, ErrorCode, JwtUtil 등
-    └── resources/
-        ├── mappers/         # MyBatis Mapper XML (SQL)
-        └── db.properties    # DB 접속 정보 (gitignore 처리)
+src/main/java/com/doday/dev/doday/
+├── controller/
+│   ├── UserController.java         # 유저 API
+│   ├── RoutineController.java      # 루틴 API
+│   ├── StatsController.java        # 통계 API
+│   ├── CalendarController.java     # 캘린더 API
+│   └── NotificationController.java # 알림 설정 API
+├── service/
+│   ├── UserService.java
+│   ├── RoutineService.java
+│   ├── StatsService.java
+│   ├── CalendarService.java
+│   └── NotificationService.java
+├── mapper/
+│   ├── UserMapper.java
+│   ├── RoutineMapper.java
+│   ├── RoutineLogMapper.java
+│   └── NotificationSettingsMapper.java
+├── domain/
+│   ├── User.java
+│   ├── Routine.java
+│   ├── RoutineLog.java
+│   └── NotificationSettings.java
+├── dto/
+│   ├── SignupRequestDto.java
+│   ├── LoginRequestDto.java
+│   ├── UpdateProfileRequestDto.java
+│   └── NotificationSettingsDto.java
+└── common/
+    ├── ApiResponse.java
+    ├── ErrorCode.java
+    ├── GlobalExceptionHandler.java
+    └── JwtAuthenticationFilter.java
 ```
 
----
+<br />
 
-## 🔌 API 명세
+## 🗄️ DB 스키마
 
-> Swagger UI: `http://localhost:8080/swagger-ui.html`
+```sql
+CREATE TABLE Users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    nickname VARCHAR(50) NOT NULL,
+    gender CHAR(1) NOT NULL DEFAULT 'm',
+    profile_image VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-| 메서드 | 엔드포인트 | 설명 |
-|--------|-----------|------|
-| POST | `/api/users/signup` | 회원가입 |
-| POST | `/api/users/login` | 로그인 (JWT 반환) |
-| PUT | `/api/users/me` | 프로필 수정 |
-| GET | `/api/routines` | 루틴 목록 조회 |
-| GET | `/api/routines/{id}` | 루틴 단건 조회 |
-| POST | `/api/routines` | 루틴 생성 |
-| PUT | `/api/routines/{id}` | 루틴 수정 |
-| DELETE | `/api/routines/{id}` | 루틴 삭제 |
-| GET | `/api/routines/today` | 오늘의 루틴 조회 |
-| POST | `/api/routines/{id}/check` | 루틴 완료 체크 |
-| GET | `/api/stats/monthly` | 월간 통계 |
-| GET | `/api/stats/weekly` | 주간 통계 |
-| GET | `/api/stats/streak` | 스트릭 조회 |
+CREATE TABLE Routines (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    days_of_week VARCHAR(20) NOT NULL,
+    alarm_time TIME,
+    is_active BOOLEAN DEFAULT TRUE,
+    icon_id INT DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
 
----
+CREATE TABLE RoutineLogs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    routine_id BIGINT NOT NULL,
+    check_date DATE NOT NULL,
+    is_completed BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (routine_id) REFERENCES Routines(id)
+);
 
-## 📅 개발 로드맵
-
+CREATE TABLE NotificationSettings (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE,
+    is_push_enabled BOOLEAN DEFAULT TRUE,
+    is_routine_noti_enabled BOOLEAN DEFAULT TRUE,
+    is_marketing_enabled BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
 ```
-✅ 1주차  환경 세팅, DB 연결, ngrok, Swagger 구성
-✅ 2주차  회원가입 / 로그인 / JWT 인증 / JWT 검증 필터
-✅ 3주차  루틴 CRUD / JWT 권한 체크
-✅ 4주차  데일리 체크리스트
-✅ 5주차  성취도 리포트 (월간/주간 통계, 스트릭)
-🔄 6주차  예외처리 고도화 / 프로필 수정
-⬜ 7주차  Docker + AWS EC2 배포
-⬜ 8주차  마무리 / 포트폴리오 정리
+
+<br />
+
+## 📡 API 명세
+
+### 👤 User API
+
+| Method | URL | 설명 | 인증 |
+|--------|-----|------|------|
+| POST | /api/users/signup | 회원가입 | ❌ |
+| POST | /api/users/login | 로그인 | ❌ |
+| GET | /api/users/me | 프로필 조회 | ✅ |
+| PUT | /api/users/me | 프로필 수정 (닉네임/비밀번호) | ✅ |
+| POST | /api/users/me/image | 프로필 이미지 업로드 | ✅ |
+| GET | /api/users/me/notifications | 알림 설정 조회 | ✅ |
+| PUT | /api/users/me/notifications | 알림 설정 변경 | ✅ |
+
+### 📅 Routine API
+
+| Method | URL | 설명 | 인증 |
+|--------|-----|------|------|
+| GET | /api/routines | 루틴 목록 조회 | ✅ |
+| GET | /api/routines/{id} | 루틴 단건 조회 | ✅ |
+| POST | /api/routines | 루틴 생성 | ✅ |
+| PUT | /api/routines/{id} | 루틴 수정 | ✅ |
+| DELETE | /api/routines/{id} | 루틴 삭제 | ✅ |
+| GET | /api/routines/today | 오늘의 루틴 조회 | ✅ |
+| POST | /api/routines/{id}/check | 루틴 완료 토글 | ✅ |
+
+### 📊 Stats API
+
+| Method | URL | 설명 | 인증 |
+|--------|-----|------|------|
+| GET | /api/stats/monthly | 월간 달성률 통계 | ✅ |
+| GET | /api/stats/weekly | 주간 달성률 통계 | ✅ |
+| GET | /api/stats/streak | 스트릭 조회 | ✅ |
+
+### 📆 Calendar API
+
+| Method | URL | 설명 | 인증 |
+|--------|-----|------|------|
+| GET | /api/calendar/monthly | 월간 캘린더 루틴 목록 | ✅ |
+
+<br />
+
+## 🔐 공통 응답 포맷
+
+```json
+{
+    "success": true,
+    "data": {},
+    "error": null
+}
 ```
 
----
+### 에러 코드
 
-## ⚙️ 로컬 실행 방법
+| 코드 | 설명 |
+|------|------|
+| U001 | 이미 사용 중인 이메일 |
+| U002 | 유저를 찾을 수 없음 |
+| U003 | 비밀번호 불일치 |
+| R001 | 루틴을 찾을 수 없음 |
+| R002 | 루틴 접근 권한 없음 |
+| A001 | 토큰이 없음 |
+| A002 | 유효하지 않은 토큰 |
+| F001 | 허용되지 않는 파일 형식 |
+| F002 | 파일 크기 초과 (5MB) |
 
-### 1. 레포 클론
+<br />
+
+## 🚀 로컬 실행 방법
+
 ```bash
+# 1. 레포 클론
 git clone https://github.com/{username}/doday.git
-cd doday
-git checkout backend
+
+# 2. db.properties 설정
+db.url=jdbc:mysql://localhost:3306/doday?serverTimezone=UTC&useSSL=false&characterEncoding=UTF-8&useUnicode=true&allowPublicKeyRetrieval=true
+db.username=YOUR_USERNAME
+db.password=YOUR_PASSWORD
+jwt.secret=YOUR_JWT_SECRET
+server.url=http://localhost:8080
+
+# 3. Tomcat 9 서버 실행
 ```
 
-### 2. DB 설정
-`src/main/resources/db.properties` 파일 생성 후 아래 내용 입력:
-```properties
-db.url=jdbc:mysql://localhost:3306/doday?serverTimezone=UTC&useSSL=false&characterEncoding=UTF-8&useUnicode=true
-db.username=your_username
-db.password=your_password
-jwt.secret=your_jwt_secret_key
-```
+<br />
 
-### 3. MySQL 테이블 생성
-위 DB 스키마 SQL 실행
+## 🔗 관련 레포지토리
 
-### 4. Tomcat 실행
-IntelliJ에서 Smart Tomcat 플러그인으로 실행
+| 레포 | 설명 |
+|------|------|
+| [doday-landing](https://github.com/{username}/doday-landing) | React 랜딩페이지 |
+| [doday-app](https://github.com/{username}/doday-app) | Flutter 앱 (협업 중) |
 
-### 5. Swagger 접속
-```
-http://localhost:8080/swagger-ui.html
-```
+<br />
 
----
+## 📌 주요 설계 결정
 
-## 🔐 보안 주의사항
+| 항목 | 결정 | 이유 |
+|------|------|------|
+| 루틴 삭제 | Hard Delete + CASCADE 제거 | 과거 통계 데이터 보존 |
+| 통계 형식 | Boolean → Double (%) | 하루 n개 중 완료 개수 기반 정확한 달성률 |
+| 이미지 저장 | 서버 로컬 + WebP 변환 | 용량 최적화 (30~50% 절감) |
+| 알림 설정 | 별도 테이블 (1:1) | 확장성 (방해금지 시간 등 추가 용이) |
+| JWT 방식 | Request Attribute | 세션 방식 아닌 무상태 인증 |
 
-- `db.properties` 는 `.gitignore` 에 등록되어 있으며 **절대 커밋하지 않습니다**
-- JWT Secret Key는 `db.properties` 에서 관리합니다
-
----
-
-## 📬 협업 관련
-
-- API 명세는 Swagger로 공유
-- 브랜치 전략: `main` ← `backend` / `frontend` 분리 운영
-- 커밋 컨벤션:
-
-```
-feat:     새 기능 추가
-fix:      버그 수정
-refactor: 코드 리팩토링
-docs:     문서 수정
-chore:    빌드/설정 변경
-```
+<br />
 
 ---
 
 <div align="center">
-  <sub>Built with ☕ and 💪 | DoDay Backend</sub>
+  <sub>Built with ☕ | DoDay Backend Server</sub>
 </div>
