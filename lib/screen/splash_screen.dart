@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import '../provider/auth_provider.dart';
+import '../provider/user_provider.dart';
+import '../theme/app_colors.dart';
 import 'login_screen.dart';
-import 'main_screen.dart'; // 하단 네비게이션바가 있는 메인 화면
+import 'main_screen.dart'; 
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,7 +23,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   // 💡 앱 진입 시 필요한 초기화 작업 진행
   Future<void> _initializeApp() async {
-    // 1. 알림 권한 묻기 (시스템 팝업 호출)
+    // 1. 알림 권한 묻기
     await Permission.notification.request();
 
     // 2. 유저가 로고를 볼 수 있도록 약간의 딜레이 (1.5초)
@@ -29,14 +31,19 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    // 3. 스토리지에서 JWT 토큰 확인 (자동 로그인)
+    // 3. 스토리지에서 JWT 토큰 확인
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     await authProvider.loadToken();
 
     if (!mounted) return;
 
-    // 4. 토큰 유무에 따라 목적지로 라우팅 (pushReplacement로 뒤로가기 방지)
+    // 4. 토큰 유무에 따라 라우팅
     if (authProvider.isAuthenticated) {
+      
+      // 메인 화면으로 넘어가기 '직전'에 내 최신 프로필 정보를 백엔드에서 싹 당겨옵니다!
+      await context.read<UserProvider>().loadMyProfile();
+
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const MainScreen()),
       );
@@ -49,22 +56,34 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 💡 초기화 로직이 도는 동안 유저에게 보여줄 화면
     return Scaffold(
-      backgroundColor: Colors.black, // Doday 테마 색상으로 변경 가능
+      backgroundColor: AppColors.background, 
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 앱 로고 이미지
+            // 💡 추후 로고가 들어갈 자리 (반드시 .webp 확장자 사용!)
+            /*
             Image.asset(
-              'assets/images/quokka.webp', 
-              width: 120,
-              height: 120,
+              'assets/images/logo.webp', 
+              width: 150,
             ),
             const SizedBox(height: 24),
-            // 부드러운 로딩 인디케이터
-            const CircularProgressIndicator(color: Colors.white), 
+            */
+            const Text(
+              "Doday",
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w900,
+                color: AppColors.primary,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // 테마에 맞는 로딩 인디케이터
+            const CircularProgressIndicator(
+              color: AppColors.primary,
+            ),
           ],
         ),
       ),
