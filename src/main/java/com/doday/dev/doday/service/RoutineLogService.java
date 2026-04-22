@@ -22,10 +22,8 @@ public class RoutineLogService {
 
 
     // 루틴 완료 체크 (토글)
-    public void check(RoutineLog log) {
-
-        // 루틴 활성화 여부 확인
-        Routine routine = routineMapper.findById(log.getRoutineId());
+    public void check(Long routineId, Long userId, String date) {
+        Routine routine = routineMapper.findById(routineId);
         if (routine == null) {
             throw new IllegalArgumentException(ErrorCode.ROUTINE_NOT_FOUND.getMessage());
         }
@@ -33,19 +31,29 @@ public class RoutineLogService {
             throw new IllegalArgumentException(ErrorCode.ROUTINE_INACTIVE.getMessage());
         }
 
+        // 본인 루틴인지 확인
+        if (!routine.getUserId().equals(userId)) {
+            throw new IllegalArgumentException(ErrorCode.ROUTINE_UNAUTHORIZED.getMessage());
+        }
 
-        String today = LocalDate.now().toString();
-        log.setCheckDate(today);
+        if (!routine.getIsActive()) {
+            throw new IllegalArgumentException(ErrorCode.ROUTINE_INACTIVE.getMessage());
+        }
 
-        RoutineLog existing = routineLogMapper.findByRoutineIdAndDate(log.getRoutineId(), today);
+
+        // date 없으면 오늘 날짜
+        String checkDate = (date != null && !date.isEmpty()) ? date : LocalDate.now().toString();
+
+        RoutineLog existing = routineLogMapper.findByRoutineIdAndDate(routineId, checkDate);
 
         if (existing == null) {
-            // 오늘 처음 체크 -> 새로 생성
+            RoutineLog log = new RoutineLog();
+            log.setRoutineId(routineId);
+            log.setCheckDate(checkDate);
             log.setCompleted(true);
             routineLogMapper.insert(log);
         } else {
-            // 이미 있으면 토글
-            routineLogMapper.updateCompleted(log.getRoutineId(), today, !existing.isCompleted());
+            routineLogMapper.updateCompleted(routineId, checkDate, !existing.isCompleted());
         }
     }
 }
