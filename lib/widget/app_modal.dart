@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_shadow.dart';
+import '../theme/app_icon.dart';
 import 'custom_snackbar.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../provider/user_provider.dart';
+import '../provider/routine_provider.dart';
 
 class AppModals {
   
@@ -27,30 +29,16 @@ class AppModals {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '닉네임 변경',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.onSurface,
-                  ),
-                ),
+                const Text('닉네임 변경', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.onSurface)),
                 const SizedBox(height: 16),
                 TextField(
                   controller: controller,
                   decoration: InputDecoration(
                     hintText: '새로운 닉네임을 입력하세요',
                     hintStyle: const TextStyle(color: AppColors.onSurfaceVariant),
-                    filled: true,
-                    fillColor: AppColors.surfaceContainer,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
-                    ),
+                    filled: true, fillColor: AppColors.surfaceContainer,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -59,24 +47,12 @@ class AppModals {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        '취소',
-                        style: TextStyle(color: AppColors.onSurfaceVariant),
-                      ),
+                      child: const Text('취소', style: TextStyle(color: AppColors.onSurfaceVariant)),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.onPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      onPressed: () {
-                        // 입력된 텍스트를 반환하며 모달 닫기
-                        Navigator.pop(context, controller.text);
-                      },
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: AppColors.onPrimary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                      onPressed: () => Navigator.pop(context, controller.text),
                       child: const Text('저장', style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ],
@@ -89,62 +65,34 @@ class AppModals {
     );
   }
 
-  // 🚀 2. 루틴 아이콘 선택 바텀시트 (20개 IconData로 변경)
+  // 🚀 2. 루틴 아이콘 선택 바텀시트
   static Future<IconData?> showIconPickerBottomSheet(BuildContext context) async {
-    // 실무에서 자주 쓰이는 루틴 관련 아이콘 20개 매핑
-    final List<IconData> routineIcons = [
-      Icons.water_drop, Icons.fitness_center, Icons.directions_run, Icons.menu_book,
-      Icons.self_improvement, Icons.apple, Icons.computer, Icons.bed,
-      Icons.brush, Icons.music_note, Icons.shopping_cart, Icons.cleaning_services,
-      Icons.local_cafe, Icons.wb_sunny, Icons.nights_stay, Icons.pets,
-      Icons.attach_money, Icons.flight, Icons.favorite, Icons.star,
-    ];
-
     return showModalBottomSheet<IconData>(
       context: context,
       backgroundColor: AppColors.surfaceContainerLowest,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (BuildContext context) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                '루틴 아이콘 선택',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.onSurface,
-                ),
-              ),
+              const Text('루틴 아이콘 선택', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.onSurface)),
               const SizedBox(height: 24),
               GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 5, // 20개이므로 가로 5개 x 세로 4줄 배치가 깔끔함
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                ),
-                itemCount: routineIcons.length,
+                shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5, mainAxisSpacing: 16, crossAxisSpacing: 16),
+                
+                // 💡 길이와 아이콘 목록을 모두 AppIcons 창고에서 가져옵니다!
+                itemCount: AppIcons.routineIcons.length,
                 itemBuilder: (context, index) {
                   return InkWell(
-                    onTap: () => Navigator.pop(context, routineIcons[index]), // 선택한 아이콘 반환
+                    onTap: () => Navigator.pop(context, AppIcons.routineIcons[index]),
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryContainer,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                      decoration: BoxDecoration(color: AppColors.primaryContainer, borderRadius: BorderRadius.circular(16)),
                       alignment: Alignment.center,
-                      child: Icon(
-                        routineIcons[index],
-                        color: AppColors.primary, // 테마 컬러 적용
-                        size: 28,
-                      ),
+                      child: Icon(AppIcons.routineIcons[index], color: AppColors.primary, size: 28),
                     ),
                   );
                 },
@@ -157,110 +105,204 @@ class AppModals {
     );
   }
 
-  // 🚀 3. 루틴 추가 바텀시트 (텍스트 입력 + 아이콘 픽커 호출)
-  static Future<void> showAddRoutineBottomSheet(BuildContext context) async {
-    final TextEditingController nameController = TextEditingController();
-    IconData selectedIcon = Icons.star; // 기본 아이콘 설정
+// 🚀 통합 루틴 폼 바텀시트
+  static Future<void> showRoutineFormBottomSheet(
+    BuildContext context, {
+    Map<String, dynamic>? routine, 
+  }) async {
+    final bool isEditMode = routine != null; 
+    final TextEditingController nameController = TextEditingController(text: isEditMode ? routine['title'] : '');
+    
+    // 시간 복구: "09:00:00" -> "09", "00" 분리
+    final String timeRaw = isEditMode ? (routine['alarm_time'] ?? routine['alarmTime'] ?? '09:00:00') : '09:00:00';
+    final List<String> timeParts = timeRaw.split(':');
+    final TextEditingController hourController = TextEditingController(text: timeParts[0]);
+    final TextEditingController minuteController = TextEditingController(text: timeParts.length > 1 ? timeParts[1].substring(0,2) : '00');
+    
+    final int iconId = isEditMode ? (routine['icon_id'] ?? routine['iconId'] ?? 1) : 1; 
+    IconData selectedIcon = AppIcons.routineIcons[(iconId - 1).clamp(0, 19)]; 
+
+    final String daysRaw = isEditMode ? (routine['days_of_week'] ?? routine['daysOfWeek'] ?? 'MON,TUE,WED,THU,FRI,SAT,SUN') : 'MON,TUE,WED,THU,FRI,SAT,SUN';
+    List<String> selectedDays = daysRaw.split(',');
+
+    final List<Map<String, String>> weekDays = [
+      {'key': 'MON', 'label': '월'}, {'key': 'TUE', 'label': '화'}, {'key': 'WED', 'label': '수'},
+      {'key': 'THU', 'label': '목'}, {'key': 'FRI', 'label': '금'}, {'key': 'SAT', 'label': '토'}, {'key': 'SUN', 'label': '일'},
+    ];
 
     return showModalBottomSheet<void>(
       context: context,
-      isScrollControlled: true, // 키보드가 올라올 때 화면이 밀려올라가도록 설정
+      isScrollControlled: true, 
       backgroundColor: AppColors.surfaceContainerLowest,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (BuildContext context) {
-        // StatefulBuilder를 사용해야 바텀시트 내부에서 아이콘 변경 상태를 즉각 반영할 수 있음
+        bool isSubmitting = false; 
+
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return Padding(
-              // 키보드 높이만큼 여백을 주기 위한 패딩 설정
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 24,
-                right: 24,
-                top: 32,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '새로운 루틴 추가',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // 아이콘 선택 버튼 + 루틴명 입력창
-                  Row(
-                    children: [
-                      // 아이콘 선택 영역
-                      GestureDetector(
-                        onTap: () async {
-                          // 💡 위에서 만든 아이콘 픽커 바텀시트를 호출!
-                          final IconData? pickedIcon = await showIconPickerBottomSheet(context);
-                          if (pickedIcon != null) {
-                            setState(() => selectedIcon = pickedIcon); // 선택된 아이콘으로 업데이트
-                          }
-                        },
-                        child: Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceContainer,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 32),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(isEditMode ? '루틴 수정하기' : '새로운 루틴 추가', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.onSurface)),
+                    const SizedBox(height: 24),
+                    
+                    // --- 아이콘 및 이름 입력 ---
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () async {
+                            final IconData? pickedIcon = await showIconPickerBottomSheet(context);
+                            if (pickedIcon != null) setState(() => selectedIcon = pickedIcon); 
+                          },
+                          child: Container(
+                            width: 56, height: 56,
+                            decoration: BoxDecoration(color: AppColors.surfaceContainer, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primary.withOpacity(0.2))),
+                            child: Icon(selectedIcon, color: AppColors.primary, size: 28),
                           ),
-                          child: Icon(selectedIcon, color: AppColors.primary, size: 28),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      
-                      // 루틴명 입력 영역
-                      Expanded(
-                        child: TextField(
-                          controller: nameController,
-                          decoration: InputDecoration(
-                            hintText: '루틴 이름을 입력하세요',
-                            hintStyle: const TextStyle(color: AppColors.onSurfaceVariant),
-                            filled: true,
-                            fillColor: AppColors.surfaceContainer,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextField(
+                            controller: nameController,
+                            decoration: InputDecoration(
+                              hintText: '루틴 이름을 입력하세요',
+                              hintStyle: const TextStyle(color: AppColors.onSurfaceVariant),
+                              filled: true, fillColor: AppColors.surfaceContainer,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  
-                  // 추가하기 버튼
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.onPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      onPressed: () {
-                        // TODO: 입력된 nameController.text와 selectedIcon 데이터를 백엔드 API로 전송하는 로직 추가
-                        Navigator.pop(context); // 닫기
-                      },
-                      child: const Text('루틴 추가하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
+                    const SizedBox(height: 28),
+
+                    // --- 반복 요일 ---
+                    const Text('반복 요일', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.secondary)),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: weekDays.map((day) {
+                        final isSelected = selectedDays.contains(day['key']);
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              if (isSelected) {
+                                if (selectedDays.length > 1) {
+                                  selectedDays.remove(day['key']);
+                                } else {
+                                  CustomSnackBar.show(context, message: '최소 하루는 선택해야 합니다.', isError: true);
+                                }
+                              } else {
+                                selectedDays.add(day['key']!);
+                                selectedDays.sort((a, b) => weekDays.indexWhere((d) => d['key'] == a).compareTo(weekDays.indexWhere((d) => d['key'] == b)));
+                              }
+                            });
+                          },
+                          child: Container(
+                            width: 38, height: 38,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: isSelected ? AppColors.primary : AppColors.surfaceContainerLowest,
+                              border: Border.all(color: isSelected ? AppColors.primary : AppColors.primary.withOpacity(0.2)),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(day['label']!, style: TextStyle(color: isSelected ? Colors.white : AppColors.onSurfaceVariant, fontWeight: FontWeight.w600)),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 28),
+
+                    // --- 🚀 알림 시간 직접 입력 (스위치 삭제됨) ---
+                    const Text('알림 시간', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.secondary)),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 60,
+                          child: TextField(
+                            controller: hourController,
+                            keyboardType: TextInputType.number, maxLength: 2, textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            decoration: InputDecoration(counterText: "", filled: true, fillColor: AppColors.surfaceContainer, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none), contentPadding: const EdgeInsets.symmetric(vertical: 12)),
+                          ),
+                        ),
+                        const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text(':', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.onSurfaceVariant))),
+                        SizedBox(
+                          width: 60,
+                          child: TextField(
+                            controller: minuteController,
+                            keyboardType: TextInputType.number, maxLength: 2, textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            decoration: InputDecoration(counterText: "", filled: true, fillColor: AppColors.surfaceContainer, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none), contentPadding: const EdgeInsets.symmetric(vertical: 12)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 36),
+                    
+                    // --- 저장 버튼 ---
+                    SizedBox(
+                      width: double.infinity, height: 52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: AppColors.onPrimary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                        onPressed: isSubmitting ? null : () async {
+                          if (nameController.text.trim().isEmpty) {
+                            CustomSnackBar.show(context, message: '루틴 이름을 입력해주세요.', isError: true);
+                            return;
+                          }
+
+                          int? h = int.tryParse(hourController.text);
+                          int? m = int.tryParse(minuteController.text);
+                          if (h == null || m == null || h < 0 || h > 23 || m < 0 || m > 59) {
+                            CustomSnackBar.show(context, message: '올바른 시간을 입력해주세요 (00~23, 00~59).', isError: true);
+                            return;
+                          }
+
+                          final user = context.read<UserProvider>().currentUser;
+                          final int? userId = user?.id; 
+                          if (userId == null) return;
+
+                          setState(() => isSubmitting = true); 
+
+                          try {
+                            String formattedTime = '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+
+                            // 수정 : isEditMode 대신 routine != null 로 직접 판별
+                            if (routine != null) {
+                              await context.read<RoutineProvider>().updateRoutine(
+                                routine['id'], userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime
+                              );
+                            } else {
+                              await context.read<RoutineProvider>().addRoutine(
+                                userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime
+                              );
+                            }
+                            
+                            if (context.mounted) {
+                              Navigator.pop(context); 
+                              // 메시지도 직접 판별식으로 깔끔하게 출력
+                              CustomSnackBar.show(context, message: (routine != null) ? '루틴이 수정되었습니다!' : '새 루틴이 추가되었습니다!');
+                            }
+                          } catch (e) {
+                            if (context.mounted) CustomSnackBar.show(context, message: '실패: $e', isError: true);
+                          } finally {
+                            if (context.mounted) setState(() => isSubmitting = false); 
+                          }
+                        },
+                        
+                        child: isSubmitting 
+                            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : Text(isEditMode ? '수정 저장하기' : '루틴 추가하기', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             );
           },
@@ -269,8 +311,7 @@ class AppModals {
     );
   }
 
-
-  // 🚀 비밀번호 변경 모달 (Center Dialog)
+  // 🚀 4. 비밀번호 변경 모달 
   static Future<String?> showPasswordEditDialog(BuildContext context) async {
     final TextEditingController newPasswordController = TextEditingController();
     final TextEditingController confirmPasswordController = TextEditingController();
@@ -292,30 +333,19 @@ class AppModals {
                 TextField(
                   controller: newPasswordController,
                   obscureText: true,
-                  decoration: InputDecoration(
-                    hintText: '새로운 비밀번호',
-                    filled: true, fillColor: AppColors.surfaceContainer,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  ),
+                  decoration: InputDecoration(hintText: '새로운 비밀번호', filled: true, fillColor: AppColors.surfaceContainer, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: confirmPasswordController,
                   obscureText: true,
-                  decoration: InputDecoration(
-                    hintText: '비밀번호 확인',
-                    filled: true, fillColor: AppColors.surfaceContainer,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  ),
+                  decoration: InputDecoration(hintText: '비밀번호 확인', filled: true, fillColor: AppColors.surfaceContainer, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)),
                 ),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('취소', style: TextStyle(color: AppColors.onSurfaceVariant)),
-                    ),
+                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소', style: TextStyle(color: AppColors.onSurfaceVariant))),
                     const SizedBox(width: 8),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: AppColors.onPrimary),
@@ -338,20 +368,14 @@ class AppModals {
     );
   }
 
-  // 🔔 알림 설정 메뉴를 누를 때 호출되는 함수
+  // 🚀 5. 알림 설정 메뉴
   static Future<void> showNotificationSettingsBottomSheet(BuildContext context) async {
-    // 1. 바텀 시트 열기 전에 먼저 권한 상태 확인
     PermissionStatus status = await Permission.notification.status;
-
     if (status.isDenied) {
-      // 🚨 거부 상태라면? -> OS 권한 팝업을 다시 띄움
       status = await Permission.notification.request();
-      // 만약 팝업 떴는데 또 거절하면 바텀 시트 안 열고 종료
       if (!status.isGranted && !status.isPermanentlyDenied) return;
     }
-
     if (status.isPermanentlyDenied) {
-      // 🚨 '항상 거부' 상태라면? -> 설정창으로 유도하는 안내창 띄움
       if (!context.mounted) return;
       showDialog(
         context: context,
@@ -360,20 +384,13 @@ class AppModals {
           content: const Text('스마트폰 설정에서 알림 권한을 허용해 주세요.'),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
-            TextButton(
-              onPressed: () {
-                openAppSettings(); // 기기 설정창 열기
-                Navigator.pop(context);
-              }, 
-              child: const Text('설정으로 이동')
-            ),
+            TextButton(onPressed: () { openAppSettings(); Navigator.pop(context); }, child: const Text('설정으로 이동')),
           ],
         ),
       );
-      return; // 설정창 안내를 띄웠으므로 바텀 시트는 열지 않음
+      return; 
     }
 
-    // 2. 권한이 허용된 상태라면 서버에서 데이터를 불러오고 바텀 시트를 엽니다.
     if (!context.mounted) return;
     Provider.of<UserProvider>(context, listen: false).loadNotificationSettings();
 
@@ -381,17 +398,12 @@ class AppModals {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (BuildContext context) {
         return Consumer<UserProvider>(
           builder: (context, userProvider, child) {
             final settings = userProvider.notificationSettings;
-
-            if (settings == null) {
-              return const SizedBox(height: 300, child: Center(child: CircularProgressIndicator()));
-            }
+            if (settings == null) return const SizedBox(height: 300, child: Center(child: CircularProgressIndicator()));
 
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -401,38 +413,23 @@ class AppModals {
                 children: [
                   const Text('알림 세부 설정', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 24),
-                  
-                  // 스위치 로직은 기존과 동일 (이미 위에서 권한을 받았으므로 바로 통신)
                   SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('앱 알림 전체 켜기'),
-                    subtitle: const Text('앱에서 보내는 모든 알림을 제어합니다.'),
+                    contentPadding: EdgeInsets.zero, title: const Text('앱 알림 전체 켜기'), subtitle: const Text('앱에서 보내는 모든 알림을 제어합니다.'),
                     value: settings.isPushEnabled,
                     onChanged: (value) {
-                      final newSettings = settings.copyWith(
-                        isPushEnabled: value,
-                        isRoutineNotiEnabled: value ? settings.isRoutineNotiEnabled : false,
-                        isMarketingEnabled: value ? settings.isMarketingEnabled : false,
-                      );
-                      userProvider.updateNotification(newSettings);
+                      userProvider.updateNotification(settings.copyWith(isPushEnabled: value, isRoutineNotiEnabled: value ? settings.isRoutineNotiEnabled : false, isMarketingEnabled: value ? settings.isMarketingEnabled : false));
                     },
                   ),
                   const Divider(),
                   SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('루틴 리마인더'),
+                    contentPadding: EdgeInsets.zero, title: const Text('루틴 리마인더'),
                     value: settings.isRoutineNotiEnabled,
-                    onChanged: settings.isPushEnabled ? (value) {
-                      userProvider.updateNotification(settings.copyWith(isRoutineNotiEnabled: value));
-                    } : null,
+                    onChanged: settings.isPushEnabled ? (value) => userProvider.updateNotification(settings.copyWith(isRoutineNotiEnabled: value)) : null,
                   ),
                   SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('이벤트 및 혜택 알림'),
+                    contentPadding: EdgeInsets.zero, title: const Text('이벤트 및 혜택 알림'),
                     value: settings.isMarketingEnabled,
-                    onChanged: settings.isPushEnabled ? (value) {
-                      userProvider.updateNotification(settings.copyWith(isMarketingEnabled: value));
-                    } : null,
+                    onChanged: settings.isPushEnabled ? (value) => userProvider.updateNotification(settings.copyWith(isMarketingEnabled: value)) : null,
                   ),
                   const SizedBox(height: 24),
                 ],
