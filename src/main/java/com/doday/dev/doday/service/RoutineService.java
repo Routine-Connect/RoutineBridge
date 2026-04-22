@@ -66,6 +66,7 @@ public class RoutineService {
             map.put("title", routine.getTitle());
             map.put("alarmTime", routine.getAlarmTime());
             map.put("iconId", routine.getIconId());
+            map.put("daysOfWeek", routine.getDaysOfWeek());
             map.put("isCompleted", log != null && log.isCompleted());
             result.add(map);
         }
