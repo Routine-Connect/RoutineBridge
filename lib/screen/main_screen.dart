@@ -39,6 +39,12 @@ class _MainScreenState extends State<MainScreen> {
         scrolledUnderElevation: 0,
         backgroundColor: AppColors.background.withOpacity(0.94),
         surfaceTintColor: Colors.transparent,
+        shape: const Border(
+          bottom: BorderSide(
+            color: AppColors.dividerFaint,
+            width: 1.0,
+          ),
+        ),
         toolbarHeight: 64,
         leadingWidth: 72,
         leading: Padding(
@@ -103,10 +109,10 @@ class _StitchBottomNavBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.background.withOpacity(0.94),
-        border: Border(
+        border: const Border(
           top: BorderSide(
-            color: AppColors.primary.withOpacity(0.1),
-            width: 1,
+            color: AppColors.dividerFaint,
+            width: 1.0,
           ),
         ),
       ),
