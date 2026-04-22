@@ -2,19 +2,27 @@ package com.doday.dev.doday.service;
 
 import com.doday.dev.doday.common.ErrorCode;
 import com.doday.dev.doday.domain.Routine;
+import com.doday.dev.doday.domain.RoutineLog;
+import com.doday.dev.doday.mapper.RoutineLogMapper;
 import com.doday.dev.doday.mapper.RoutineMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class RoutineService {
 
     @Autowired
     private RoutineMapper routineMapper;
+
+    @Autowired
+    private RoutineLogMapper routineLogMapper;
 
     // 루틴 생성
     public void create(Routine routine) {
@@ -37,6 +45,32 @@ public class RoutineService {
             throw new IllegalArgumentException(ErrorCode.ROUTINE_FORBBIDEN.getMessage());
         }
         return routine;
+    }
+
+    // 특정날짜 필터링 후, 루틴 조회
+    public List<Map<String, Object>> getDailyRoutines(Long userId, String date) {
+        // 날짜 파싱
+        LocalDate localDate = LocalDate.parse(date);
+        String dayOfWeek = localDate.getDayOfWeek().name().substring(0, 3); // MON, TUE ...
+
+        // 해당 요일 루틴 조회
+        List<Routine> routines = routineMapper.findByUserIdAndDayOfWeek(userId, dayOfWeek);
+
+        // 해당 날짜 로그 조회
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Routine routine : routines) {
+            RoutineLog log = routineLogMapper.findByRoutineIdAndDate(routine.getId(), date);
+
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("id", routine.getId());
+            map.put("title", routine.getTitle());
+            map.put("alarmTime", routine.getAlarmTime());
+            map.put("iconId", routine.getIconId());
+            map.put("isCompleted", log != null && log.isCompleted());
+            result.add(map);
+        }
+
+        return result;
     }
 
 

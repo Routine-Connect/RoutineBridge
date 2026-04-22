@@ -21,6 +21,13 @@
         SELECT * FROM Routines WHERE id = #{id}
     </select>
 
+    <select id="findByUserIdAndDayOfWeek" resultMap="RoutineResultMap">
+        SELECT * FROM Routines
+        WHERE user_id = #{userId}
+          AND is_active = TRUE
+          AND FIND_IN_SET(#{dayOfWeek}, days_of_week) > 0
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO Routines (user_id, title, days_of_week, alarm_time, is_active, icon_id)
         VALUES (#{userId}, #{title}, #{daysOfWeek}, #{alarmTime}, #{isActive}, #{iconId})

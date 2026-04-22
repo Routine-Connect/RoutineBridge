@@ -12,4 +12,5 @@ public interface RoutineMapper {
     void delete(Long id);
     void update(Routine routine);
     List<Routine> findTodayRoutines(@Param("userId") Long userId, @Param("dayOfWeek") String dayOfWeek); // 오늘 루틴 조회
+    List<Routine> findByUserIdAndDayOfWeek(@Param("userId") Long userId, @Param("dayOfWeek") String dayOfWeek);
 }

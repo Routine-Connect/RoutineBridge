@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/routines")
@@ -32,6 +33,16 @@ public class RoutineController {
     public ApiResponse<Routine> getOne(@PathVariable Long id, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         return ApiResponse.success(routineService.getOne(id, userId));
+    }
+
+    @ApiOperation(value = "특정 날짜 루틴 조회", notes = "date 파라미터로 특정 날짜의 루틴 목록 조회")
+    @GetMapping("/daily")
+    public ApiResponse<List<Map<String, Object>>> getDailyRoutines(
+            HttpServletRequest request,
+            @RequestParam String date
+    ) {
+        Long userId = (Long) request.getAttribute("userId");
+        return ApiResponse.success(routineService.getDailyRoutines(userId, date));
     }
 
     @ApiOperation(value = "루틴 목록 조회", notes = "유저의 전체 루틴 조회")
