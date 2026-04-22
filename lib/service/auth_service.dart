@@ -7,7 +7,7 @@ class AuthService {
   final String baseUrl = 'https://nonextendible-kandace-gratifyingly.ngrok-free.dev/api/users';
   final _storage = const FlutterSecureStorage(); // 스토리지 인스턴스 생성
 
-  // 🚀 로그인 API 통신
+  // POST /api/users/login - 로그인
   Future<String> fetchLoginToken(String email, String password) async {
     try {
       final url = Uri.parse('$baseUrl/login'); 
@@ -32,7 +32,7 @@ class AuthService {
     }
   }
 
-  // 🚀 회원가입 API 통신
+  // POST /api/users/signup - 회원가입
   Future<void> signup(String email, String password, String nickname, String gender) async {
     try {
       final url = Uri.parse('$baseUrl/signup');
@@ -59,7 +59,7 @@ class AuthService {
     }
   }
 
-  // 🚀 로그아웃 (토큰 삭제)
+  // 로그아웃 (토큰 삭제)
   Future<void> logout() async {
     try {
       // 저장된 JWT 토큰을 기기에서 삭제합니다.
