@@ -104,7 +104,7 @@ public class RoutineService {
 
             for (Routine routine : routines) {
                 if (!routine.getIsActive()) continue;
-                if (!routine.getDaysOfWeek().equals(dayOfWeek)) continue;
+                if (!routine.getDaysOfWeek().contains(dayOfWeek)) continue;
 
                 Map<String, Object> map = new LinkedHashMap<>();
                 map.put("id", routine.getId());
