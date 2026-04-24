@@ -13,6 +13,8 @@ class RoutineCard extends StatelessWidget {
     super.key,
     required this.routineId, 
     required this.icon, 
+    required this.backgroundColor,
+    required this.foregroundColor, 
     required this.title, 
     required this.subtitle, 
     required this.completed,
@@ -22,6 +24,8 @@ class RoutineCard extends StatelessWidget {
 
   final int routineId; 
   final IconData icon;
+  final Color backgroundColor;
+  final Color foregroundColor;
   final String title;
   final String subtitle;
   final bool completed;
@@ -30,7 +34,8 @@ class RoutineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color iconBackgroundColor = completed ? AppColors.surfaceContainer : AppColors.primaryContainer;
+    final Color currentBackgroundColor = completed ? AppColors.surfaceContainer : backgroundColor;
+    final Color currentForegroundColor = completed ? AppColors.outline : foregroundColor;
 
     return Slidable(
       // 💡 리스트 내 항목 식별을 위한 키
@@ -101,8 +106,8 @@ class RoutineCard extends StatelessWidget {
                   children: [
                     Container(
                       width: 40, height: 40, 
-                      decoration: BoxDecoration(color: iconBackgroundColor, borderRadius: BorderRadius.circular(12)), 
-                      child: Icon(icon, color: AppColors.primary, size: 26)
+                      decoration: BoxDecoration(color: currentBackgroundColor, borderRadius: BorderRadius.circular(12)), 
+                      child: Icon(icon, color: currentForegroundColor, size: 22)
                     ),
                     const SizedBox(width: 12),
                     Expanded(

@@ -62,14 +62,47 @@ abstract final class AppColors {
   static const Color swipeEdit = Color(0xFF93C5FD); // 스와이프 '수정' 배경 (파스텔 블루)
   static const Color swipeDelete = Color(0xFFFCA5A5); // 스와이프 '삭제' 배경 (파스텔 코랄 레드)
 
-  // —— 🚀 [신규 추가] 향후 20개 아이콘 개별 테마에 쓰일 부드러운 파스텔톤 ——
-  static const Color iconPastelRed = Color(0xFFFFCDD2);
-  static const Color iconPastelOrange = Color(0xFFFFE0B2);
-  static const Color iconPastelYellow = Color(0xFFFFF9C4);
-  static const Color iconPastelGreen = Color(0xFFC8E6C9);
-  static const Color iconPastelBlue = Color(0xFFBBDEFB);
-  static const Color iconPastelPurple = Color(0xFFE1BEE7);
-  static const Color iconPastelPink = Color(0xFFF8BBD0);
+  // —— 루틴 아이콘용 색상 팔레트 (20가지) ——
+  // —— 가독성과 부드러움을 모두 잡은 미드톤 파스텔 ——
+  static const Color iconMidRed = Color(0xFFF87171);    // 부드러운 코랄 레드
+  static const Color iconMidOrange = Color(0xFFFB923C); // 귤색 오렌지
+  static const Color iconMidYellow = Color(0xFFFBBF24); // 따뜻한 머스타드 옐로우
+  static const Color iconMidGreen = Color(0xFF4ADE80);  // 싱그러운 민트 그린
+  static const Color iconMidSky = Color(0xFF38BDF8);    // 맑은 하늘색
+  static const Color iconMidPurple = Color(0xFFC084FC); // 라일락 퍼플
+  static const Color iconMidPink = Color(0xFFF472B6);   // 딸기우유 핑크
+  static const Color iconMidBrown = Color(0xFFA1887F);  // 부드러운 모카 브라운
+  // Blue (보내주신 샘플 기준)
+  static const Color iconSkyLight = Color(0xFFE0F2FE);
+  static const Color iconSkyDark = Color(0xFF0EA5E9);
+
+  // Red
+  static const Color iconRedLight = Color(0xFFFEE2E2);
+  static const Color iconRedDark = Color(0xFFEF4444);
+
+  // Orange
+  static const Color iconOrangeLight = Color(0xFFFFEDD5);
+  static const Color iconOrangeDark = Color(0xFFF97316);
+
+  // Yellow
+  static const Color iconYellowLight = Color(0xFFFEF9C3);
+  static const Color iconYellowDark = Color(0xFFEAB308);
+
+  // Green
+  static const Color iconGreenLight = Color(0xFFDCFCE7);
+  static const Color iconGreenDark = Color(0xFF22C55E);
+
+  // Purple
+  static const Color iconPurpleLight = Color(0xFFF3E8FF);
+  static const Color iconPurpleDark = Color(0xFFA855F7);
+
+  // Pink
+  static const Color iconPinkLight = Color(0xFFFCE7F3);
+  static const Color iconPinkDark = Color(0xFFEC4899);
+
+  // Brown / Stone
+  static const Color iconStoneLight = Color(0xFFF5F5F4);
+  static const Color iconStoneDark = Color(0xFF78716C);
 
   // —— 리포트 시안 추가 브랜드 토큰 ——
   static const Color brandCaramel = Color(0xFFDCAE87);

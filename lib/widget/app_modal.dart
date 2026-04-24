@@ -83,16 +83,22 @@ class AppModals {
                 shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5, mainAxisSpacing: 16, crossAxisSpacing: 16),
                 
-                // 💡 길이와 아이콘 목록을 모두 AppIcons 창고에서 가져옵니다!
                 itemCount: AppIcons.routineIcons.length,
                 itemBuilder: (context, index) {
+                  // 💡 각 아이콘에 맞는 배경색과 전경색을 가져옵니다.
+                  final icon = AppIcons.routineIcons[index];
+                  final bgColor = AppIcons.routineIconBackgroundColors[index];
+                  final fgColor = AppIcons.routineIconForegroundColors[index];
+
                   return InkWell(
-                    onTap: () => Navigator.pop(context, AppIcons.routineIcons[index]),
+                    onTap: () => Navigator.pop(context, icon),
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
-                      decoration: BoxDecoration(color: AppColors.primaryContainer, borderRadius: BorderRadius.circular(16)),
+                      // 🚀 연한 배경색 적용
+                      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(16)),
                       alignment: Alignment.center,
-                      child: Icon(AppIcons.routineIcons[index], color: AppColors.primary, size: 28),
+                      // 🚀 선명한 전경색 적용
+                      child: Icon(icon, color: fgColor, size: 28),
                     ),
                   );
                 },
@@ -105,7 +111,7 @@ class AppModals {
     );
   }
 
-// 🚀 통합 루틴 폼 바텀시트
+  // 🚀 통합 루틴 폼 바텀시트
   static Future<void> showRoutineFormBottomSheet(
     BuildContext context, {
     Map<String, dynamic>? routine, 
@@ -140,6 +146,13 @@ class AppModals {
 
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
+            
+            // 💡 🚀 현재 선택된 아이콘이 리스트의 몇 번째인지 찾아서 색상을 매칭합니다!
+            int currentIconIndex = AppIcons.routineIcons.indexOf(selectedIcon);
+            if (currentIconIndex == -1) currentIconIndex = 0; // 안전장치
+            final Color currentBgColor = AppIcons.routineIconBackgroundColors[currentIconIndex];
+            final Color currentFgColor = AppIcons.routineIconForegroundColors[currentIconIndex];
+
             return Padding(
               padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 32),
               child: SingleChildScrollView(
@@ -156,12 +169,19 @@ class AppModals {
                         GestureDetector(
                           onTap: () async {
                             final IconData? pickedIcon = await showIconPickerBottomSheet(context);
+                            // 아이콘이 바뀌면 setState가 호출되어 색상도 즉시 변합니다!
                             if (pickedIcon != null) setState(() => selectedIcon = pickedIcon); 
                           },
                           child: Container(
                             width: 56, height: 56,
-                            decoration: BoxDecoration(color: AppColors.surfaceContainer, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primary.withOpacity(0.2))),
-                            child: Icon(selectedIcon, color: AppColors.primary, size: 28),
+                            // 🚀 선택된 아이콘에 맞는 배경색 적용, 테두리도 해당 아이콘의 전경색(연하게) 적용
+                            decoration: BoxDecoration(
+                              color: currentBgColor, 
+                              borderRadius: BorderRadius.circular(16), 
+                              border: Border.all(color: currentFgColor.withOpacity(0.3))
+                            ),
+                            // 🚀 선택된 아이콘에 맞는 전경색 적용
+                            child: Icon(selectedIcon, color: currentFgColor, size: 28),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -217,7 +237,7 @@ class AppModals {
                     ),
                     const SizedBox(height: 28),
 
-                    // --- 🚀 알림 시간 직접 입력 (스위치 삭제됨) ---
+                    // --- 🚀 알림 시간 직접 입력 ---
                     const Text('알림 시간', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.secondary)),
                     const SizedBox(height: 12),
                     Row(
@@ -272,7 +292,6 @@ class AppModals {
                           try {
                             String formattedTime = '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
 
-                            // 수정 : isEditMode 대신 routine != null 로 직접 판별
                             if (routine != null) {
                               await context.read<RoutineProvider>().updateRoutine(
                                 routine['id'], userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime
@@ -285,7 +304,6 @@ class AppModals {
                             
                             if (context.mounted) {
                               Navigator.pop(context); 
-                              // 메시지도 직접 판별식으로 깔끔하게 출력
                               CustomSnackBar.show(context, message: (routine != null) ? '루틴이 수정되었습니다!' : '새 루틴이 추가되었습니다!');
                             }
                           } catch (e) {
