@@ -27,8 +27,6 @@ public class StatsService {
         String endDate = ym.atEndOfMonth().toString();
 
         List<Routine> routines = routineMapper.findByUserId(userId);
-        System.out.println("필터 전 루틴 개수 : " + routines.size());
-        System.out.println("userId : " + userId);
 
         // 날짜별 완료 여부 집계
         Map<String, Object> dailyResult = new LinkedHashMap<>();

@@ -10,10 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.YearMonth;
+import java.util.*;
 
 @Service
 public class RoutineService {
@@ -71,6 +69,60 @@ public class RoutineService {
             result.add(map);
         }
 
+        return result;
+    }
+
+    // 한달치 루틴 조회
+    public Map<String, List<Map<String, Object>>> getMonthlyRoutines(Long userId, int year, int month) {
+        YearMonth ym = YearMonth.of(year, month);
+        String startDate = ym.atDay(1).toString();
+        String endDate = ym.atEndOfMonth().toString();
+
+        List<Routine> routines = routineMapper.findByUserId(userId);
+
+        // 해당 월 로그 미리 수집
+        Map<String, Map<Long, Boolean>> logMap = new HashMap<>();
+        for (Routine routine : routines) {
+            List<RoutineLog> logs = routineLogMapper.findByRoutineIdAndPeriod(
+                    routine.getId(), startDate, endDate
+            );
+            for (RoutineLog log : logs) {
+                logMap.computeIfAbsent(log.getCheckDate(), k -> new HashMap<>())
+                        .put(log.getRoutineId(), log.isCompleted());
+            }
+        }
+
+        // 날짜별 루틴 구성
+        Map<String, List<Map<String, Object>>> result = new LinkedHashMap<>();
+
+        for (int d = 1; d <= ym.lengthOfMonth(); d++) {
+            LocalDate date = ym.atDay(d);
+            String dateStr = date.toString();
+            String dayOfWeek = date.getDayOfWeek().name().substring(0, 3);
+
+            List<Map<String, Object>> dayRoutines = new ArrayList<>();
+
+            for (Routine routine : routines) {
+                if (!routine.getIsActive()) continue;
+                if (!routine.getDaysOfWeek().equals(dayOfWeek)) continue;
+
+                Map<String, Object> map = new LinkedHashMap<>();
+                map.put("id", routine.getId());
+                map.put("title", routine.getTitle());
+                map.put("alarmTime", routine.getAlarmTime());
+                map.put("iconId", routine.getIconId());
+                map.put("daysOfWeek", routine.getDaysOfWeek());
+
+                boolean isCompleted = logMap
+                        .getOrDefault(dateStr, Collections.emptyMap())
+                        .getOrDefault(routine.getId(), false);
+                map.put("isCompleted", isCompleted);
+
+                dayRoutines.add(map);
+            }
+
+            result.put(dateStr, dayRoutines);
+        }
         return result;
     }
 

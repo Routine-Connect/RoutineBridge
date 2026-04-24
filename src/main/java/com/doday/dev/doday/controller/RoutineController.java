@@ -45,6 +45,19 @@ public class RoutineController {
         return ApiResponse.success(routineService.getDailyRoutines(userId, date));
     }
 
+    @ApiOperation(value = "월간 루틴 조회", notes = "한달치 날짜별 루틴 목록 조회")
+    @GetMapping("/monthly-daily")
+    public ApiResponse<Map<String, List<Map<String, Object>>>> getMonthlyDaily(
+            @RequestParam int year,
+            @RequestParam int month,
+            HttpServletRequest request
+    ) {
+        Long userId = (Long) request.getAttribute("userId");
+        return ApiResponse.success(routineService.getMonthlyRoutines(userId, year, month));
+    }
+
+
+
     @ApiOperation(value = "루틴 목록 조회", notes = "유저의 전체 루틴 조회")
     @GetMapping
     public ApiResponse<List<Routine>> getAll(HttpServletRequest request) {
