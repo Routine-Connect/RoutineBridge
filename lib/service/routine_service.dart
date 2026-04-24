@@ -5,25 +5,26 @@ class RoutineService {
 
   final String baseUrl = 'https://nonextendible-kandace-gratifyingly.ngrok-free.dev/api/routines';
 
-  // GET /api/routines/daily?date={date} - 특정 날짜의 루틴 목록 조회
-  Future<List<dynamic>> getRoutinesByDate(String token, String date) async {
-    try {
-      final url = Uri.parse('$baseUrl/daily?date=$date'); 
-      final response = await http.get(url, headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      });
+// routine_service.dart 파일 내부에 추가
+Future<Map<String, dynamic>> getMonthlyRoutines(String token, int year, int month) async {
+  try {
+    final url = Uri.parse('$baseUrl/monthly-daily?year=$year&month=$month');
+    final response = await http.get(url, headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    });
 
-      final responseData = jsonDecode(utf8.decode(response.bodyBytes));
-      if (response.statusCode == 200 && responseData['success'] == true) {
-        return responseData['data'] ?? [];
-      } else {
-        throw Exception(responseData['error']?['message'] ?? '루틴을 불러오지 못했습니다.');
-      }
-    } catch (e) {
-      throw Exception('서버와 연결할 수 없습니다.');
+    final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+    if (response.statusCode == 200 && responseData['success'] == true) {
+
+      return responseData['data'] ?? {};
+    } else {
+      throw Exception('월간 데이터를 불러오지 못했습니다.');
     }
+  } catch (e) {
+    throw Exception('서버 연결 실패: $e');
   }
+}
 
   // POST /api/routines - 루틴 생성
   Future<void> createRoutine(String token, Map<String, dynamic> routineData) async {

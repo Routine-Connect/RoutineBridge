@@ -22,9 +22,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // 화면 시작할 때 오늘 날짜의 루틴을 한 번 불러옵니다.
+    // 🚀 화면 시작할 때 이번 달 기준으로 3개월치(전달, 이번달, 다음달) 데이터를 한 번에 싹 캐싱합니다.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<RoutineProvider>().changeDateAndFetch(DateTime.now());
+      context.read<RoutineProvider>().initMonthlyData();
     });
   }
 
@@ -102,9 +102,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             final routine = routines[index];
                             
                             // 서버에서 받은 icon_id 추출 
-                            final int iconId = routine['icon_id'] ?? routine['iconId'] ?? 20; 
-                            final IconData matchedIcon = AppIcons.routineIcons[(iconId - 1).clamp(0, AppIcons.routineIcons.length - 1)];
-                            
+                            final int iconId = routine['icon_id'] ?? routine['iconId'] ?? 1; 
+                            // 🚀 리스트에서 아이콘, 배경색, 전경색을 인덱스로 찾기
+                            final IconData matchedIcon = AppIcons.routineIcons[(iconId - 1).clamp(0, 19)];
+                            final Color matchedBackgroundColor = AppIcons.routineIconBackgroundColors[(iconId - 1).clamp(0, 19)];
+                            final Color matchedForegroundColor = AppIcons.routineIconForegroundColors[(iconId - 1).clamp(0, 19)];
+
                             // 시간 문자열 가공 ("09:00:00" -> "09:00")
                             String timeRaw = routine['alarm_time'] ?? routine['alarmTime'] ?? '';
                             String displayTime = timeRaw.length >= 5 ? timeRaw.substring(0, 5) : timeRaw;
@@ -114,6 +117,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: RoutineCard(
                                 routineId: routine['id'] ?? 0,
                                 icon: matchedIcon, 
+                                backgroundColor: matchedBackgroundColor,
+                                foregroundColor: matchedForegroundColor,
                                 title: routine['title'] ?? '이름 없음',
                                 subtitle: displayTime, 
                                 completed: routine['is_completed'] ?? routine['isCompleted'] ?? false, 
@@ -166,7 +171,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// --- 주간 달력 ---
+// --- 완료 상태를 구분하기 위한 Enum ---
+enum DayCompletionStatus { none, partial, full }
+
 class HomeWeekCalendar extends StatefulWidget {
   const HomeWeekCalendar({super.key});
 
@@ -177,14 +184,13 @@ class HomeWeekCalendar extends StatefulWidget {
 class _HomeWeekCalendarState extends State<HomeWeekCalendar> {
   late final PageController _pageController;
   late final DateTime _baseMonday;
+  int _currentPageIndex = 500;
 
   @override
   void initState() {
     super.initState();
-    // 💡 500페이지를 '이번 주'로 설정하여 양방향 무한 스크롤이 가능하게 함
     _pageController = PageController(initialPage: 500);
     
-    // 💡 오늘 날짜 기준으로 '이번 주 월요일' 날짜를 미리 계산해둠
     DateTime today = DateTime.now();
     int daysSinceMonday = today.weekday - 1; 
     _baseMonday = DateTime(today.year, today.month, today.day).subtract(Duration(days: daysSinceMonday));
@@ -201,81 +207,177 @@ class _HomeWeekCalendarState extends State<HomeWeekCalendar> {
     final routineProvider = context.watch<RoutineProvider>();
     final selectedDate = routineProvider.selectedDate;
 
+    final int currentWeekOffset = _currentPageIndex - 500;
+    final DateTime visibleWeekStart = _baseMonday.add(Duration(days: currentWeekOffset * 7));
+    final DateTime visibleMonthDate = visibleWeekStart.add(const Duration(days: 3));
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16), boxShadow: AppShadows.plushShadow),
-      child: SizedBox(
-        height: 75, // 기존 65 -> 75로 변경 (4px OVERFLOW 에러 해결)
-        child: PageView.builder( // ListView -> PageView로 변경하여 툭툭 끊어지는 슬라이드 적용
-          controller: _pageController,
-          itemBuilder: (context, pageIndex) {
-            // 페이지 인덱스에 따라 해당 주의 '월요일'을 계산
-            final int weekOffset = pageIndex - 500;
-            final DateTime weekStartDate = _baseMonday.add(Duration(days: weekOffset * 7));
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest, 
+        borderRadius: BorderRadius.circular(16), 
+        boxShadow: AppShadows.plushShadow
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 8, bottom: 16),
+            child: Text(
+              DateFormat('yyyy년 M월').format(visibleMonthDate),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.onSurface),
+            ),
+          ),
+          
+          SizedBox(
+            height: 90, // 🚀 1. 높이를 90으로 넉넉히 키워 이미지 깨짐 방지
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() => _currentPageIndex = index);
+                // 🚀 유저가 달력을 넘기면, 해당 주(목요일 기준)가 포함된 달의 데이터를 미리 몰래 가져옵니다.
+                final int weekOffset = index - 500;
+                final DateTime visibleDate = _baseMonday.add(Duration(days: weekOffset * 7 + 3)); 
+                context.read<RoutineProvider>().fetchMonthData(visibleDate);
+              },
+              itemBuilder: (context, pageIndex) {
+                final int weekOffset = pageIndex - 500;
+                final DateTime weekStartDate = _baseMonday.add(Duration(days: weekOffset * 7));
 
-            // 한 페이지 안에 Row를 써서 7일(월~일)을 고정 배치
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(7, (dayIndex) {
-                final date = weekStartDate.add(Duration(days: dayIndex));
-                final bool isSelected = DateUtils.isSameDay(selectedDate, date);
-                final bool isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(7, (dayIndex) {
+                    final date = weekStartDate.add(Duration(days: dayIndex));
+                    final bool isSelected = DateUtils.isSameDay(selectedDate, date);
+                    final bool isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
 
-                _DayStyle style = _DayStyle.plain;
-                if (isSelected) style = _DayStyle.selected;
-                else if (isWeekend) style = _DayStyle.weekend;
+                    // 🚀 2. 스탬프 상태 계산 (SelectedDate 체크 해제)
+                    // 현재 Provider는 선택된 날짜의 루틴만 들고 있으므로, 
+                    // 선택된 날짜에 대해서만 스탬프를 실시간으로 보여줍니다.
+                    DayCompletionStatus completionStatus = _getCompletionStatus(routineProvider, date);
 
-                // Expanded를 씌워서 가로 여백 오버플로우를 막고 7개가 딱 맞게 분배됨
-                return Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque, // 투명한 여백을 눌러도 클릭되게 함
-                    onTap: () => routineProvider.changeDateAndFetch(date), 
-                    child: _DayColumn(
-                      label: DateFormat('E', 'ko_KR').format(date),
-                      day: date.day.toString(),
-                      style: style,
-                    ),
-                  ),
+                    return Expanded(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => routineProvider.changeDateAndFetch(date), 
+                        child: _DayColumn(
+                          label: DateFormat('E', 'ko_KR').format(date),
+                          day: date.day.toString(),
+                          isSelected: isSelected,
+                          isWeekend: isWeekend,
+                          completionStatus: completionStatus, 
+                        ),
+                      ),
+                    );
+                  }),
                 );
-              }),
-            );
-          },
-        ),
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  // 🚀 캐시된 월간 데이터를 기반으로 완료 상태(세모/동그라미)를 계산하는 함수
+  DayCompletionStatus _getCompletionStatus(RoutineProvider provider, DateTime date) {
+    String monthKey = DateFormat('yyyy-MM').format(date);
+    String dateKey = DateFormat('yyyy-MM-dd').format(date);
+
+    // 1. 창고(Cache)에서 해당 날짜의 루틴 뭉치를 꺼냄 (서버 통신 안 함!)
+    final routines = provider.monthlyCache[monthKey]?[dateKey] ?? [];
+    
+    if (routines.isEmpty) return DayCompletionStatus.none;
+
+    // 2. 완료된 루틴 개수 세기 (is_completed 와 isCompleted 둘 다 호환되게 체크)
+    int completedCount = routines.where((r) => 
+        r['is_completed'] == true || r['isCompleted'] == true
+    ).length;
+
+    // 3. 상태 반환
+    if (completedCount == 0) return DayCompletionStatus.none;
+    if (completedCount == routines.length) return DayCompletionStatus.full;
+    return DayCompletionStatus.partial;
+  }
 }
 
-enum _DayStyle { plain, selected, weekend }
-
 class _DayColumn extends StatelessWidget {
-  const _DayColumn({required this.label, required this.day, required this.style});
+  static const double _homeStampSize = 46.0; 
+
+  const _DayColumn({
+    required this.label, 
+    required this.day, 
+    required this.isSelected,
+    required this.isWeekend,
+    required this.completionStatus,
+  });
+  
   final String label;
   final String day;
-  final _DayStyle style;
+  final bool isSelected;
+  final bool isWeekend;
+  final DayCompletionStatus completionStatus;
 
   @override
   Widget build(BuildContext context) {
-    Widget dayChip;
-    switch (style) {
-      case _DayStyle.selected:
-        dayChip = Container(
-          width: 40, height: 40, alignment: Alignment.center,
-          decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle, boxShadow: AppShadows.plushShadow),
-          child: Text(day, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
-        );
-      case _DayStyle.weekend:
-        dayChip = SizedBox(width: 40, height: 40, child: Center(child: Text(day, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary))));
-      case _DayStyle.plain:
-        dayChip = SizedBox(width: 40, height: 40, child: Center(child: Text(day, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onSurface))));
-    }
+    Color labelColor = isWeekend ? const Color(0xFFF87171) : AppColors.secondary;
+    Color dayTextColor = isWeekend ? const Color(0xFFF87171) : AppColors.onSurface;
+    Color selectionBgColor = isSelected ? AppColors.primary.withOpacity(0.15) : Colors.transparent;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.secondary)),
+        // 🚀 3. 요일 텍스트 영역
+        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: labelColor)),
         const SizedBox(height: 8),
-        dayChip,
+        
+        // 🚀 4. 요일 밀림 방지를 위해 Stack을 고정 크기 Container로 감싸기
+        SizedBox(
+          width: _homeStampSize, // 46px 고정
+          height: _homeStampSize, // 46px 고정
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // 선택 배경 (은은한 원)
+              Container(
+                width: 38, height: 38,
+                decoration: BoxDecoration(
+                  color: selectionBgColor, 
+                  shape: BoxShape.circle,
+                ),
+              ),
+
+              // 스탬프 이미지
+              if (completionStatus != DayCompletionStatus.none)
+                Opacity(
+                  opacity: 0.7,
+                  child: Image.asset(
+                    completionStatus == DayCompletionStatus.full
+                        ? 'assets/images/circle.webp'
+                        : 'assets/images/triangle.webp',
+                    width: _homeStampSize,
+                    height: _homeStampSize,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                  ),
+                ),
+
+              // 날짜 숫자
+              Text(
+                day, 
+                style: TextStyle(
+                  fontSize: 15, 
+                  fontWeight: FontWeight.w700, 
+                  color: dayTextColor,
+                  shadows: completionStatus != DayCompletionStatus.none 
+                      ? [const Shadow(color: Colors.white, blurRadius: 4)] 
+                      : null,
+                )
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
