@@ -18,6 +18,14 @@
     <mvc:resources mapping="/webjars/**" location="classpath:/META-INF/resources/webjars/" />
     <mvc:resources mapping="/uploads/**" location="file:///D:/app_development/uploads/"/>
 
+    <mvc:cors>
+        <mvc:mapping path="/api/**"
+                     allowed-origins="*"
+                     allowed-methods="GET,POST,PUT,DELETE,OPTIONS"
+                     allowed-headers="*"
+                     allow-credentials="false"/>
+    </mvc:cors>
+
     <context:property-placeholder location="classpath:db.properties" />
 
 
