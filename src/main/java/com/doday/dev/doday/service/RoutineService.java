@@ -3,6 +3,7 @@ package com.doday.dev.doday.service;
 import com.doday.dev.doday.common.ErrorCode;
 import com.doday.dev.doday.domain.Routine;
 import com.doday.dev.doday.domain.RoutineLog;
+import com.doday.dev.doday.dto.RoutineOrderDto;
 import com.doday.dev.doday.mapper.RoutineLogMapper;
 import com.doday.dev.doday.mapper.RoutineMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -158,6 +159,20 @@ public class RoutineService {
         DayOfWeek dayOfWeek = LocalDate.now().getDayOfWeek();
         String day = dayOfWeek.name().substring(0, 3); // MON , TUE, WED
         return routineMapper.findTodayRoutines(userid, day);
+    }
+
+
+    public void updateOrder(Long userId, List<RoutineOrderDto> orderList) {
+        for (RoutineOrderDto dto : orderList) {
+            Routine routine = routineMapper.findById(dto.getId());
+            if (routine == null) {
+                throw new IllegalArgumentException(ErrorCode.ROUTINE_NOT_FOUND.getMessage());
+            }
+            if (!routine.getUserId().equals(userId)) {
+                throw new IllegalArgumentException(ErrorCode.ROUTINE_FORBBIDEN.getMessage());
+            }
+            routineMapper.updateOrder(dto.getId(), dto.getSortOrder());
+        }
     }
 
 }

@@ -16,4 +16,5 @@ public class Routine {
     private Boolean isActive;
     private String createdAt;
     private Integer iconId;
+    private Integer sortOrder;
 }

@@ -3,6 +3,7 @@ package com.doday.dev.doday.controller;
 
 import com.doday.dev.doday.common.ApiResponse;
 import com.doday.dev.doday.domain.Routine;
+import com.doday.dev.doday.dto.RoutineOrderDto;
 import com.doday.dev.doday.service.RoutineService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -89,4 +90,15 @@ public class RoutineController {
         Long userId = (Long) request.getAttribute("userId");
         return ApiResponse.success(routineService.getToday(userId));
     }
+
+    @ApiOperation(value = "루틴 순서 변경", notes = "루틴 리스트 순서 변경")
+    @PutMapping("/order")
+    public ApiResponse<Void> updateOrder(
+            @RequestBody List<RoutineOrderDto> orderList,
+            HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        routineService.updateOrder(userId, orderList);
+        return ApiResponse.success(null);
+    }
+
 }

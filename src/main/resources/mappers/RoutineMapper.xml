@@ -13,9 +13,6 @@
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
-    <select id="findByUserId" resultType="com.doday.dev.doday.domain.Routine">
-        SELECT * FROM Routines WHERE user_id = #{userId}
-    </select>
 
     <select id="findById" resultType="com.doday.dev.doday.domain.Routine">
         SELECT * FROM Routines WHERE id = #{id}
@@ -50,5 +47,17 @@
           AND is_active = TRUE
           AND FIND_IN_SET(#{dayOfWeek}, days_of_week) > 0
     </select>
+
+    <select id="findByUserId" resultMap="RoutineResultMap">
+        SELECT * FROM Routines
+        WHERE user_id = #{userId}
+        ORDER BY sort_order ASC
+    </select>
+
+    <update id="updateOrder">
+        UPDATE Routines
+        SET sort_order = #{sortOrder}
+        WHERE id = #{id}
+    </update>
 
 </mapper>
