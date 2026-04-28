@@ -2,8 +2,10 @@ package com.doday.dev.doday.service;
 
 import com.doday.dev.doday.domain.Routine;
 import com.doday.dev.doday.domain.RoutineLog;
+import com.doday.dev.doday.domain.User;
 import com.doday.dev.doday.mapper.RoutineLogMapper;
 import com.doday.dev.doday.mapper.RoutineMapper;
+import com.doday.dev.doday.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,9 @@ public class StatsService {
 
     @Autowired
     private RoutineLogMapper routineLogMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     // 월간 통계
     public Map<String, Object> getMonthly(Long userId, int year, int month) {
@@ -114,17 +119,25 @@ public class StatsService {
 
     // 스트릭 계산
     public Map<String, Object> getStreak(Long userId) {
+
+        // 유저 가입일 가져오기
+        User user = userMapper.findById(userId);
+        String startDate = user.getCreatedAt().substring(0, 10);
+
         List<Routine> routines = routineMapper.findByUserId(userId);
 
         // 전체 로그 날짜 중 완료된 날짜 Set으로 수집
         Set<String> completedDates = new HashSet<>();
+        int totalCompleted = 0;
+
         for (Routine routine : routines) {
             List<RoutineLog> logs = routineLogMapper.findByRoutineIdAndPeriod(
-                    routine.getId(), "2000-01-01", LocalDate.now().toString()
+                    routine.getId(), startDate, LocalDate.now().toString()
             );
             for (RoutineLog log : logs) {
                 if (log.isCompleted()) {
                     completedDates.add(log.getCheckDate());
+                    totalCompleted++;
                 }
             }
         }
@@ -132,11 +145,15 @@ public class StatsService {
         // 현재 스트릭 계산
         int currentStreak = 0;
         LocalDate date = LocalDate.now();
+
+        if (completedDates.contains(date.toString())) {
+            date = date.minusDays(1);
+        }
+
         while (!completedDates.contains(date.toString())) {
             currentStreak++;
             date = date.minusDays(1);
         }
-
 
         // 최장 스트릭 계산
         int logestStreak = 0;
@@ -162,6 +179,7 @@ public class StatsService {
         Map<String, Object> result = new HashMap<>();
         result.put("currentStreak", currentStreak);
         result.put("longestStreak", logestStreak);
+        result.put("totalCompleted", totalCompleted);
         return result;
     }
 }
