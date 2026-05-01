@@ -1,0 +1,49 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+class StatisticsService {
+  final String _baseUrl = 'https://nonextendible-kandace-gratifyingly.ngrok-free.dev/api/stats';
+
+  // GET /api/stats/streak - 상단 요약 통계 (스트릭 + 총 완료 개수 한 번에 가져오기)
+  Future<Map<String, dynamic>> fetchSummaryStats(String token) async {
+    final url = Uri.parse('$_baseUrl/streak'); 
+    final response = await http.get(url, headers: {'Authorization': 'Bearer $token'});
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      return decoded['data'] ?? decoded; 
+    } else {
+      throw Exception('통계 요약을 불러오지 못했습니다.');
+    }
+  }
+
+  // GET /api/stats/weekly - 주간 통계 (그래프용)
+  Future<Map<String, double>> fetchWeeklyStats(String token) async {
+    final url = Uri.parse('$_baseUrl/weekly'); // URL 중복 수정 완료
+    final response = await http.get(url, headers: {'Authorization': 'Bearer $token'});
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      final daily = decoded['data']['daily'] as Map<String, dynamic>;
+      
+      // JSON의 값을 Map<String, double>로 깔끔하게 캐스팅
+      return daily.map((key, value) => MapEntry(key, (value as num).toDouble()));
+    } else {
+      throw Exception('주간 통계를 불러오지 못했습니다.');
+    }
+  }
+
+  // GET /api/routines/monthly-daily?year=yyyy&month=m - 월간 통계 (달력 스탬프용)
+  Future<Map<String, double>> fetchMonthlyStats(String token, int year, int month) async {
+    final url = Uri.parse('$_baseUrl/monthly?year=$year&month=$month'); 
+    final response = await http.get(url, headers: {'Authorization': 'Bearer $token'});
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      final daily = decoded['data']['daily'] as Map<String, dynamic>;
+      return daily.map((key, value) => MapEntry(key, (value as num).toDouble()));
+    } else {
+      throw Exception('월간 통계를 불러오지 못했습니다.');
+    }
+  }
+}
