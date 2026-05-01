@@ -3,10 +3,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import '../service/routine_service.dart';
 import '../theme/app_icon.dart';
+import '../widget/custom_snackbar.dart';
+import 'statistics_provider.dart';
+import 'package:provider/provider.dart';
 
 class RoutineProvider with ChangeNotifier {
   final RoutineService _routineService = RoutineService();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  String _lastCheeredDateKey = '';   // 하루에 한 번만 스낵바를 띄우기 위해 마지막으로 응원한 날짜를 기억하는 변수
 
   DateTime _selectedDate = DateTime.now();
   
@@ -89,8 +93,8 @@ class RoutineProvider with ChangeNotifier {
     fetchMonthData(date);
   }
 
-  // 🚀 루틴 완료 체크 (낙관적 업데이트)
-  Future<void> toggleRoutineCheck(int routineId) async {
+ // 🚀 루틴 완료 체크 (낙관적 업데이트 + 하루 한 번 쿼카 응원)
+  Future<void> toggleRoutineCheck(BuildContext context, int routineId) async {
     String monthKey = DateFormat('yyyy-MM').format(_selectedDate);
     String dateKey = DateFormat('yyyy-MM-dd').format(_selectedDate);
 
@@ -100,18 +104,46 @@ class RoutineProvider with ChangeNotifier {
     final index = dayRoutines.indexWhere((r) => r['id'] == routineId);
     
     if (index != -1) {
-      // 1. 서버 응답 전 내 창고 데이터부터 즉시 수정 (체크박스 & 달력 스탬프 동시 반응)
       bool currentStatus = dayRoutines[index]['is_completed'] ?? dayRoutines[index]['isCompleted'] ?? false;
+
+      // 오늘 이미 완료된 다른 루틴이 있는지 검사
+      bool hasOtherCompleted = dayRoutines.any((r) => 
+         r['id'] != routineId && (r['is_completed'] ?? r['isCompleted'] ?? false) == true
+      );
+
+      // 1. 내 창고 데이터 즉시 수정
       dayRoutines[index]['is_completed'] = !currentStatus;
       dayRoutines[index]['isCompleted'] = !currentStatus; 
       notifyListeners();
 
-      // 2. 서버에는 뒤에서 조용히 보고
+      // 🚀 [핵심 수정] 상태가 바뀌었으니, 무조건 통계 탭도 갱신하라고 깃발을 먼저 올립니다!
+      // 이렇게 해야 홈에서 체크 후 통계 탭을 눌렀을 때 실시간으로 싹 바뀝니다.
+      if (context.mounted) {
+        context.read<StatisticsProvider>().markAsDirty();
+      }
+
+      // 🎁 [쿼카 스낵바 로직] 
+      // 안 했던 걸 완료(true)로 바꿨고 + 다른 완료 루틴이 없으며 + 이 날짜에 아직 응원한 적이 없다면!
+      if (!currentStatus && !hasOtherCompleted && _lastCheeredDateKey != dateKey) {
+        if (context.mounted) CustomSnackBar.showCheer(context);
+        
+        // 🚀 스낵바를 띄웠으니, 이 날짜는 띄웠다고 도장을 찍어둠 (해제했다 다시 체크해도 안 뜸)
+        _lastCheeredDateKey = dateKey; 
+      }
+
+      // 2. 서버 통신 및 롤백 로직 (기존과 동일)
       try {
         final token = await _getToken();
         await _routineService.checkRoutine(token, routineId, dateKey);
       } catch (e) {
-        // 실패 시 다시 원래대로 복구하는 로직 (선택 사항)
+        dayRoutines[index]['is_completed'] = currentStatus; 
+        dayRoutines[index]['isCompleted'] = currentStatus; 
+        notifyListeners(); 
+        
+        if (context.mounted) {
+          context.read<StatisticsProvider>().markAsDirty();
+          CustomSnackBar.show(context, message: '네트워크가 불안정하여 체크가 취소되었습니다.', isError: true);
+        }
         debugPrint('루틴 체크 에러: $e');
       }
     }
@@ -157,5 +189,11 @@ class RoutineProvider with ChangeNotifier {
     };
     await _routineService.updateRoutine(token, routineId, routineData);
     await _refreshAllData(); // 🔄 전체 캐시 갱신!
+  }
+
+  // 🚀 로그아웃 시 기존 유저의 데이터 메모리를 싹 비워주는 함수
+  void clearRoutines() {
+    _monthlyCache.clear(); // 월간 캐시 비우기
+    notifyListeners(); // 화면 갱신
   }
 }
