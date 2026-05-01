@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_shadow.dart';
-import '../provider/routine_provider.dart';
-import '../widget/app_modal.dart';
-import '../widget/custom_snackbar.dart';
+import '../../provider/routine_provider.dart';
+import 'app_modal.dart';
+import 'custom_snackbar.dart';
 import 'package:vibration/vibration.dart';
 
 class RoutineCard extends StatelessWidget {

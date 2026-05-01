@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../provider/auth_provider.dart';
-import '../provider/user_provider.dart';
+import '../../provider/auth_provider.dart';
+import '../../provider/user_provider.dart';
 import '../theme/app_colors.dart';
 import '../widget/custom_snackbar.dart';
 import 'main_screen.dart';

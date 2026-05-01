@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import '../provider/auth_provider.dart';
-import '../provider/user_provider.dart';
+import '../../provider/auth_provider.dart';
+import '../../provider/user_provider.dart';
 import '../theme/app_colors.dart';
 import 'login_screen.dart';
 import 'main_screen.dart'; 

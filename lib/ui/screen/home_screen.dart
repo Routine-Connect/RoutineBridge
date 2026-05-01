@@ -5,7 +5,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_shadow.dart';
 import '../theme/app_icon.dart';
 import '../widget/app_modal.dart';
-import '../provider/routine_provider.dart';
+import '../../provider/routine_provider.dart';
 import '../widget/routine_card.dart';
 
 class HomeScreen extends StatefulWidget {

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart'; // 🚀 주간 그래프용 패키지
 import '../theme/app_colors.dart';
 import '../theme/app_shadow.dart';
-import '../provider/statistics_provider.dart';
+import '../../provider/statistics_provider.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});

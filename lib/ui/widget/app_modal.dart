@@ -5,9 +5,9 @@ import '../theme/app_icon.dart';
 import 'custom_snackbar.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../provider/user_provider.dart';
-import '../provider/routine_provider.dart';
-import '../provider/theme_provider.dart';
+import '../../provider/user_provider.dart';
+import '../../provider/routine_provider.dart';
+import '../../provider/theme_provider.dart';
 
 class AppModals {
   

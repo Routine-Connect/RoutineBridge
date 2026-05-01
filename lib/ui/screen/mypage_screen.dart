@@ -5,10 +5,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:routine_app/provider/routine_provider.dart';
 import 'package:routine_app/provider/statistics_provider.dart';
+import 'package:routine_app/provider/theme_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_shadow.dart';
-import '../provider/auth_provider.dart';
-import '../provider/user_provider.dart';
+import '../../provider/auth_provider.dart';
+import '../../provider/user_provider.dart';
 import '../widget/app_modal.dart';
 import '../widget/custom_snackbar.dart';
 import 'login_screen.dart';
@@ -259,8 +260,13 @@ class _SettingsSection extends StatelessWidget {
         _SettingTile(
           icon: Icons.logout, title: '로그아웃', isDestructive: true, showChevron: true,
           onTap: () async {
-            await context.read<AuthProvider>().logout();  // 유저 정보 초기화 및 토큰 삭제
+            await context.read<AuthProvider>().logout();  // 토큰 삭제
+
+            context.read<UserProvider>().clearUser();  // 유저 정보 초기화
             context.read<RoutineProvider>().clearRoutines();  // 루틴 데이터 초기화
+            context.read<StatisticsProvider>().clearStats();  // 통계 데이터 초기화
+            context.read<ThemeProvider>().clearTheme();  // 테마 데이터 초기화
+            
             if (!context.mounted) return;
             Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => const LoginScreen()), (route) => false);
           },

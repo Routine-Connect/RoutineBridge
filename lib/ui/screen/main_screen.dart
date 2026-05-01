@@ -3,7 +3,7 @@ import '../theme/app_colors.dart';
 import 'home_screen.dart';
 import 'mypage_screen.dart';
 import 'statistics_screen.dart';
-import '../provider/statistics_provider.dart';
+import '../../provider/statistics_provider.dart';
 import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
