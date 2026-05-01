@@ -1,5 +1,19 @@
 import 'package:flutter/material.dart';
 
+enum DodayThemeType { milkTea, sage, rose, ocean, lavender }
+
+class DodayThemeColors {
+  final Color primary;
+  final Color primaryContainer;
+  final String label;
+
+  const DodayThemeColors({
+    required this.primary,
+    required this.primaryContainer,
+    required this.label,
+  });
+}
+
 /// Doday 프로젝트 공통 디자인 시스템 (부드럽고 따뜻한 밀크/파스텔 톤으로 리팩토링)
 abstract final class AppColors {
   // —— Material 3 토큰 (전체적으로 한 톤 밝고 부드럽게 조정) ——
@@ -128,4 +142,32 @@ abstract final class AppColors {
   static const Color darkNavBar = Color(0xFF1C1917);
   static const Color darkNavHover = Color(0xFF292524);
   static const Color darkMutedText = Color(0xFFA8A29E);
+
+  static const Map<DodayThemeType, DodayThemeColors> themes = {
+    DodayThemeType.milkTea: DodayThemeColors(
+      primary: Color(0xFFDCAE87), // 기존 오리지널
+      primaryContainer: Color(0xFFFBF1E6),
+      label: '포근한 밀크티',
+    ),
+    DodayThemeType.sage: DodayThemeColors(
+      primary: Color(0xFF8DA399), // 차분한 그린
+      primaryContainer: Color(0xFFF0F4F2),
+      label: '싱그러운 세이지',
+    ),
+    DodayThemeType.rose: DodayThemeColors(
+      primary: Color(0xFFE2979C), // 따뜻한 핑크
+      primaryContainer: Color(0xFFF9F0F1),
+      label: '달콤한 로즈티',
+    ),
+    DodayThemeType.ocean: DodayThemeColors(
+      primary: Color(0xFF89A5C0), // 맑은 블루
+      primaryContainer: Color(0xFFF0F4F8),
+      label: '투명한 바다',
+    ),
+    DodayThemeType.lavender: DodayThemeColors(
+      primary: Color(0xFFB0A4C4), // 우아한 퍼플
+      primaryContainer: Color(0xFFF2F0F6),
+      label: '은은한 라벤더',
+    ),
+  };
 }

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../provider/user_provider.dart';
 import '../provider/routine_provider.dart';
+import '../provider/theme_provider.dart';
 
 class AppModals {
   
@@ -154,13 +155,33 @@ class AppModals {
             final Color currentFgColor = AppIcons.routineIconForegroundColors[currentIconIndex];
 
             return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 32),
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom, left: 24, right: 24, top: 32),
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(isEditMode ? '루틴 수정하기' : '새로운 루틴 추가', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.onSurface)),
+                    // 🚀 수정: 제목 텍스트를 Row로 감싸고 우측 끝에 휴지통 버튼을 추가합니다.
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(isEditMode ? '루틴 수정하기' : '새로운 루틴 추가', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.onSurface)),
+                        
+                        // 🚀 수정 모드일 때만 휴지통 아이콘 노출
+                        if (isEditMode)
+                          IconButton(
+                            onPressed: () async {
+                              // routine은 null이 아님이 보장되므로 ! 사용
+                              await context.read<RoutineProvider>().deleteRoutine(routine!['id']);
+                              if (context.mounted) {
+                                Navigator.pop(context); // 창 닫기
+                                CustomSnackBar.show(context, message: '루틴이 삭제되었습니다.');
+                              }
+                            },
+                            icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                          ),
+                      ],
+                    ),
                     const SizedBox(height: 24),
                     
                     // --- 아이콘 및 이름 입력 ---
@@ -457,5 +478,90 @@ class AppModals {
         );
       },
     );
+  }
+
+  static void showThemeSelectBottomSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: AppColors.background,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    ),
+    builder: (context) {
+      return Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '나만의 색상 선택하기',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.onSurface),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Doday를 당신의 취향으로 물들여보세요.',
+                  style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
+                ),
+                const SizedBox(height: 32),
+                
+                // 🚀 테마 리스트 레이아웃
+                Wrap(
+                  spacing: 20,
+                  runSpacing: 24,
+                  children: DodayThemeType.values.map((type) {
+                    final themeColors = AppColors.themes[type]!;
+                    final isSelected = themeProvider.currentThemeType == type;
+
+                    return GestureDetector(
+                      onTap: () => themeProvider.setTheme(type),
+                      child: Column(
+                        children: [
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: themeColors.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: isSelected ? themeColors.primary : Colors.transparent,
+                                    width: 3,
+                                  ),
+                                  boxShadow: isSelected 
+                                    ? [BoxShadow(color: themeColors.primary.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4))]
+                                    : null,
+                                ),
+                              ),
+                              if (isSelected)
+                                const Icon(Icons.check, color: Colors.white, size: 28),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            themeColors.label,
+                            style: TextStyle(
+                              fontSize: 12, 
+                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                              color: isSelected ? AppColors.onSurface : AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 40),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
   }
 }
