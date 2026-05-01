@@ -3,6 +3,8 @@ import '../theme/app_colors.dart';
 import 'home_screen.dart';
 import 'mypage_screen.dart';
 import 'statistics_screen.dart';
+import '../provider/statistics_provider.dart';
+import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -25,6 +27,19 @@ class _MainScreenState extends State<MainScreen> {
   final List<String> _titles = ['홈', '통계', '프로필'];
 
   void _onTap(int index) {
+    if (_currentIndex == index) return;
+
+    // 🚀 전환되는 탭에 맞는 데이터만 정확히 호출
+    if (index == 1) {
+      // 통계 탭 진입 시
+      context.read<StatisticsProvider>().loadSummaryOnly(); // 숫자 최신화
+      context.read<StatisticsProvider>().loadFullStats();   // 그래프/달력 최신화
+    }
+    else if (index == 2) {
+      // 프로필 탭: 상세 프로필 + 요약 수치 호출
+      context.read<StatisticsProvider>().loadSummaryOnly();
+    }
+    
     setState(() => _currentIndex = index);
   }
 
