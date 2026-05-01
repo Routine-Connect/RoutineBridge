@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:routine_app/provider/routine_provider.dart';
+import 'package:routine_app/provider/statistics_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_shadow.dart';
 import '../provider/auth_provider.dart';
@@ -141,37 +143,64 @@ class _StatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 🚀 Provider를 구독하여 실제 통계 데이터를 실시간으로 가져옵니다.
+    final statsProvider = context.watch<StatisticsProvider>();
+    final int longestStreak = statsProvider.longestStreak; // 최장 기록 변수
+    final int totalCompleted = statsProvider.totalCompleted; // 완료 루틴 변수
+
     return Row(
       children: [
+        // 1. 연속 기록 카드
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.streakOrange.withOpacity(0.1)), boxShadow: AppShadows.plushShadow),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLowest, 
+              borderRadius: BorderRadius.circular(16), 
+              border: Border.all(color: AppColors.streakOrange.withOpacity(0.1)), 
+              boxShadow: AppShadows.plushShadow
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(width: 32, height: 32, decoration: BoxDecoration(color: AppColors.streakOrange.withOpacity(0.1), shape: BoxShape.circle), child: const Icon(Icons.local_fire_department, color: AppColors.streakOrange, size: 20)),
+                Container(
+                  width: 32, height: 32, 
+                  decoration: BoxDecoration(color: AppColors.streakOrange.withOpacity(0.1), shape: BoxShape.circle), 
+                  child: const Icon(Icons.local_fire_department, color: AppColors.streakOrange, size: 20)
+                ),
                 const SizedBox(height: 12),
-                const Text('연속 기록', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.secondary)),
+                const Text('최장 기록', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.secondary)),
                 const SizedBox(height: 2),
-                const Text('12일', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.streakOrange)),
+                // 최장 기록
+                Text('$longestStreak일', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.streakOrange)),
               ],
             ),
           ),
         ),
         const SizedBox(width: 16),
+        // 2. 완료 루틴 카드
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primary.withOpacity(0.05)), boxShadow: AppShadows.plushShadow),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLowest, 
+              borderRadius: BorderRadius.circular(16), 
+              border: Border.all(color: AppColors.primary.withOpacity(0.05)), 
+              boxShadow: AppShadows.plushShadow
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(width: 32, height: 32, decoration: const BoxDecoration(color: AppColors.tertiaryFixed, shape: BoxShape.circle), child: const Icon(Icons.check_circle, color: AppColors.tertiary, size: 20)),
+                Container(
+                  width: 32, height: 32, 
+                  decoration: const BoxDecoration(color: AppColors.tertiaryFixed, shape: BoxShape.circle), 
+                  child: const Icon(Icons.check_circle, color: AppColors.tertiary, size: 20)
+                ),
                 const SizedBox(height: 12),
                 const Text('완료 루틴', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.secondary)),
                 const SizedBox(height: 2),
-                const Text('48개', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.onSurface)),
+                // 완료 루틴
+                Text('$totalCompleted개', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.onSurface)),
               ],
             ),
           ),
@@ -200,7 +229,14 @@ class _SettingsSection extends StatelessWidget {
           },
         ),
         const SizedBox(height: 8),
-        const _SettingTile(icon: Icons.palette, title: '테마 설정', showChevron: true),
+        _SettingTile(
+          icon: Icons.palette, 
+          title: '테마 설정', 
+          showChevron: true, 
+          onTap: () {
+            AppModals.showThemeSelectBottomSheet(context);
+          },
+        ),
         const SizedBox(height: 8),
         _SettingTile(
           icon: Icons.lock, title: '비밀번호 변경', showChevron: true,
@@ -223,7 +259,8 @@ class _SettingsSection extends StatelessWidget {
         _SettingTile(
           icon: Icons.logout, title: '로그아웃', isDestructive: true, showChevron: true,
           onTap: () async {
-            await context.read<AuthProvider>().logout();
+            await context.read<AuthProvider>().logout();  // 유저 정보 초기화 및 토큰 삭제
+            context.read<RoutineProvider>().clearRoutines();  // 루틴 데이터 초기화
             if (!context.mounted) return;
             Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => const LoginScreen()), (route) => false);
           },
