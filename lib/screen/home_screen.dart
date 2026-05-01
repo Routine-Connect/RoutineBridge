@@ -39,137 +39,175 @@ class _HomeScreenState extends State<HomeScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           const SizedBox(height: 24),
+          // 상단 달력
           const HomeWeekCalendar(),
-          const SizedBox(height: _sectionGap),
-          const HomeCheerBanner(),
           const SizedBox(height: _sectionGap),
           
           // 루틴 리스트 헤더
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('루틴 리스트', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.primary)),
-            ],
-          ),
+          const RoutineListHeader(),
           const SizedBox(height: 16),
 
-          // 🚀 데이터 연동된 루틴 리스트 (깜빡임 없는 부드러운 로딩 UX 적용)
-          Consumer<RoutineProvider>(
-            builder: (context, routineProvider, child) {
-              final routines = routineProvider.routines;
-              final isLoading = routineProvider.isLoading;
-
-              // 💡 미래 날짜 판별 로직 추가 (시간은 무시하고 '날짜'만 비교합니다)
-              final selectedDate = DateUtils.dateOnly(routineProvider.selectedDate);
-              final today = DateUtils.dateOnly(DateTime.now());
-              final bool isFutureDate = selectedDate.isAfter(today);
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 1. 상단 얇은 로딩 바 (공간이 들썩거리지 않게 고정 높이 지정)
-                  SizedBox(
-                    height: 3,
-                    child: isLoading 
-                        ? const LinearProgressIndicator(color: AppColors.primary, backgroundColor: Colors.transparent)
-                        : const SizedBox.shrink(),
-                  ),
-                  const SizedBox(height: 13), // 기존 여백 16에서 로딩바 높이(3)를 뺀 값
-
-                  // 2. 등록된 루틴이 없을 때 (로딩 중이 아닐 때만 표시)
-                  if (routines.isEmpty && !isLoading)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 40),
-                      child: Center(
-                        child: Text('등록된 루틴이 없습니다.\n아래 버튼을 눌러 추가해보세요!', 
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: AppColors.secondary, height: 1.5)
-                        )
-                      ),
-                    ),
-
-                  // 3. 루틴 리스트 렌더링 (핵심!)
-                  if (routines.isNotEmpty || isLoading)
-                    Opacity(
-                      opacity: isLoading ? 0.4 : 1.0, // 💡 로딩 중일 때는 40% 투명도로 흐려짐
-                      child: IgnorePointer(
-                        ignoring: isLoading, // 💡 로딩 중일 때는 중복 클릭 방지
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: isLoading && routines.isEmpty ? 0 : routines.length, // 데이터가 아예 없는데 로딩 중이면 안그림
-                          itemBuilder: (context, index) {
-                            final routine = routines[index];
-                            
-                            // 서버에서 받은 icon_id 추출 
-                            final int iconId = routine['icon_id'] ?? routine['iconId'] ?? 1; 
-                            // 🚀 리스트에서 아이콘, 배경색, 전경색을 인덱스로 찾기
-                            final IconData matchedIcon = AppIcons.routineIcons[(iconId - 1).clamp(0, 19)];
-                            final Color matchedBackgroundColor = AppIcons.routineIconBackgroundColors[(iconId - 1).clamp(0, 19)];
-                            final Color matchedForegroundColor = AppIcons.routineIconForegroundColors[(iconId - 1).clamp(0, 19)];
-
-                            // 시간 문자열 가공 ("09:00:00" -> "09:00")
-                            String timeRaw = routine['alarm_time'] ?? routine['alarmTime'] ?? '';
-                            String displayTime = timeRaw.length >= 5 ? timeRaw.substring(0, 5) : timeRaw;
-
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: RoutineCard(
-                                routineId: routine['id'] ?? 0,
-                                icon: matchedIcon, 
-                                backgroundColor: matchedBackgroundColor,
-                                foregroundColor: matchedForegroundColor,
-                                title: routine['title'] ?? '이름 없음',
-                                subtitle: displayTime, 
-                                completed: routine['is_completed'] ?? routine['isCompleted'] ?? false, 
-                                rawData: routine, 
-                                isFuture: isFutureDate,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
+          // 데이터 연동 루틴 리스트
+          const HomeRoutineList(),
           const SizedBox(height: _sectionGap),
 
-          // 🚀 루틴 추가 버튼 (모달 연결)
-          Center(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 8))],
-              ),
-              child: Material(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(999),
-                child: InkWell(
-                  onTap: () => AppModals.showRoutineFormBottomSheet(context), 
-                  borderRadius: BorderRadius.circular(999),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add, color: Colors.white, size: 22),
-                        SizedBox(width: 8),
-                        Text('루틴 추가하기', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          // 루틴 추가 버튼
+          const HomeAddRoutineButton(),
+          
           SizedBox(height: 25 + bottomInset),
         ],
       ),
     );
   }
 }
+
+// ==============================================
+// HomeScreen을 깔끔하게 만들기 위해 분리해낸 위젯
+// ==============================================
+
+/// 1. 루틴 리스트 헤더 위젯
+class RoutineListHeader extends StatelessWidget {
+  const RoutineListHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          '루틴 리스트', 
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.primary),
+        ),
+      ],
+    );
+  }
+}
+
+/// 2. 루틴 리스트 메인 위젯 (상태 구독 및 렌더링 로직 포함)
+class HomeRoutineList extends StatelessWidget {
+  const HomeRoutineList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<RoutineProvider>(
+      builder: (context, routineProvider, child) {
+        final routines = routineProvider.routines;
+        final isLoading = routineProvider.isLoading;
+
+        // 미래 날짜 판별 로직
+        final selectedDate = DateUtils.dateOnly(routineProvider.selectedDate);
+        final today = DateUtils.dateOnly(DateTime.now());
+        final bool isFutureDate = selectedDate.isAfter(today);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 상단 얇은 로딩 바
+            SizedBox(
+              height: 3,
+              child: isLoading 
+                  ? const LinearProgressIndicator(color: AppColors.primary, backgroundColor: Colors.transparent)
+                  : const SizedBox.shrink(),
+            ),
+            const SizedBox(height: 13), 
+
+            // 등록된 루틴이 없을 때
+            if (routines.isEmpty && !isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: Center(
+                  child: Text(
+                    '등록된 루틴이 없습니다.\n아래 버튼을 눌러 추가해보세요!', 
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.secondary, height: 1.5)
+                  )
+                ),
+              ),
+
+            // 루틴 리스트 렌더링
+            if (routines.isNotEmpty || isLoading)
+              Opacity(
+                opacity: isLoading ? 0.4 : 1.0, 
+                child: IgnorePointer(
+                  ignoring: isLoading, 
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: isLoading && routines.isEmpty ? 0 : routines.length,
+                    itemBuilder: (context, index) {
+                      final routine = routines[index];
+                      
+                      final int iconId = routine['icon_id'] ?? routine['iconId'] ?? 1; 
+                      final IconData matchedIcon = AppIcons.routineIcons[(iconId - 1).clamp(0, 19)];
+                      final Color matchedBackgroundColor = AppIcons.routineIconBackgroundColors[(iconId - 1).clamp(0, 19)];
+                      final Color matchedForegroundColor = AppIcons.routineIconForegroundColors[(iconId - 1).clamp(0, 19)];
+
+                      String timeRaw = routine['alarm_time'] ?? routine['alarmTime'] ?? '';
+                      String displayTime = timeRaw.length >= 5 ? timeRaw.substring(0, 5) : timeRaw;
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: RoutineCard(
+                          routineId: routine['id'] ?? 0,
+                          icon: matchedIcon, 
+                          backgroundColor: matchedBackgroundColor,
+                          foregroundColor: matchedForegroundColor,
+                          title: routine['title'] ?? '이름 없음',
+                          subtitle: displayTime, 
+                          completed: routine['is_completed'] ?? routine['isCompleted'] ?? false, 
+                          rawData: routine, 
+                          isFuture: isFutureDate,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// 3. 루틴 추가 버튼 위젯
+class HomeAddRoutineButton extends StatelessWidget {
+  const HomeAddRoutineButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: [
+            BoxShadow(color: AppColors.primary.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 8))
+          ],
+        ),
+        child: Material(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(999),
+          child: InkWell(
+            onTap: () => AppModals.showRoutineFormBottomSheet(context), 
+            borderRadius: BorderRadius.circular(999),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add, color: Colors.white, size: 22),
+                  SizedBox(width: 8),
+                  Text('루틴 추가하기', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 // --- 완료 상태를 구분하기 위한 Enum ---
 enum DayCompletionStatus { none, partial, full }
@@ -379,36 +417,6 @@ class _DayColumn extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-// --- 응원 배너 ---
-class HomeCheerBanner extends StatelessWidget {
-  const HomeCheerBanner({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 192, width: double.infinity,
-      decoration: BoxDecoration(color: AppColors.primaryContainer, borderRadius: BorderRadius.circular(20), boxShadow: AppShadows.plushShadow),
-      child: Stack(
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('오늘의 응원', style: TextStyle(fontSize: 14, color: AppColors.secondary)),
-                SizedBox(height: 4),
-                Text('오늘도 힘내요!\n쿼카가 응원할게요', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, height: 1.2)),
-              ],
-            ),
-          ),
-          Positioned(right: -3, bottom: 25, child: Image.asset('assets/images/quokka_cheerleader.webp', width: 150, fit: BoxFit.contain)),
-        ],
-      ),
     );
   }
 }
