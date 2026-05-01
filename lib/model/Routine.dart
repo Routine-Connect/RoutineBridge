@@ -8,6 +8,7 @@ class Routine {
   final TimeOfDay? alarmTime;
   final bool isActive;
   final int iconId;
+  final int sortOrder;
 
   Routine({
     required this.id,
@@ -17,6 +18,7 @@ class Routine {
     this.alarmTime,
     required this.isActive,
     required this.iconId,
+    required this.sortOrder,
   });
 
   factory Routine.fromJson(Map<String, dynamic> json) {
@@ -28,6 +30,7 @@ class Routine {
       alarmTime: json['alarm_time'],
       isActive: json['is_active'] == true || json['is_active'] == 1,
       iconId: json['icon_id'] ?? 1, 
+      sortOrder: json['sort_order'] ?? 0,
     );
   }
 }
