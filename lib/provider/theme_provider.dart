@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../theme/app_colors.dart';
+import '../ui/theme/app_colors.dart';
 
 class ThemeProvider with ChangeNotifier {
   final _storage = const FlutterSecureStorage();
@@ -8,7 +8,7 @@ class ThemeProvider with ChangeNotifier {
 
   DodayThemeType get currentThemeType => _currentTheme;
   
-  // 🚀 현재 테마의 색상을 반환하는 Getter (UI에서 이거만 부르면 됨)
+  // 🚀 현재 테마의 색상을 반환하는 Getter
   DodayThemeColors get colors => AppColors.themes[_currentTheme]!;
 
   ThemeProvider() {
@@ -28,5 +28,11 @@ class ThemeProvider with ChangeNotifier {
       _currentTheme = DodayThemeType.values.firstWhere((e) => e.name == saved);
       notifyListeners();
     }
+  }
+
+  // 테마 초기화 (로그아웃 시 호출)
+  void clearTheme() {
+    _currentTheme = DodayThemeType.milkTea; // 기본 테마로 초기화
+    notifyListeners();
   }
 }

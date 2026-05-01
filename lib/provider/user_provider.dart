@@ -103,4 +103,11 @@ class UserProvider with ChangeNotifier {
        await loadNotificationSettings(); 
     }
   }
+  
+  // 🚀 로그아웃 시 메모리 누수 방지용 초기화
+  void clearUser() {
+    _currentUser = null;
+    _notificationSettings = null;
+    notifyListeners();
+  }
 }

@@ -118,4 +118,16 @@ class StatisticsProvider with ChangeNotifier {
       notifyListeners(); // 에러 나도 멈춤 방지를 위해 호출
     }
   }
+
+  // 🚀 로그아웃 시 이전 유저의 통계 데이터 완벽 삭제
+  void clearStats() {
+    _currentStreak = 0;
+    _longestStreak = 0;
+    _totalCompleted = 0;
+    _weeklyStats.clear();
+    _monthlyStats.clear();
+    _isDirty = true;
+    _isFetching = false;
+    notifyListeners();
+  }
 }
