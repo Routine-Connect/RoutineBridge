@@ -74,7 +74,7 @@ public class RoutineService {
     }
 
     // 한달치 루틴 조회
-    public Map<String, List<Map<String, Object>>> getMonthlyRoutines(Long userId, int year, int month) {
+    public Map<String, Object> getMonthlyRoutines(Long userId, int year, int month) {
         YearMonth ym = YearMonth.of(year, month);
         String startDate = ym.atDay(1).toString();
         String endDate = ym.atEndOfMonth().toString();
@@ -85,8 +85,7 @@ public class RoutineService {
         Map<String, Map<Long, Boolean>> logMap = new HashMap<>();
         for (Routine routine : routines) {
             List<RoutineLog> logs = routineLogMapper.findByRoutineIdAndPeriod(
-                    routine.getId(), startDate, endDate
-            );
+                    routine.getId(), startDate, endDate);
             for (RoutineLog log : logs) {
                 logMap.computeIfAbsent(log.getCheckDate(), k -> new HashMap<>())
                         .put(log.getRoutineId(), log.isCompleted());
@@ -94,7 +93,9 @@ public class RoutineService {
         }
 
         // 날짜별 루틴 구성
-        Map<String, List<Map<String, Object>>> result = new LinkedHashMap<>();
+        Map<String, List<Map<String, Object>>> daily = new LinkedHashMap<>();
+        int totalRoutineCount = 0;
+        int completedRoutineCount = 0;
 
         for (int d = 1; d <= ym.lengthOfMonth(); d++) {
             LocalDate date = ym.atDay(d);
@@ -120,10 +121,19 @@ public class RoutineService {
                 map.put("isCompleted", isCompleted);
 
                 dayRoutines.add(map);
+
+                // 이번달 루틴 총개수 / 완료 개수 집계
+                totalRoutineCount++;
+                if (isCompleted) completedRoutineCount++;
             }
 
-            result.put(dateStr, dayRoutines);
+            daily.put(dateStr, dayRoutines);
         }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("daily", daily);
+        result.put("totalRoutineCount", totalRoutineCount);
+        result.put("completedRoutineCount", completedRoutineCount);
         return result;
     }
 

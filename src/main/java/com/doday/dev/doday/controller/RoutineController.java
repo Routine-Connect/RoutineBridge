@@ -48,7 +48,7 @@ public class RoutineController {
 
     @ApiOperation(value = "월간 루틴 조회", notes = "한달치 날짜별 루틴 목록 조회")
     @GetMapping("/monthly-daily")
-    public ApiResponse<Map<String, List<Map<String, Object>>>> getMonthlyDaily(
+    public ApiResponse<Map<String, Object>> getMonthlyDaily(
             @RequestParam int year,
             @RequestParam int month,
             HttpServletRequest request
