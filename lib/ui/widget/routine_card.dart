@@ -49,7 +49,7 @@ class RoutineCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: completed ? AppColors.surfaceContainerLow.withOpacity(0.5) : AppColors.surfaceContainerLowest, 
             borderRadius: BorderRadius.circular(16), 
-            boxShadow: AppShadows.plushShadow,
+            boxShadow: AppShadows.getPlushShadow(context),
           ),
           child: Row(
             children: [
@@ -140,11 +140,11 @@ class RoutineCard extends StatelessWidget {
                 child: Container(
                   width: 32, height: 32,
                   decoration: BoxDecoration(
-                    color: completed ? AppColors.primary : Colors.transparent, 
+                    color: completed ? Theme.of(context).colorScheme.primary : Colors.transparent, 
                     shape: BoxShape.circle, 
-                    border: completed ? null : Border.all(color: AppColors.primary.withOpacity(0.3), width: 2)
+                    border: completed ? null : Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3), width: 2)
                   ),
-                  child: Icon(Icons.check, color: completed ? Colors.white : AppColors.primary.withOpacity(0.35), size: 18),
+                  child: Icon(Icons.check, color: completed ? Colors.white : Theme.of(context).colorScheme.primary.withOpacity(0.35), size: 18),
                 ),
               ),
             ],

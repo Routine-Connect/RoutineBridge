@@ -71,12 +71,12 @@ class RoutineListHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           '루틴 리스트', 
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.primary),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.primary),
         ),
       ],
     );
@@ -106,7 +106,7 @@ class HomeRoutineList extends StatelessWidget {
             SizedBox(
               height: 3,
               child: isLoading 
-                  ? const LinearProgressIndicator(color: AppColors.primary, backgroundColor: Colors.transparent)
+                  ? LinearProgressIndicator(color: Theme.of(context).colorScheme.primary, backgroundColor: Colors.transparent)
                   : const SizedBox.shrink(),
             ),
             const SizedBox(height: 13), 
@@ -139,7 +139,7 @@ class HomeRoutineList extends StatelessWidget {
                       
                       final int iconId = routine['icon_id'] ?? routine['iconId'] ?? 1; 
                       final IconData matchedIcon = AppIcons.routineIcons[(iconId - 1).clamp(0, 19)];
-                      final Color matchedBackgroundColor = AppIcons.routineIconBackgroundColors[(iconId - 1).clamp(0, 19)];
+                      final Color matchedBackgroundColor = Theme.of(context).colorScheme.primaryContainer;
                       final Color matchedForegroundColor = AppIcons.routineIconForegroundColors[(iconId - 1).clamp(0, 19)];
 
                       String timeRaw = routine['alarm_time'] ?? routine['alarmTime'] ?? '';
@@ -181,11 +181,11 @@ class HomeAddRoutineButton extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
           boxShadow: [
-            BoxShadow(color: AppColors.primary.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 8))
+            BoxShadow(color: Theme.of(context).colorScheme.primary.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 8))
           ],
         ),
         child: Material(
-          color: AppColors.primary,
+          color: Theme.of(context).colorScheme.primary,
           borderRadius: BorderRadius.circular(999),
           child: InkWell(
             onTap: () => AppModals.showRoutineFormBottomSheet(context), 
@@ -254,7 +254,7 @@ class _HomeWeekCalendarState extends State<HomeWeekCalendar> {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest, 
         borderRadius: BorderRadius.circular(16), 
-        boxShadow: AppShadows.plushShadow
+        boxShadow: AppShadows.getPlushShadow(context)
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -361,7 +361,7 @@ class _DayColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     Color labelColor = isWeekend ? const Color(0xFFF87171) : AppColors.secondary;
     Color dayTextColor = isWeekend ? const Color(0xFFF87171) : AppColors.onSurface;
-    Color selectionBgColor = isSelected ? AppColors.primary.withOpacity(0.15) : Colors.transparent;
+    Color selectionBgColor = isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.15) : Colors.transparent;
 
     return Column(
       mainAxisSize: MainAxisSize.min,

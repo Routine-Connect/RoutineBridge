@@ -39,7 +39,7 @@ class AppModals {
                     hintStyle: const TextStyle(color: AppColors.onSurfaceVariant),
                     filled: true, fillColor: AppColors.surfaceContainer,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -52,7 +52,7 @@ class AppModals {
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: AppColors.onPrimary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                      style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: AppColors.onPrimary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                       onPressed: () => Navigator.pop(context, controller.text),
                       child: const Text('저장', style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
@@ -88,7 +88,7 @@ class AppModals {
                 itemBuilder: (context, index) {
                   // 💡 각 아이콘에 맞는 배경색과 전경색을 가져옵니다.
                   final icon = AppIcons.routineIcons[index];
-                  final bgColor = AppIcons.routineIconBackgroundColors[index];
+                  final bgColor = Theme.of(context).colorScheme.primaryContainer;
                   final fgColor = AppIcons.routineIconForegroundColors[index];
 
                   return InkWell(
@@ -151,7 +151,7 @@ class AppModals {
             // 💡 🚀 현재 선택된 아이콘이 리스트의 몇 번째인지 찾아서 색상을 매칭합니다!
             int currentIconIndex = AppIcons.routineIcons.indexOf(selectedIcon);
             if (currentIconIndex == -1) currentIconIndex = 0; // 안전장치
-            final Color currentBgColor = AppIcons.routineIconBackgroundColors[currentIconIndex];
+            final Color currentBgColor = Theme.of(context).colorScheme.primaryContainer;
             final Color currentFgColor = AppIcons.routineIconForegroundColors[currentIconIndex];
 
             return Padding(
@@ -247,8 +247,8 @@ class AppModals {
                             width: 38, height: 38,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: isSelected ? AppColors.primary : AppColors.surfaceContainerLowest,
-                              border: Border.all(color: isSelected ? AppColors.primary : AppColors.primary.withOpacity(0.2)),
+                              color: isSelected ? Theme.of(context).colorScheme.primary : AppColors.surfaceContainerLowest,
+                              border: Border.all(color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.primary.withOpacity(0.2)),
                               shape: BoxShape.circle,
                             ),
                             child: Text(day['label']!, style: TextStyle(color: isSelected ? Colors.white : AppColors.onSurfaceVariant, fontWeight: FontWeight.w600)),
@@ -290,7 +290,7 @@ class AppModals {
                     SizedBox(
                       width: double.infinity, height: 52,
                       child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: AppColors.onPrimary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                        style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: AppColors.onPrimary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
                         onPressed: isSubmitting ? null : () async {
                           if (nameController.text.trim().isEmpty) {
                             CustomSnackBar.show(context, message: '루틴 이름을 입력해주세요.', isError: true);
@@ -387,7 +387,7 @@ class AppModals {
                     TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소', style: TextStyle(color: AppColors.onSurfaceVariant))),
                     const SizedBox(width: 8),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: AppColors.onPrimary),
+                      style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: AppColors.onPrimary),
                       onPressed: () {
                         if (newPasswordController.text != confirmPasswordController.text) {
                           CustomSnackBar.show(context, message: '비밀번호가 일치하지 않습니다.', isError: true);
@@ -483,7 +483,7 @@ class AppModals {
   static void showThemeSelectBottomSheet(BuildContext context) {
   showModalBottomSheet(
     context: context,
-    backgroundColor: AppColors.background,
+    backgroundColor: Theme.of(context).colorScheme.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),

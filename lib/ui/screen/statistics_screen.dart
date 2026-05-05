@@ -70,9 +70,9 @@ class _MonthlySummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.primaryContainer,
+        color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.plushShadow,
+        boxShadow: AppShadows.getPlushShadow(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,11 +84,11 @@ class _MonthlySummaryCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'ACHIEVEMENT',
                       style: TextStyle(
                         fontSize: 10, fontWeight: FontWeight.w800,
-                        color: AppColors.primary, letterSpacing: 2.0,
+                        color: Theme.of(context).colorScheme.primary, letterSpacing: 2.0,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -120,8 +120,8 @@ class _MonthlySummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('0%', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primary.withOpacity(0.7))),
-              Text('100%', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primary.withOpacity(0.7))),
+              Text('0%', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.primary.withOpacity(0.7))),
+              Text('100%', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.primary.withOpacity(0.7))),
             ],
           ),
           const SizedBox(height: 8),
@@ -134,7 +134,7 @@ class _MonthlySummaryCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               widthFactor: widthFactor, // 🚀 실제 퍼센트만큼 바 채우기
               child: Container(
-                decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(999)),
+                decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, borderRadius: BorderRadius.circular(999)),
               ),
             ),
           ),
@@ -145,7 +145,7 @@ class _MonthlySummaryCard extends StatelessWidget {
 }
 
 // ============================================================================
-// 🚀 2. 주간 루틴 통계 그래프 (새로 삽입됨)
+// 🚀 2. 주간 루틴 통계 그래프
 // ============================================================================
 class _WeeklyGraphCard extends StatelessWidget {
   const _WeeklyGraphCard();
@@ -159,10 +159,10 @@ class _WeeklyGraphCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: Theme.of(context).colorScheme.surfaceContainerLowest, // 혹시 AppColors를 쓰고 계시다면 유지하셔도 됩니다.
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.primary.withOpacity(0.05)),
-        boxShadow: AppShadows.plushShadow,
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.05)),
+        boxShadow: AppShadows.getPlushShadow(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,17 +174,17 @@ class _WeeklyGraphCard extends StatelessWidget {
           SizedBox(
             height: 220,
             child: isLoading 
-              ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+              ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
               : weeklyData.isEmpty 
                   ? const Center(child: Text('데이터를 불러올 수 없습니다.', style: TextStyle(color: AppColors.secondary)))
-                  : _buildChart(weeklyData),
+                  : _buildChart(context, weeklyData), 
           ),
         ],
       ),
     );
   }
 
-  Widget _buildChart(Map<String, double> data) {
+  Widget _buildChart(BuildContext context, Map<String, double> data) { 
     List<FlSpot> spots = [];
     List<String> dates = data.keys.toList(); // 서버가 준 7일 치 날짜 배열 (과거 -> 오늘)
     
@@ -260,8 +260,7 @@ class _WeeklyGraphCard extends StatelessWidget {
                   child: Text(
                     dayStr,
                     style: TextStyle(
-                      // 🚀 오늘은 메인 컬러로 진하게, 나머지는 회색으로!
-                      color: isToday ? AppColors.primary : AppColors.secondary, 
+                      color: isToday ? Theme.of(context).colorScheme.primary : AppColors.secondary, 
                       fontSize: 13, 
                       fontWeight: isToday ? FontWeight.w900 : FontWeight.w600,
                     ),
@@ -279,7 +278,7 @@ class _WeeklyGraphCard extends StatelessWidget {
             spots: spots,
             isCurved: true,
             curveSmoothness: 0.35,
-            color: AppColors.primary,
+            color: Theme.of(context).colorScheme.primary,
             barWidth: 3,
             isStrokeCapRound: true,
             dotData: FlDotData(
@@ -288,15 +287,15 @@ class _WeeklyGraphCard extends StatelessWidget {
                 radius: 4,
                 color: Colors.white,
                 strokeWidth: 2.5,
-                strokeColor: AppColors.primary,
+                strokeColor: Theme.of(context).colorScheme.primary,
               ),
             ),
             belowBarData: BarAreaData(
               show: true,
               gradient: LinearGradient(
                 colors: [
-                  AppColors.primary.withOpacity(0.3),
-                  AppColors.primary.withOpacity(0.0),
+                  Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  Theme.of(context).colorScheme.primary.withOpacity(0.0),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -310,7 +309,7 @@ class _WeeklyGraphCard extends StatelessWidget {
 }
 
 // ============================================================================
-// 3. 월간 루틴 달력 (개발자님 기존 코드 유지 - 추후 퍼센트 연동 예정)
+// 3. 월간 루틴 달력 
 // ============================================================================
 class _RoutineCalendar extends StatelessWidget {
   const _RoutineCalendar();
@@ -361,18 +360,19 @@ class _RoutineCalendar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.plushShadow,
+        boxShadow: AppShadows.getPlushShadow(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.only(bottom: 4),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: AppColors.primaryContainer, width: 4)),
+            // 🚀 3. Theme.of(context)가 있으므로 const 삭제!
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: Theme.of(context).colorScheme.primaryContainer, width: 4)),
             ),
             child: Text(
-              '${currentMonth.month}월 Routine', // 🚀 4월 하드코딩 -> 동적 월 표시
+              '${currentMonth.month}월 Routine',
               style: const TextStyle(
                 fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.onSurface, letterSpacing: -0.5,
               ),
@@ -397,9 +397,10 @@ class _RoutineCalendar extends StatelessWidget {
           const SizedBox(height: 16),
           
           if (isLoading) 
-             const Padding(
-               padding: EdgeInsets.symmetric(vertical: 40),
-               child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+             // 🚀 4. Theme.of(context)가 있으므로 상단 패딩의 const 삭제!
+             Padding(
+               padding: const EdgeInsets.symmetric(vertical: 40),
+               child: Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)),
              )
           else 
             GridView.builder(
@@ -493,9 +494,9 @@ class _ShareStreakCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
       decoration: BoxDecoration(
-        color: AppColors.primaryContainer,
+        color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.plushShadow,
+        boxShadow: AppShadows.getPlushShadow(context),
       ),
       child: Column(
         children: [
@@ -525,11 +526,11 @@ class _ShareStreakCard extends StatelessWidget {
             width: double.infinity,
             height: 56,
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
               borderRadius: BorderRadius.circular(999),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),

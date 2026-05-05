@@ -70,19 +70,19 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 24),
             */
-            const Text(
+            Text(
               "Doday",
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.w900,
-                color: AppColors.primary,
+                color: Theme.of(context).colorScheme.primary,
                 letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 24),
             // 테마에 맞는 로딩 인디케이터
-            const CircularProgressIndicator(
-              color: AppColors.primary,
+            CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary,
             ),
           ],
         ),

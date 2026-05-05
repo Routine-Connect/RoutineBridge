@@ -181,7 +181,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ChoiceChip(
                           label: const Text('남성'),
                           selected: _selectedGender == 'm',
-                          selectedColor: AppColors.primaryContainer,
+                          selectedColor: Theme.of(context).colorScheme.primaryContainer,
                           onSelected: (bool selected) {
                             if (selected) setState(() => _selectedGender = 'm');
                           },
@@ -190,7 +190,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ChoiceChip(
                           label: const Text('여성'),
                           selected: _selectedGender == 'w',
-                          selectedColor: AppColors.primaryContainer,
+                          selectedColor: Theme.of(context).colorScheme.primaryContainer,
                           onSelected: (bool selected) {
                             if (selected) setState(() => _selectedGender = 'w');
                           },
@@ -205,7 +205,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       height: 50,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: Theme.of(context).colorScheme.primary,
                           foregroundColor: AppColors.onPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),

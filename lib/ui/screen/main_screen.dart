@@ -69,30 +69,30 @@ class _MainScreenState extends State<MainScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppColors.primaryContainer,
+                color: Theme.of(context).colorScheme.primaryContainer,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.primary.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                   width: 2,
                 ),
               ),
-              child: const Icon(Icons.person, color: AppColors.primary, size: 22),
+              child: Icon(Icons.person, color: Theme.of(context).colorScheme.primary, size: 22),
             ),
           ),
         ),
         centerTitle: true,
         title: Text(
           _titles[_currentIndex], // 💡 현재 탭에 맞춰 제목 변경 (홈/통계/프로필)
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: AppColors.primary,
+            color: Theme.of(context).colorScheme.primary,
           ),
         ),
         actions: [
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.calendar_today_outlined, color: AppColors.primary),
+            icon: Icon(Icons.calendar_today_outlined, color: Theme.of(context).colorScheme.primary),
           ),
           const SizedBox(width: 8),
         ],
@@ -191,7 +191,7 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? AppColors.primary : AppColors.primary.withOpacity(0.5),
+              color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.primary.withOpacity(0.5),
               size: 24,
             ),
             const SizedBox(height: 4),
@@ -200,7 +200,7 @@ class _NavItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? AppColors.primary : AppColors.primary.withOpacity(0.5),
+                color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.primary.withOpacity(0.5),
               ),
             ),
           ],

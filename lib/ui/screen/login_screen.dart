@@ -136,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: 50,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor: AppColors.onPrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -173,11 +173,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             MaterialPageRoute(builder: (context) => const SignupScreen()),
                           );
                         },
-                        child: const Text(
+                        child: Text(
                           '회원가입',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: AppColors.primary, 
+                            color: Theme.of(context).colorScheme.primary, 
                           ),
                         ),
                       ),

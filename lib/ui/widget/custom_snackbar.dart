@@ -16,7 +16,7 @@ class CustomSnackBar {
           children: [
             Icon(
               isError ? Icons.error_outline : Icons.check_circle_outline,
-              color: isError ? AppColors.error : AppColors.primary,
+              color: isError ? AppColors.error : Theme.of(context).colorScheme.primary,
               size: 20,
             ),
             const SizedBox(width: 10),

@@ -5,7 +5,7 @@ import 'provider/theme_provider.dart';
 import 'provider/auth_provider.dart';
 import 'provider/user_provider.dart';
 import 'provider/routine_provider.dart';
-import 'screen/splash_screen.dart';
+import 'ui/screen/splash_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async { 
@@ -32,15 +32,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Doday',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        fontFamily: 'Pretendard', // 폰트 설정 (필요시)
-        useMaterial3: true,
-      ),
-      // 🚀 앱이 켜지면 무조건 SplashScreen부터 띄웁니다!
-      home: const SplashScreen(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'Doday',
+          debugShowCheckedModeBanner: false,
+          theme: themeProvider.themeData, 
+          
+          home: const SplashScreen(),
+        );
+      },
     );
   }
 }

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import '../service/routine_service.dart';
-import '../theme/app_icon.dart';
-import '../widget/custom_snackbar.dart';
+import '../ui/theme/app_icon.dart';
+import '../ui/widget/custom_snackbar.dart';
 import 'statistics_provider.dart';
 import 'package:provider/provider.dart';
 

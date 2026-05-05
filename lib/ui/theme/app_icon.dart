@@ -28,9 +28,12 @@ class AppIcons {
   ];
 
   // 🚀 배경색: 모두 연베이지 (수정 없음)
-  static final List<Color> routineIconBackgroundColors = List.generate(
-    20, (index) => AppColors.primaryContainer,
-  );
+  static List<Color> getRoutineIconBackgroundColors(BuildContext context) {
+    return List.generate(
+      20, (index) => Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+    );
+  }
+  
 
   // 🚀 전경색: 기획에 맞춘 찰떡 미드톤 컬러 매핑 (수정 없음)
   static const List<Color> routineIconForegroundColors = [

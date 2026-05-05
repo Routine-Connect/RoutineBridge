@@ -63,8 +63,8 @@ class _ProfileSection extends StatelessWidget {
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryContainer], begin: Alignment.topRight, end: Alignment.bottomLeft),
-                boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10))],
+                gradient: LinearGradient(colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primaryContainer], begin: Alignment.topRight, end: Alignment.bottomLeft),
+                boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.primary.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10))],
               ),
               child: Container(
                 decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.surfaceContainerLowest, border: Border.all(color: AppColors.surfaceContainerLowest, width: 4)),
@@ -91,8 +91,8 @@ class _ProfileSection extends StatelessWidget {
               },
               child: Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, shape: BoxShape.circle, boxShadow: AppShadows.plushShadow, border: Border.all(color: AppColors.surfaceContainer, width: 1)),
-                child: const Icon(Icons.camera_alt, color: AppColors.primary, size: 16),
+                decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, shape: BoxShape.circle, boxShadow: AppShadows.getPlushShadow(context), border: Border.all(color: AppColors.surfaceContainer, width: 1)),
+                child: Icon(Icons.camera_alt, color: Theme.of(context).colorScheme.primary, size: 16),
               ),
             ),
           ],
@@ -104,7 +104,7 @@ class _ProfileSection extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, shape: BoxShape.circle, boxShadow: AppShadows.plushShadow, border: Border.all(color: AppColors.surfaceContainer, width: 1)),
+              decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, shape: BoxShape.circle, boxShadow: AppShadows.getPlushShadow(context), border: Border.all(color: AppColors.surfaceContainer, width: 1)),
               child: Icon(genderIcon, color: genderColor, size: 12),
             ),
             const SizedBox(width: 8), 
@@ -126,8 +126,8 @@ class _ProfileSection extends StatelessWidget {
               },
               child: Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, shape: BoxShape.circle, boxShadow: AppShadows.plushShadow, border: Border.all(color: AppColors.surfaceContainer, width: 1)),
-                child: const Icon(Icons.edit, color: AppColors.primary, size: 12),
+                decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, shape: BoxShape.circle, boxShadow: AppShadows.getPlushShadow(context), border: Border.all(color: AppColors.surfaceContainer, width: 1)),
+                child: Icon(Icons.edit, color: Theme.of(context).colorScheme.primary, size: 12),
               ),
             ),
           ],
@@ -159,7 +159,7 @@ class _StatsGrid extends StatelessWidget {
               color: AppColors.surfaceContainerLowest, 
               borderRadius: BorderRadius.circular(16), 
               border: Border.all(color: AppColors.streakOrange.withOpacity(0.1)), 
-              boxShadow: AppShadows.plushShadow
+              boxShadow: AppShadows.getPlushShadow(context)
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,8 +186,8 @@ class _StatsGrid extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.surfaceContainerLowest, 
               borderRadius: BorderRadius.circular(16), 
-              border: Border.all(color: AppColors.primary.withOpacity(0.05)), 
-              boxShadow: AppShadows.plushShadow
+              border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.05)), 
+              boxShadow: AppShadows.getPlushShadow(context)
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,12 +287,12 @@ class _SettingTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color iconBgColor = isDestructive ? AppColors.logoutCoral.withOpacity(0.1) : AppColors.primaryFixed.withOpacity(0.5);
+    final Color iconBgColor = isDestructive ? AppColors.logoutCoral.withOpacity(0.1) : Theme.of(context).colorScheme.primaryFixed.withOpacity(0.5);
     final Color iconColor = isDestructive ? AppColors.logoutCoral : AppColors.onSurfaceVariant;
     final Color titleColor = isDestructive ? AppColors.secondary : AppColors.onSurface;
 
     return Container(
-      decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(12), boxShadow: AppShadows.plushShadow),
+      decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(12), boxShadow: AppShadows.getPlushShadow(context)),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -302,7 +302,7 @@ class _SettingTile extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Container(width: 40, height: 40, decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: iconColor, size: 20)),
+                Container(width: 40, height: 40, decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 20)),
                 const SizedBox(width: 16),
                 Expanded(child: Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor))),
                 if (trailing != null) trailing!,
