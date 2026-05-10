@@ -60,29 +60,38 @@ class RoutineProvider with ChangeNotifier {
     }
   }
 
-  // 🚀 [신규] 특정 월의 데이터를 서버에서 가져와 캐시에 저장
-  Future<void> fetchMonthData(DateTime date) async {
-    String monthKey = DateFormat('yyyy-MM').format(date);
+  // 🚀 [수정] 특정 월의 데이터를 서버에서 가져와 캐시에 저장
+Future<void> fetchMonthData(DateTime date) async {
+  String monthKey = DateFormat('yyyy-MM').format(date);
+  
+  if (_monthlyCache.containsKey(monthKey)) return;
+
+  try {
+    final token = await _getToken();
     
-    // 이미 캐시에 있으면 중복 호출 방지
-    if (_monthlyCache.containsKey(monthKey)) return;
+    // 1. 서버에서 '바구니' 전체를 받아옵니다.
+    final Map<String, dynamic> response = await _routineService.getMonthlyRoutines(
+      token, 
+      date.year, 
+      date.month
+    );
 
-    try {
-      final token = await _getToken();
-      // 백엔드: GET /api/routines/monthly-daily?year=yyyy&month=m
-      final Map<String, dynamic> data = await _routineService.getMonthlyRoutines(
-        token, 
-        date.year, 
-        date.month
-      );
+    // 2. 🚀 핵심 수정: 바구니 전체(response)가 아니라, 그 안의 'daily' 데이터만 추출합니다!
+    // 백엔드 구조에 따라 ['data']['daily'] 일 수도 있으니 확인 필요
+    final Map<String, dynamic> dailyData = response['daily'] ?? response['data']?['daily'] ?? {};
 
-      // 받아온 데이터를 Map<String, List<dynamic>> 형태로 변환하여 저장
-      _monthlyCache[monthKey] = data.map((key, value) => MapEntry(key, List<dynamic>.from(value)));
-      notifyListeners();
-    } catch (e) {
-      debugPrint('$monthKey 데이터 로드 실패: $e');
-    }
+    // 3. 추출한 dailyData만 가지고 캐시 작업을 진행합니다.
+    _monthlyCache[monthKey] = dailyData.map(
+      (key, value) => MapEntry(key, List<dynamic>.from(value))
+    );
+    
+    notifyListeners();
+    debugPrint('✅ $monthKey 캐시 로드 성공!');
+  } catch (e) {
+    // 🚀 에러 메시지를 더 구체적으로 찍어서 범인을 찾기 쉽게 합니다.
+    debugPrint('❌ $monthKey 데이터 로드 실패: $e');
   }
+}
 
   // 🚀 날짜 클릭 시: 이제 서버 통신 없이 날짜만 바꿈 (UX 향상)
   void changeDateAndFetch(DateTime date) {
