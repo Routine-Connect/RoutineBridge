@@ -33,15 +33,31 @@ class StatisticsService {
     }
   }
 
-  // GET /api/routines/monthly-daily?year=yyyy&month=m - 월간 통계 (달력 스탬프용)
-  Future<Map<String, double>> fetchMonthlyStats(String token, int year, int month) async {
+  // GET /api/stats/monthly?year=yyyy&month=m - 월간 통계 (달력 스탬프용)
+  Future<Map<String, dynamic>> fetchMonthlyStats(String token, int year, int month) async {
     final url = Uri.parse('$_baseUrl/monthly?year=$year&month=$month'); 
     final response = await http.get(url, headers: {'Authorization': 'Bearer $token'});
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-      final daily = decoded['data']['daily'] as Map<String, dynamic>;
-      return daily.map((key, value) => MapEntry(key, (value as num).toDouble()));
+      
+      final data = decoded['data'] ?? decoded;
+      
+      // 1. 일별 달성률 데이터 추출
+      final dailyRaw = data['daily'] as Map<String, dynamic>? ?? {};
+      final Map<String, double> dailyStats = dailyRaw.map(
+        (key, value) => MapEntry(key, (value as num).toDouble())
+      );
+
+      // 2. 🚀 백엔드에서 새로 추가된 '총 개수'와 '완료 개수' 추출
+      final int totalCount = data['totalRoutineCount'] ?? 0;
+      final int completedCount = data['completedRoutineCount'] ?? 0;
+
+        return {
+        'daily': dailyStats,
+        'totalRoutineCount': data['totalRoutineCount'] ?? 0,
+        'completedRoutineCount': data['completedRoutineCount'] ?? 0,
+      };
     } else {
       throw Exception('월간 통계를 불러오지 못했습니다.');
     }
