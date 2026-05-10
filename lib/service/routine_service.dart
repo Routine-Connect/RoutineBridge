@@ -5,7 +5,7 @@ class RoutineService {
 
   final String baseUrl = 'https://nonextendible-kandace-gratifyingly.ngrok-free.dev/api/routines';
 
-// routine_service.dart 파일 내부에 추가
+// GET /api/routines/monthly-daily?year=yyyy&month=m 
 Future<Map<String, dynamic>> getMonthlyRoutines(String token, int year, int month) async {
   try {
     final url = Uri.parse('$baseUrl/monthly-daily?year=$year&month=$month');
