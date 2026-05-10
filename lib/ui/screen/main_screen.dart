@@ -65,19 +65,6 @@ class _MainScreenState extends State<MainScreen> {
         leading: Padding(
           padding: const EdgeInsets.only(left: 12),
           child: Center(
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                  width: 2,
-                ),
-              ),
-              child: Icon(Icons.person, color: Theme.of(context).colorScheme.primary, size: 22),
-            ),
           ),
         ),
         centerTitle: true,
