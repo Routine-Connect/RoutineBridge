@@ -35,12 +35,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           _MonthlySummaryCard(),
           
           SizedBox(height: 24),
-          // 2. 🚀 최장 연속/성실 루틴을 빼고 추가된 주간 루틴 통계 그래프
-          _WeeklyGraphCard(),
-          
-          SizedBox(height: 24),
-          // 3. 기존 월간 루틴 달력 (유지 - 추후 퍼센트 연동)
+
+          // 2. 기존 월간 루틴 달력 (유지 - 추후 퍼센트 연동)
           _RoutineCalendar(),
+
+          SizedBox(height: 24),
+
+          // 3. 🚀 최장 연속/성실 루틴을 빼고 추가된 주간 루틴 통계 그래프
+          _WeeklyGraphCard(),
           
           SizedBox(height: 24),
           // 4. 기존 나의 기록 공유하기 (유지)
@@ -145,171 +147,7 @@ class _MonthlySummaryCard extends StatelessWidget {
 }
 
 // ============================================================================
-// 🚀 2. 주간 루틴 통계 그래프
-// ============================================================================
-class _WeeklyGraphCard extends StatelessWidget {
-  const _WeeklyGraphCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final statsProvider = context.watch<StatisticsProvider>();
-    final weeklyData = statsProvider.weeklyStats;
-    final isLoading = statsProvider.isLoading; // 로딩 상태 추가
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest, // 혹시 AppColors를 쓰고 계시다면 유지하셔도 됩니다.
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.05)),
-        boxShadow: AppShadows.getPlushShadow(context),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('이번 주 달성률', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.secondary)),
-          const SizedBox(height: 32),
-          
-          // 그래프 영역
-          SizedBox(
-            height: 220,
-            child: isLoading 
-              ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
-              : weeklyData.isEmpty 
-                  ? const Center(child: Text('데이터를 불러올 수 없습니다.', style: TextStyle(color: AppColors.secondary)))
-                  : _buildChart(context, weeklyData), 
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChart(BuildContext context, Map<String, double> data) { 
-    List<FlSpot> spots = [];
-    List<String> dates = data.keys.toList(); // 서버가 준 7일 치 날짜 배열 (과거 -> 오늘)
-    
-    final today = DateUtils.dateOnly(DateTime.now());
-
-    // 1. 데이터 점(Spot) 연동
-    for (int i = 0; i < dates.length; i++) {
-      DateTime date = DateTime.parse(dates[i]);
-      
-      // 혹시 모를 미래 날짜 방어 로직
-      if (date.isAfter(today)) continue; 
-      
-      // X축은 index(0~6), Y축은 서버에서 온 퍼센트 값(0.0 ~ 100.0)
-      spots.add(FlSpot(i.toDouble(), data[dates[i]]!));
-    }
-
-    return LineChart(
-      LineChartData(
-        minY: 0,
-        maxY: 100, // Y축 0~100%
-        minX: 0,
-        maxX: 6,   // X축 데이터 개수(7개)
-        
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: false,
-          horizontalInterval: 25,
-          getDrawingHorizontalLine: (value) => FlLine(
-            color: AppColors.secondary.withOpacity(0.1),
-            strokeWidth: 1,
-            dashArray: [5, 5],
-          ),
-        ),
-        
-        titlesData: FlTitlesData(
-          show: true,
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          
-          // Y축 (0, 25, 50, 75, 100)
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              interval: 25,
-              reservedSize: 32,
-              getTitlesWidget: (value, meta) {
-                return Text('${value.toInt()}', style: const TextStyle(color: AppColors.secondary, fontSize: 11));
-              },
-            ),
-          ),
-          
-          // 🚀 X축 (서버 데이터 기반 동적 요일 매핑)
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              interval: 1,
-              getTitlesWidget: (value, meta) {
-                int index = value.toInt();
-                if (index < 0 || index >= dates.length) return const SizedBox.shrink();
-                
-                // 1) 서버에서 준 날짜 문자열("2026-04-20")을 날짜 객체로 변환
-                DateTime date = DateTime.parse(dates[index]);
-                
-                // 2) 날짜 객체에서 요일 추출 (1:월, 2:화 ... 7:일)
-                const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
-                String dayStr = weekdays[date.weekday - 1];
-                
-                // 3) 이 날짜가 '오늘'인지 확인 (오늘이면 색상 강조!)
-                bool isToday = DateUtils.isSameDay(date, today);
-
-                return Padding(
-                  padding: const EdgeInsets.only(top: 10.0),
-                  child: Text(
-                    dayStr,
-                    style: TextStyle(
-                      color: isToday ? Theme.of(context).colorScheme.primary : AppColors.secondary, 
-                      fontSize: 13, 
-                      fontWeight: isToday ? FontWeight.w900 : FontWeight.w600,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        borderData: FlBorderData(show: false),
-        
-        // 곡선 그래프 디자인 세팅
-        lineBarsData: [
-          LineChartBarData(
-            spots: spots,
-            isCurved: true,
-            curveSmoothness: 0.35,
-            color: Theme.of(context).colorScheme.primary,
-            barWidth: 3,
-            isStrokeCapRound: true,
-            dotData: FlDotData(
-              show: true,
-              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-                radius: 4,
-                color: Colors.white,
-                strokeWidth: 2.5,
-                strokeColor: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-            belowBarData: BarAreaData(
-              show: true,
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                  Theme.of(context).colorScheme.primary.withOpacity(0.0),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ============================================================================
-// 3. 월간 루틴 달력 
+// 2. 월간 루틴 달력 
 // ============================================================================
 class _RoutineCalendar extends StatelessWidget {
   const _RoutineCalendar();
@@ -470,6 +308,170 @@ class _DayCell extends StatelessWidget {
             fit: BoxFit.contain,
           ),
       ],
+    );
+  }
+}
+
+// ============================================================================
+// 🚀 3. 주간 루틴 통계 그래프
+// ============================================================================
+class _WeeklyGraphCard extends StatelessWidget {
+  const _WeeklyGraphCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final statsProvider = context.watch<StatisticsProvider>();
+    final weeklyData = statsProvider.weeklyStats;
+    final isLoading = statsProvider.isLoading; // 로딩 상태 추가
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerLowest, // 혹시 AppColors를 쓰고 계시다면 유지하셔도 됩니다.
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.05)),
+        boxShadow: AppShadows.getPlushShadow(context),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('이번 주 달성률', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.secondary)),
+          const SizedBox(height: 32),
+          
+          // 그래프 영역
+          SizedBox(
+            height: 220,
+            child: isLoading 
+              ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
+              : weeklyData.isEmpty 
+                  ? const Center(child: Text('데이터를 불러올 수 없습니다.', style: TextStyle(color: AppColors.secondary)))
+                  : _buildChart(context, weeklyData), 
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChart(BuildContext context, Map<String, double> data) { 
+    List<FlSpot> spots = [];
+    List<String> dates = data.keys.toList(); // 서버가 준 7일 치 날짜 배열 (과거 -> 오늘)
+    
+    final today = DateUtils.dateOnly(DateTime.now());
+
+    // 1. 데이터 점(Spot) 연동
+    for (int i = 0; i < dates.length; i++) {
+      DateTime date = DateTime.parse(dates[i]);
+      
+      // 혹시 모를 미래 날짜 방어 로직
+      if (date.isAfter(today)) continue; 
+      
+      // X축은 index(0~6), Y축은 서버에서 온 퍼센트 값(0.0 ~ 100.0)
+      spots.add(FlSpot(i.toDouble(), data[dates[i]]!));
+    }
+
+    return LineChart(
+      LineChartData(
+        minY: 0,
+        maxY: 100, // Y축 0~100%
+        minX: 0,
+        maxX: 6,   // X축 데이터 개수(7개)
+        
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: 25,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: AppColors.secondary.withOpacity(0.1),
+            strokeWidth: 1,
+            dashArray: [5, 5],
+          ),
+        ),
+        
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          
+          // Y축 (0, 25, 50, 75, 100)
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: 25,
+              reservedSize: 32,
+              getTitlesWidget: (value, meta) {
+                return Text('${value.toInt()}', style: const TextStyle(color: AppColors.secondary, fontSize: 11));
+              },
+            ),
+          ),
+          
+          // 🚀 X축 (서버 데이터 기반 동적 요일 매핑)
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: 1,
+              getTitlesWidget: (value, meta) {
+                int index = value.toInt();
+                if (index < 0 || index >= dates.length) return const SizedBox.shrink();
+                
+                // 1) 서버에서 준 날짜 문자열("2026-04-20")을 날짜 객체로 변환
+                DateTime date = DateTime.parse(dates[index]);
+                
+                // 2) 날짜 객체에서 요일 추출 (1:월, 2:화 ... 7:일)
+                const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+                String dayStr = weekdays[date.weekday - 1];
+                
+                // 3) 이 날짜가 '오늘'인지 확인 (오늘이면 색상 강조!)
+                bool isToday = DateUtils.isSameDay(date, today);
+
+                return Padding(
+                  padding: const EdgeInsets.only(top: 10.0),
+                  child: Text(
+                    dayStr,
+                    style: TextStyle(
+                      color: isToday ? Theme.of(context).colorScheme.primary : AppColors.secondary, 
+                      fontSize: 13, 
+                      fontWeight: isToday ? FontWeight.w900 : FontWeight.w600,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        
+        // 곡선 그래프 디자인 세팅
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            curveSmoothness: 0.35,
+            color: Theme.of(context).colorScheme.primary,
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                radius: 4,
+                color: Colors.white,
+                strokeWidth: 2.5,
+                strokeColor: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  Theme.of(context).colorScheme.primary.withOpacity(0.0),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
