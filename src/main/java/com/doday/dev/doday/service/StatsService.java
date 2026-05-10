@@ -33,12 +33,10 @@ public class StatsService {
 
         List<Routine> routines = routineMapper.findByUserId(userId);
 
-        // 완료 개수 집계 (RoutineLogs 기반)
         Map<String, Integer> doneCount = new LinkedHashMap<>();
         for (Routine routine : routines) {
             List<RoutineLog> logs = routineLogMapper.findByRoutineIdAndPeriod(
-                    routine.getId(), startDate, endDate
-            );
+                    routine.getId(), startDate, endDate);
             for (RoutineLog log : logs) {
                 if (log.isCompleted()) {
                     doneCount.merge(log.getCheckDate(), 1, Integer::sum);
@@ -47,13 +45,14 @@ public class StatsService {
         }
 
         Map<String, Object> dailyResult = new LinkedHashMap<>();
+        int totalRoutineCount = 0;
+        int completedRoutineCount = 0;
 
         for (int d = 1; d <= ym.lengthOfMonth(); d++) {
             LocalDate date = ym.atDay(d);
             String dateStr = date.toString();
             String dayOfWeek = date.getDayOfWeek().name().substring(0, 3);
 
-            // 분모 = 해당 날짜 요일에 해당하는 루틴 개수
             int totalForDay = (int) routines.stream()
                     .filter(r -> Boolean.TRUE.equals(r.getIsActive()))
                     .filter(r -> r.getDaysOfWeek().contains(dayOfWeek))
@@ -66,10 +65,16 @@ public class StatsService {
                 double pct = Math.round((done * 100.0 / totalForDay) * 10) / 10.0;
                 dailyResult.put(dateStr, pct);
             }
+
+            // 이번달 총개수 / 완료 개수 집계
+            totalRoutineCount += totalForDay;
+            completedRoutineCount += doneCount.getOrDefault(dateStr, 0);
         }
 
         Map<String, Object> result = new HashMap<>();
         result.put("daily", dailyResult);
+        result.put("totalRoutineCount", totalRoutineCount);
+        result.put("completedRoutineCount", completedRoutineCount);
         return result;
     }
 
@@ -81,12 +86,10 @@ public class StatsService {
 
         List<Routine> routines = routineMapper.findByUserId(userId);
 
-        // 완료 개수 집계
         Map<String, Integer> doneCount = new LinkedHashMap<>();
         for (Routine routine : routines) {
             List<RoutineLog> logs = routineLogMapper.findByRoutineIdAndPeriod(
-                    routine.getId(), startDate, endDate
-            );
+                    routine.getId(), startDate, endDate);
             for (RoutineLog log : logs) {
                 if (log.isCompleted()) {
                     doneCount.merge(log.getCheckDate(), 1, Integer::sum);
@@ -95,13 +98,14 @@ public class StatsService {
         }
 
         Map<String, Object> dailyResult = new LinkedHashMap<>();
+        int totalRoutineCount = 0;
+        int completedRoutineCount = 0;
 
         for (int i = 6; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
             String dateStr = date.toString();
             String dayOfWeek = date.getDayOfWeek().name().substring(0, 3);
 
-            // 분모 = 해당 날짜 요일에 해당하는 루틴 개수
             int totalForDay = (int) routines.stream()
                     .filter(r -> Boolean.TRUE.equals(r.getIsActive()))
                     .filter(r -> r.getDaysOfWeek().contains(dayOfWeek))
@@ -114,10 +118,15 @@ public class StatsService {
                 double pct = Math.round((done * 100.0 / totalForDay) * 10) / 10.0;
                 dailyResult.put(dateStr, pct);
             }
+
+            totalRoutineCount += totalForDay;
+            completedRoutineCount += doneCount.getOrDefault(dateStr, 0);
         }
 
         Map<String, Object> result = new HashMap<>();
         result.put("daily", dailyResult);
+        result.put("totalRoutineCount", totalRoutineCount);
+        result.put("completedRoutineCount", completedRoutineCount);
         return result;
     }
 
