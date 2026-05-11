@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // 🚀 스토리지 임포트!
 
@@ -24,6 +25,9 @@ class UserService {
         },
       );
 
+      debugPrint('👤 유저 정보 응답 상태코드: ${response.statusCode}');
+      debugPrint('👤 유저 정보 응답 바디: ${response.body}');
+
       final responseData = jsonDecode(utf8.decode(response.bodyBytes));
 
       if (response.statusCode == 200 && responseData['success'] == true) {
@@ -32,6 +36,7 @@ class UserService {
         throw Exception(responseData['error']?['message'] ?? '정보를 불러오지 못했습니다.');
       }
     } catch (e) {
+      debugPrint('유저 정보 조회 실패: $e');
       throw Exception('서버와 연결할 수 없습니다.');
     }
   }
