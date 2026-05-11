@@ -31,13 +31,29 @@ class _LoginScreenState extends State<LoginScreen> {
     final String email = _emailController.text.trim();
     final String password = _passwordController.text;
 
-    // 빈 칸 검사
-    if (email.isEmpty || password.isEmpty) {
-      CustomSnackBar.show(
-        context, 
-        message: '이메일과 비밀번호를 모두 입력해주세요.', 
-        isError: true,
-      );
+    // 🚀 1. 이메일 빈 칸 검사
+    if (email.isEmpty) {
+      CustomSnackBar.show(context, message: '이메일을 입력해주세요.', isError: true);
+      return;
+    }
+
+    // 🚀 2. 이메일 형식(정규표현식) 검사
+    // 올바른 이메일 형태(예: user@domain.com)인지 프론트에서 먼저 거릅니다.
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    if (!emailRegex.hasMatch(email)) {
+      CustomSnackBar.show(context, message: '올바른 이메일 형식을 입력해주세요.', isError: true);
+      return;
+    }
+
+    // 🚀 3. 비밀번호 빈 칸 검사
+    if (password.isEmpty) {
+      CustomSnackBar.show(context, message: '비밀번호를 입력해주세요.', isError: true);
+      return;
+    }
+
+    // 🚀 4. 비밀번호 최소 길이 검사 (백엔드 설정에 맞게 수정하세요. 보통 6~8자리)
+    if (password.length < 4) {
+      CustomSnackBar.show(context, message: '비밀번호는 4자리 이상입니다.', isError: true);
       return;
     }
 
@@ -108,6 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: '이메일',
                       border: OutlineInputBorder(),
@@ -121,6 +138,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _loginToServer(),
                     decoration: const InputDecoration(
                       labelText: '비밀번호',
                       border: OutlineInputBorder(),
