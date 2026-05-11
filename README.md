@@ -1,47 +1,66 @@
-# Doday - Frontend
+# 🗓 Doday - Frontend
 
-사용자의 일상적인 루틴을 관리하고 성취도를 시각화하는 루틴 관리 앱의 프론트엔드 리포지토리입니다.
+사용자의 일상적인 루틴을 관리하고 성취도를 시각화하는 루틴 관리 앱 'Doday'의 프론트엔드 리포지토리입니다.
 
 ## 🛠 Tech Stack
-- **Framework:** Flutter (SDK 3.41.5)
+- **Framework:** Flutter (SDK 3.x)
 - **State Management:** Provider
-- **Local Storage:** flutter_secure_storage (JWT 토큰 보관)
-- **Network:** `http
+- **Network:** `http`
+- **Local Storage:** `flutter_secure_storage` (JWT 토큰 안전 보관)
+
+---
+
+## 🚀 Performance & Optimization
+Doday 프론트엔드는 사용자 경험(UX)과 앱 성능 향상을 위해 아래와 같은 최적화를 적용했습니다.
+
+- **에셋(Asset) 최적화 및 용량 절감:** 앱 내 모든 무거운 이미지 리소스를 `.webp` 형식으로 인코딩 및 해상도 최적화를 진행하여, **전체 이미지 리소스 용량을 평균 98% 이상 절감**했습니다.
+- **낙관적 업데이트 (Optimistic UI):** 루틴 완료 체크 시, 서버의 응답을 기다리지 않고 로컬 상태(캐시)를 즉시 변경해 화면에 렌더링하는 낙관적 업데이트를 적용했습니다. 이를 통해 네트워크 지연 없는 압도적인 조작감을 제공하며, 통신 실패 시에만 조용히 롤백(Rollback)하도록 예외 처리를 완벽하게 구현했습니다.
+- **데이터 프리페칭 (Data Pre-fetching) 및 캐싱:** 통계 및 달력 화면 진입 시, 현재 월을 기준으로 이전/다음 달을 포함한 총 3개월 치의 데이터를 `Future.wait`을 통해 병렬로 미리 캐싱(Pre-fetch)합니다. 덕분에 유저가 달력을 스와이프할 때 발생하는 로딩 버퍼링을 제로(0)로 만들었습니다.
+- **API 호출 방어막 설계:** 유저의 가입일(createdAt) 데이터를 기준으로 이전 날짜나, 통계가 필요 없는 미래의 달로 이동할 경우 원천적으로 서버 API 호출을 차단하여 백엔드 부하를 최소화했습니다.
+
+---
 
 ## 📁 Directory Structure
-아키텍처에 따라 기능 및 목적별로 디렉토리를 분리하여 관리합니다.
+클린 아키텍처 원칙을 지향하며, 유지보수와 확장성을 고려해 기능과 계층별로 디렉토리를 분리했습니다.
 
 ```text
 lib/
-┣ 📂 provider/             # [ViewModel] 전역 상태 관리 및 화면 갱신
-┃ ┗ 📄 auth_provider.dart         # 로그인/로그아웃 상태 관리 및 SecureStorage 토큰 관리 
+┣ 📂 model/                 # 데이터 모델 (JSON 직렬화/역직렬화)
+┃ ┣ 📄 NotificationSettings.dart
+┃ ┣ 📄 Routine.dart
+┃ ┗ 📄 User.dart
 ┃
-┣ 📂 screen/               # [View] UI 화면 컴포넌트
-┃ ┣ 📄 main_screen.dart           # 뼈대 (통합된 바텀 네비게이션 및 공통 상단바)
-┃ ┣ 📄 login_screen.dart          # 로그인 화면
-┃ ┣ 📄 home_screen.dart           # [탭 1] 오늘의 루틴 목록 및 주간 달력
-┃ ┣ 📄 statistics_screen.dart     # [탭 2] (구 routine_screen) 성취도 및 월간 통계 리포트
-┃ ┣ 📄 mypage_screen.dart         # [탭 3] 프로필 및 설정 (로그아웃 연동)
-┃ ┗ 📄 profile_edit_screen.dart   # 프로필 수정 화면
+┣ 📂 provider/              # [ViewModel] 상태 관리 및 비즈니스 로직 통제
+┃ ┣ 📄 auth_provider.dart         # 로그인/로그아웃 및 토큰 상태 관리
+┃ ┣ 📄 routine_provider.dart      # 루틴 조회, 체크, 캐싱 상태 관리
+┃ ┣ 📄 statistics_provider.dart   # 월간/주간 통계 및 성취도 상태 관리
+┃ ┣ 📄 theme_provider.dart        # 앱 전역 테마(다크/라이트, 컬러) 상태 관리
+┃ ┗ 📄 user_provider.dart         # 유저 프로필 정보 상태 관리
 ┃
-┣ 📂 service/              # [Model] 백엔드 API 통신 전담
-┃ ┣ 📄 auth_service.dart          # Auth 도메인 (로그인 통신 및 토큰 발급)
-┃ ┣ 📄 routine_service.dart       # Routine 도메인 (루틴 조회, 추가, 완료 처리 통신)
-┃ ┣ 📄 statistics_service.dart    # Statistics 도메인 (월간 달성률, 스트릭 조회 통신)
-┃ ┗ 📄 user_service.dart          # User 도메인 (유저 프로필 조회 및 수정 통신)
+┣ 📂 service/               # [Model] 백엔드 API 통신 전담 (네트워크 계층)
+┃ ┣ 📄 auth_service.dart
+┃ ┣ 📄 routine_service.dart
+┃ ┣ 📄 statistics_service.dart
+┃ ┗ 📄 user_service.dart
 ┃
-┣ 📂 theme/                # 공통 디자인 시스템
-┃ ┗ 📄 app_style.dart             # 컬러 팔레트 및 전역 그림자(plushShadow) 통합 관리
+┣ 📂 ui/                    # [View] 화면 및 UI 컴포넌트
+┃ ┣ 📂 screen/              # 독립된 페이지 단위 위젯
+┃ ┃ ┣ 📄 splash_screen.dart       # 앱 초기화 및 로딩 화면
+┃ ┃ ┣ 📄 login_screen.dart        # 로그인 화면
+┃ ┃ ┣ 📄 signup_screen.dart       # 회원가입 화면
+┃ ┃ ┣ 📄 main_screen.dart         # 메인 뼈대 (바텀 네비게이션 적용)
+┃ ┃ ┣ 📄 home_screen.dart         # [탭 1] 주간 달력 및 오늘의 루틴
+┃ ┃ ┣ 📄 statistics_screen.dart   # [탭 2] 루틴 통계 및 성취도 시각화
+┃ ┃ ┗ 📄 mypage_screen.dart       # [탭 3] 프로필 관리 및 설정
+┃ ┃
+┃ ┣ 📂 theme/               # 디자인 시스템 및 공통 스타일 요소
+┃ ┃ ┣ 📄 app_colors.dart          # 컬러 팔레트 관리 (하드코딩 방지)
+┃ ┃ ┣ 📄 app_icon.dart            # 커스텀 아이콘 매핑
+┃ ┃ ┗ 📄 app_shadow.dart          # 전역 그림자 스타일 (Plush Shadow)
+┃ ┃
+┃ ┗ 📂 widget/              # 재사용 가능한 공통 위젯
+┃   ┣ 📄 app_modal.dart           # 루틴 추가/수정 등 공통 바텀 시트
+┃   ┣ 📄 custom_snackbar.dart     # 에러 및 알림용 커스텀 스낵바
+┃   ┗ 📄 routine_card.dart        # 루틴 리스트 아이템 카드
 ┃
-┗ 📄 main.dart             # 앱 엔트리 포인트 (시작 화면 설정 및 Provider 전역 주입)
-
-assets/
-┗ 📂 images/               # WebP 등으로 최적화된 앱 내부 에셋 이미지
-  ┣ 📄 bg_login.webp              # 로그인 배경 
-  ┣ 📄 quokka_manager.webp        # 탐정/매니저 쿼카 (통계 화면)
-  ┣ 📄 quokka_cheerleader.webp    # 응원하는 쿼카 (홈 화면)
-  ┗ 📄 (아이콘 이미지들)
-```
- 
- 
-프론트엔드 에셋 최적화(WebP 인코딩 및 해상도 최적화)를 주도하여 전체 이미지 리소스 용량을 평균 98% 이상 절감
+┗ 📄 main.dart              # 앱 엔트리 포인트 (Provider 전역 주입)
