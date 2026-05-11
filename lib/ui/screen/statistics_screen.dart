@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart'; // 🚀 주간 그래프용 패키지
+import 'package:routine_app/provider/user_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_shadow.dart';
 import '../../provider/statistics_provider.dart';
@@ -16,10 +17,29 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   void initState() {
     super.initState();
-    // 🚀 화면 진입 시 통계 데이터(주간 그래프 데이터 등) 호출
+    // 🚀 화면 뼈대가 그려진 직후, 비동기 초기화 함수를 실행합니다.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<StatisticsProvider>().loadFullStats();
+      _initializeStats();
     });
+  }
+
+  // 🚀 비동기(async)로 작동하는 완벽한 초기화 로직
+  Future<void> _initializeStats() async {
+    final userProvider = context.read<UserProvider>();
+    final statsProvider = context.read<StatisticsProvider>();
+
+    if (userProvider.currentUser == null) {
+      await userProvider.loadMyProfile(); 
+    }
+
+    final joinDate = userProvider.currentUser?.createdAt; // 가입 날짜 가져오기
+    
+    if (joinDate != null) {
+      statsProvider.setUserCreatedAt(joinDate);
+    }
+
+    // 통계 데이터 3개월치 로딩
+    statsProvider.loadFullStats();
   }
 
   @override
@@ -166,7 +186,7 @@ class _RoutineCalendar extends StatelessWidget {
     int year = currentMonth.year;
     int month = currentMonth.month;
 
-    // 이번 달 1일이 무슨 요일인지 알아냅니다 (일요일=0, 월요일=1 ... 토요일=6)
+    // 이번 달 1일이 무슨 요일인지 알아냅니다
     DateTime firstDay = DateTime(year, month, 1);
     int paddingDays = firstDay.weekday % 7; 
 
@@ -178,7 +198,6 @@ class _RoutineCalendar extends StatelessWidget {
     // 1일부터 말일까지 데이터 채우기
     int daysInMonth = DateUtils.getDaysInMonth(year, month);
     for (int d = 1; d <= daysInMonth; d++) {
-      // 날짜를 API 키 형식(yyyy-MM-dd)으로 맞춤
       String dateKey = "$year-${month.toString().padLeft(2, '0')}-${d.toString().padLeft(2, '0')}";
       double? pct = monthlyStats[dateKey];
 
@@ -193,77 +212,112 @@ class _RoutineCalendar extends StatelessWidget {
       }
     }
 
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getPlushShadow(context),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.only(bottom: 4),
-            // 🚀 3. Theme.of(context)가 있으므로 const 삭제!
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: Theme.of(context).colorScheme.primaryContainer, width: 4)),
-            ),
-            child: Text(
-              '${currentMonth.month}월 Routine',
-              style: const TextStyle(
-                fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.onSurface, letterSpacing: -0.5,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: weekDays.map((day) {
-              return SizedBox(
-                width: 32,
-                child: Text(
-                  day, textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 10, fontWeight: FontWeight.w800,
-                    color: day == 'SUN' ? AppColors.logoutCoral : AppColors.onSurface,
+    // 🚀 [추가] 스와이프 방향을 감지해서 Provider의 달을 바꿔주는 함수
+    void handleSwipe(DragEndDetails details) {
+      if (details.primaryVelocity == null) return;
+      
+      if (details.primaryVelocity! > 0) {
+        // 오른쪽으로 스와이프 ➔ 이전 달
+        statsProvider.changeMonth(DateTime(year, month - 1, 1));
+      } else if (details.primaryVelocity! < 0) {
+        // 왼쪽으로 스와이프 ➔ 다음 달
+        statsProvider.changeMonth(DateTime(year, month + 1, 1));
+      }
+    }
+
+    return GestureDetector(
+      onHorizontalDragEnd: handleSwipe,
+      behavior: HitTestBehavior.opaque, // 🚀 달력의 빈 여백을 스와이프해도 인식되도록 설정
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: AppShadows.getPlushShadow(context),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 🚀 [수정] 헤더 부분에 좌우 화살표를 추가하고 UX 개선
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // 이전 달 버튼
+                IconButton(
+                  icon: const Icon(Icons.chevron_left, size: 28),
+                  onPressed: () => statsProvider.changeMonth(DateTime(year, month - 1, 1)),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(), // 기본 패딩 제거로 깔끔하게 배치
+                ),
+                Container(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Theme.of(context).colorScheme.primaryContainer, width: 4)),
+                  ),
+                  child: Text(
+                    // 🚀 달을 막 넘기다 보면 연도를 헷갈리므로 'yyyy년 M월'로 표시 변경
+                    '$year년 $month월',
+                    style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.onSurface, letterSpacing: -0.5,
+                    ),
                   ),
                 ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 16),
-          
-          if (isLoading) 
-             // 🚀 4. Theme.of(context)가 있으므로 상단 패딩의 const 삭제!
-             Padding(
-               padding: const EdgeInsets.symmetric(vertical: 40),
-               child: Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)),
-             )
-          else 
-            GridView.builder(
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: calendarData.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 7, mainAxisSpacing: 12, crossAxisSpacing: 4, childAspectRatio: 1.2,
-              ),
-              itemBuilder: (context, index) {
-                if (calendarData[index] == 0) return const SizedBox(); // 1일 이전의 빈칸 처리
-                
-                // 실제 표시할 날짜 (인덱스에서 빈칸 개수를 빼고 +1)
-                int dayNumber = index - paddingDays + 1;
-                bool isSunday = index % 7 == 0;
-                
-                return _DayCell(
-                  day: dayNumber.toString(),
-                  status: calendarData[index],
-                  isSunday: isSunday,
-                );
-              },
+                // 다음 달 버튼
+                IconButton(
+                  icon: const Icon(Icons.chevron_right, size: 28),
+                  onPressed: () => statsProvider.changeMonth(DateTime(year, month + 1, 1)),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
             ),
-        ],
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: weekDays.map((day) {
+                return SizedBox(
+                  width: 32,
+                  child: Text(
+                    day, textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 10, fontWeight: FontWeight.w800,
+                      color: day == 'SUN' ? AppColors.logoutCoral : AppColors.onSurface,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+            
+            if (isLoading) 
+               Padding(
+                 padding: const EdgeInsets.symmetric(vertical: 40),
+                 child: Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)),
+               )
+            else 
+              GridView.builder(
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: calendarData.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 7, mainAxisSpacing: 12, crossAxisSpacing: 4, childAspectRatio: 1.2,
+                ),
+                itemBuilder: (context, index) {
+                  if (calendarData[index] == 0) return const SizedBox(); 
+                  
+                  int dayNumber = index - paddingDays + 1;
+                  bool isSunday = index % 7 == 0;
+                  
+                  return _DayCell(
+                    day: dayNumber.toString(),
+                    status: calendarData[index],
+                    isSunday: isSunday,
+                  );
+                },
+              ),
+          ],
+        ),
       ),
     );
   }
