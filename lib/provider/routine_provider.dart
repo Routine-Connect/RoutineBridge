@@ -10,27 +10,34 @@ import 'package:provider/provider.dart';
 class RoutineProvider with ChangeNotifier {
   final RoutineService _routineService = RoutineService();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
-  String _lastCheeredDateKey = '';   // 하루에 한 번만 스낵바를 띄우기 위해 마지막으로 응원한 날짜를 기억하는 변수
+  String _lastCheeredDateKey = ''; 
 
   DateTime _selectedDate = DateTime.now();
   
-  // 🚀 핵심: 월별 데이터 캐시 창고 
-  // 구조: { "2024-04": { "2024-04-20": [루틴들], "2024-04-21": [...] } }
+  // 🚀 [에러 해결 핵심] 현재 화면에 보여줄 루틴 리스트 변수 선언
+  List<dynamic> _routines = []; 
+  
+  // 🚀 월별 데이터 캐시 창고
   Map<String, Map<String, List<dynamic>>> _monthlyCache = {};
   
   bool _isLoading = false;
 
+  // Getter들
   DateTime get selectedDate => _selectedDate;
   bool get isLoading => _isLoading;
-
-  // 🚀 Getter: 캐시 창고 자체를 반환 (달력 스탬프 계산용)
   Map<String, Map<String, List<dynamic>>> get monthlyCache => _monthlyCache;
+  
+  // 🚀 [수정] 이제 변수 _routines를 그대로 반환합니다.
+  List<dynamic> get routines => _routines;
 
-  // 🚀 Getter: 현재 선택된 날짜의 루틴 리스트를 캐시에서 즉시 추출
-  List<dynamic> get routines {
+  // 🚀 [추가] 캐시 창고와 현재 선택된 날짜의 리스트를 동기화하는 내부 함수
+  void _updateCurrentRoutines() {
     String monthKey = DateFormat('yyyy-MM').format(_selectedDate);
     String dateKey = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    return _monthlyCache[monthKey]?[dateKey] ?? [];
+    
+    // 캐시에서 가져오되, 없으면 빈 리스트를 넣어줌
+    _routines = _monthlyCache[monthKey]?[dateKey] ?? [];
+    notifyListeners();
   }
 
   Future<String> _getToken() async {
@@ -39,19 +46,19 @@ class RoutineProvider with ChangeNotifier {
     return token;
   }
 
-  // 🚀 [신규] 앱 시작 시 호출: 전달, 이번 달, 다음 달 3개월치 한꺼번에 가져오기
+  // 앱 시작 시 3개월치 데이터 가져오기
   Future<void> initMonthlyData() async {
     _isLoading = true;
     notifyListeners();
-
     DateTime now = DateTime.now();
     try {
-      // Future.wait를 사용해 3개의 API를 병렬로 호출 (속도 최적화)
       await Future.wait([
-        fetchMonthData(DateTime(now.year, now.month - 1)), // 전달
-        fetchMonthData(now),                              // 이번 달
-        fetchMonthData(DateTime(now.year, now.month + 1)), // 다음 달
+        fetchMonthData(DateTime(now.year, now.month - 1)), 
+        fetchMonthData(now),                               
+        fetchMonthData(DateTime(now.year, now.month + 1)), 
       ]);
+      // 데이터 로드 후 현재 날짜 리스트 업데이트
+      _updateCurrentRoutines(); 
     } catch (e) {
       debugPrint('초기 데이터 로딩 에러: $e');
     } finally {
@@ -60,149 +67,121 @@ class RoutineProvider with ChangeNotifier {
     }
   }
 
-  // 🚀 [수정] 특정 월의 데이터를 서버에서 가져와 캐시에 저장
-Future<void> fetchMonthData(DateTime date) async {
-  String monthKey = DateFormat('yyyy-MM').format(date);
-  
-  if (_monthlyCache.containsKey(monthKey)) return;
+  // 월간 데이터 fetch
+  Future<void> fetchMonthData(DateTime date) async {
+    String monthKey = DateFormat('yyyy-MM').format(date);
+    if (_monthlyCache.containsKey(monthKey)) return;
 
-  try {
-    final token = await _getToken();
-    
-    // 1. 서버에서 '바구니' 전체를 받아옵니다.
-    final Map<String, dynamic> response = await _routineService.getMonthlyRoutines(
-      token, 
-      date.year, 
-      date.month
-    );
+    try {
+      final token = await _getToken();
+      final Map<String, dynamic> response = await _routineService.getMonthlyRoutines(token, date.year, date.month);
+      final Map<String, dynamic> dailyData = response['daily'] ?? response['data']?['daily'] ?? {};
 
-    // 2. 🚀 핵심 수정: 바구니 전체(response)가 아니라, 그 안의 'daily' 데이터만 추출합니다!
-    // 백엔드 구조에 따라 ['data']['daily'] 일 수도 있으니 확인 필요
-    final Map<String, dynamic> dailyData = response['daily'] ?? response['data']?['daily'] ?? {};
-
-    // 3. 추출한 dailyData만 가지고 캐시 작업을 진행합니다.
-    _monthlyCache[monthKey] = dailyData.map(
-      (key, value) => MapEntry(key, List<dynamic>.from(value))
-    );
-    
-    notifyListeners();
-    debugPrint('✅ $monthKey 캐시 로드 성공!');
-  } catch (e) {
-    // 🚀 에러 메시지를 더 구체적으로 찍어서 범인을 찾기 쉽게 합니다.
-    debugPrint('❌ $monthKey 데이터 로드 실패: $e');
+      _monthlyCache[monthKey] = dailyData.map(
+        (key, value) => MapEntry(key, List<dynamic>.from(value))
+      );
+      
+      // 만약 방금 가져온 달이 현재 선택된 날짜와 같은 달이라면 화면 갱신
+      if (DateFormat('yyyy-MM').format(_selectedDate) == monthKey) {
+        _updateCurrentRoutines();
+      }
+      
+      debugPrint('✅ $monthKey 캐시 로드 성공!');
+    } catch (e) {
+      debugPrint('❌ $monthKey 데이터 로드 실패: $e');
+    }
   }
-}
 
-  // 🚀 날짜 클릭 시: 이제 서버 통신 없이 날짜만 바꿈 (UX 향상)
+  // 날짜 클릭 시 (정상 범위)
   void changeDateAndFetch(DateTime date) {
     _selectedDate = date;
-    notifyListeners(); 
-    
-    // 혹시라도 이동한 달의 데이터가 없으면 백그라운드에서 조용히 가져옴
+    _updateCurrentRoutines(); // 🚀 날짜가 바뀌었으니 리스트 동기화
     fetchMonthData(date);
   }
 
- // 🚀 루틴 완료 체크 (낙관적 업데이트 + 하루 한 번 쿼카 응원)
+  // 🚀 [중요] 가입일 이전 날짜를 눌렀을 때 호출할 함수
+  void setSelectedDateOnly(DateTime date) {
+    _selectedDate = date;
+    _routines = []; // 🚀 이제 _routines 변수가 존재하므로 에러 안 남! 확실하게 비워줌.
+    notifyListeners();
+  }
+
+  // 루틴 체크 토글
   Future<void> toggleRoutineCheck(BuildContext context, int routineId) async {
-    String monthKey = DateFormat('yyyy-MM').format(_selectedDate);
     String dateKey = DateFormat('yyyy-MM-dd').format(_selectedDate);
-
-    final dayRoutines = _monthlyCache[monthKey]?[dateKey];
-    if (dayRoutines == null) return;
-
-    final index = dayRoutines.indexWhere((r) => r['id'] == routineId);
     
-    if (index != -1) {
-      bool currentStatus = dayRoutines[index]['is_completed'] ?? dayRoutines[index]['isCompleted'] ?? false;
+    // 현재 리스트에서 해당 루틴 찾기
+    final index = _routines.indexWhere((r) => r['id'] == routineId);
+    if (index == -1) return;
 
-      // 오늘 이미 완료된 다른 루틴이 있는지 검사
-      bool hasOtherCompleted = dayRoutines.any((r) => 
+    bool currentStatus = _routines[index]['is_completed'] ?? _routines[index]['isCompleted'] ?? false;
+    bool hasOtherCompleted = _routines.any((r) => 
          r['id'] != routineId && (r['is_completed'] ?? r['isCompleted'] ?? false) == true
-      );
+    );
 
-      // 1. 내 창고 데이터 즉시 수정
-      dayRoutines[index]['is_completed'] = !currentStatus;
-      dayRoutines[index]['isCompleted'] = !currentStatus; 
+    // 1. 낙관적 업데이트 (변수와 캐시 둘 다 수정)
+    _routines[index]['is_completed'] = !currentStatus;
+    _routines[index]['isCompleted'] = !currentStatus; 
+    notifyListeners();
+
+    if (context.mounted) {
+      context.read<StatisticsProvider>().markAsDirty();
+    }
+
+    // 쿼카 응원 로직
+    if (!currentStatus && !hasOtherCompleted && _lastCheeredDateKey != dateKey) {
+      if (context.mounted) CustomSnackBar.showCheer(context);
+      _lastCheeredDateKey = dateKey; 
+    }
+
+    try {
+      final token = await _getToken();
+      await _routineService.checkRoutine(token, routineId, dateKey);
+    } catch (e) {
+      // 실패 시 롤백
+      _routines[index]['is_completed'] = currentStatus; 
+      _routines[index]['isCompleted'] = currentStatus; 
       notifyListeners();
-
-      // 🚀 [핵심 수정] 상태가 바뀌었으니, 무조건 통계 탭도 갱신하라고 깃발을 먼저 올립니다!
-      // 이렇게 해야 홈에서 체크 후 통계 탭을 눌렀을 때 실시간으로 싹 바뀝니다.
       if (context.mounted) {
         context.read<StatisticsProvider>().markAsDirty();
-      }
-
-      // 🎁 [쿼카 스낵바 로직] 
-      // 안 했던 걸 완료(true)로 바꿨고 + 다른 완료 루틴이 없으며 + 이 날짜에 아직 응원한 적이 없다면!
-      if (!currentStatus && !hasOtherCompleted && _lastCheeredDateKey != dateKey) {
-        if (context.mounted) CustomSnackBar.showCheer(context);
-        
-        // 🚀 스낵바를 띄웠으니, 이 날짜는 띄웠다고 도장을 찍어둠 (해제했다 다시 체크해도 안 뜸)
-        _lastCheeredDateKey = dateKey; 
-      }
-
-      // 2. 서버 통신 및 롤백 로직 (기존과 동일)
-      try {
-        final token = await _getToken();
-        await _routineService.checkRoutine(token, routineId, dateKey);
-      } catch (e) {
-        dayRoutines[index]['is_completed'] = currentStatus; 
-        dayRoutines[index]['isCompleted'] = currentStatus; 
-        notifyListeners(); 
-        
-        if (context.mounted) {
-          context.read<StatisticsProvider>().markAsDirty();
-          CustomSnackBar.show(context, message: '네트워크가 불안정하여 체크가 취소되었습니다.', isError: true);
-        }
-        debugPrint('루틴 체크 에러: $e');
+        CustomSnackBar.show(context, message: '네트워크 에러로 체크가 취소되었습니다.', isError: true);
       }
     }
   }
 
-  // 🚀 [수정됨] 루틴 추가/삭제/수정 후에는 전체 캐시를 싹 비우고 3개월치를 다시 세팅합니다!
+  // 데이터 갱신 후 리스트 업데이트를 위한 헬퍼
   Future<void> _refreshAllData() async {
-    _monthlyCache.clear(); // 1. 창고 완전 초기화
-    await initMonthlyData(); // 2. 최신 기준으로 전달/이번달/다음달 다시 가져오기
+    _monthlyCache.clear();
+    await initMonthlyData();
+    _updateCurrentRoutines(); 
   }
 
+  // 추가/삭제/수정 로직은 동일... (생략하되 내부에서 _refreshAllData 호출 유지)
   Future<void> addRoutine(int userId, String title, IconData icon, List<String> daysOfWeek, String alarmTime) async {
     final token = await _getToken();
     int mappedIconId = AppIcons.routineIcons.indexOf(icon) + 1;
-    final routineData = {
-      "userId": userId,
-      "title": title,
-      "iconId": mappedIconId == 0 ? 20 : mappedIconId,
-      "daysOfWeek": daysOfWeek.join(','),
-      "alarmTime": "$alarmTime:00",
-      "isActive": true
-    };
+    final routineData = { "userId": userId, "title": title, "iconId": mappedIconId == 0 ? 20 : mappedIconId, "daysOfWeek": daysOfWeek.join(','), "alarmTime": "$alarmTime:00", "isActive": true };
     await _routineService.createRoutine(token, routineData);
-    await _refreshAllData(); // 🔄 전체 캐시 갱신!
+    await _refreshAllData();
   }
 
   Future<void> deleteRoutine(int routineId) async {
     final token = await _getToken();
     await _routineService.deleteRoutine(token, routineId);
-    await _refreshAllData(); // 🔄 전체 캐시 갱신!
+    await _refreshAllData();
   }
 
   Future<void> updateRoutine(int routineId, int userId, String title, IconData icon, List<String> daysOfWeek, String alarmTime) async {
     final token = await _getToken();
     int mappedIconId = AppIcons.routineIcons.indexOf(icon) + 1;
-    final routineData = {
-      "userId": userId,
-      "title": title,
-      "iconId": mappedIconId == 0 ? 20 : mappedIconId,
-      "daysOfWeek": daysOfWeek.join(','),
-      "alarmTime": "$alarmTime:00",
-      "isActive": true
-    };
+    final routineData = { "userId": userId, "title": title, "iconId": mappedIconId == 0 ? 20 : mappedIconId, "daysOfWeek": daysOfWeek.join(','), "alarmTime": "$alarmTime:00", "isActive": true };
     await _routineService.updateRoutine(token, routineId, routineData);
-    await _refreshAllData(); // 🔄 전체 캐시 갱신!
+    await _refreshAllData();
   }
 
-  // 🚀 로그아웃 시 기존 유저의 데이터 메모리를 싹 비워주는 함수
   void clearRoutines() {
-    _monthlyCache.clear(); // 월간 캐시 비우기
-    notifyListeners(); // 화면 갱신
+    _monthlyCache.clear();
+    _routines = [];
+    notifyListeners();
   }
 }
