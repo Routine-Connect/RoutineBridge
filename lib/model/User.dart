@@ -5,6 +5,7 @@ class User {
   final String nickname;
   final String gender;
   final String? profileImage;
+  final DateTime createdAt;
 
   User({
     required this.id,
@@ -12,6 +13,7 @@ class User {
     required this.nickname,
     required this.gender,
     this.profileImage,
+    required this.createdAt,
     });
 
     factory User.fromJson(Map<String, dynamic> json) {
@@ -20,7 +22,8 @@ class User {
       email: json['email'],
       nickname: json['nickname'],
       gender: json['gender'],
-      profileImage: json['profile_image'],
+      profileImage: json['profileImage'],
+      createdAt: DateTime.parse(json['createdAt'].toString()),
     );
   }
 
@@ -30,6 +33,7 @@ class User {
     String? nickname,
     String? gender,
     String? profileImage,
+    DateTime? createdAt,
   }) {
     return User(
       id: id ?? this.id,
@@ -37,6 +41,7 @@ class User {
       nickname: nickname ?? this.nickname,
       gender: gender ?? this.gender,
       profileImage: profileImage ?? this.profileImage, // 이미지 변경 시 덮어씌움
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }
