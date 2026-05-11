@@ -260,15 +260,27 @@ class _SettingsSection extends StatelessWidget {
         _SettingTile(
           icon: Icons.logout, title: '로그아웃', isDestructive: true, showChevron: true,
           onTap: () async {
-            await context.read<AuthProvider>().logout();  // 토큰 삭제
+            try{
+              await context.read<AuthProvider>().logout();  // 토큰 삭제
+              if (!context.mounted) return;
+              Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => const LoginScreen()), (route) => false);
+            } catch (e) {
+              if (!context.mounted) return;
+              debugPrint('서버 로그아웃 실패 (서버 꺼짐 등), 하지만 로컬 로그아웃은 진행합니다.');
+            } finally {
+              // 2. 🚀 서버 에러와 상관없이 로컬 데이터는 무조건 싹 비움! (가장 중요)
+              context.read<UserProvider>().clearUser();  
+              context.read<RoutineProvider>().clearRoutines();  
+              context.read<StatisticsProvider>().clearStats();  
+              context.read<ThemeProvider>().clearTheme();  
 
-            context.read<UserProvider>().clearUser();  // 유저 정보 초기화
-            context.read<RoutineProvider>().clearRoutines();  // 루틴 데이터 초기화
-            context.read<StatisticsProvider>().clearStats();  // 통계 데이터 초기화
-            context.read<ThemeProvider>().clearTheme();  // 테마 데이터 초기화
-            
-            if (!context.mounted) return;
-            Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => const LoginScreen()), (route) => false);
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()), 
+                  (route) => false,
+                );
+              }
+            }
           },
         ),
       ],
