@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../../provider/user_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_shadow.dart';
 import '../theme/app_icon.dart';
 import '../widget/app_modal.dart';
 import '../../provider/routine_provider.dart';
+import '../widget/custom_snackbar.dart';
 import '../widget/routine_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -209,7 +211,7 @@ class HomeAddRoutineButton extends StatelessWidget {
 }
 
 
-// --- 완료 상태를 구분하기 위한 Enum ---
+// 4. 홈 캘린더 위젯 (주간 뷰 + 스탬프 표시 로직 포함)
 enum DayCompletionStatus { none, partial, full }
 
 class HomeWeekCalendar extends StatefulWidget {
@@ -240,14 +242,31 @@ class _HomeWeekCalendarState extends State<HomeWeekCalendar> {
     super.dispose();
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     final routineProvider = context.watch<RoutineProvider>();
+    final userProvider = context.watch<UserProvider>();
+    final joinDate = userProvider.currentUser?.createdAt;
     final selectedDate = routineProvider.selectedDate;
 
     final int currentWeekOffset = _currentPageIndex - 500;
     final DateTime visibleWeekStart = _baseMonday.add(Duration(days: currentWeekOffset * 7));
-    final DateTime visibleMonthDate = visibleWeekStart.add(const Duration(days: 3));
+
+    // 🚀 상단 타이틀 월 계산 로직 (기존 유지)
+    DateTime displayMonthDate;
+    final normalizedSelected = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+    final normalizedStart = DateTime(visibleWeekStart.year, visibleWeekStart.month, visibleWeekStart.day);
+    final normalizedEnd = visibleWeekStart.add(const Duration(days: 6));
+
+    bool isSelectedInVisibleWeek = normalizedSelected.isAtSameMomentAs(normalizedStart) || 
+                                   normalizedSelected.isAtSameMomentAs(normalizedEnd) || 
+                                   (normalizedSelected.isAfter(normalizedStart) && normalizedSelected.isBefore(normalizedEnd));
+
+    if (isSelectedInVisibleWeek) {
+      displayMonthDate = selectedDate;
+    } else {
+      displayMonthDate = visibleWeekStart.add(const Duration(days: 3));
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -263,20 +282,27 @@ class _HomeWeekCalendarState extends State<HomeWeekCalendar> {
           Padding(
             padding: const EdgeInsets.only(left: 8, bottom: 16),
             child: Text(
-              DateFormat('yyyy년 M월').format(visibleMonthDate),
+              DateFormat('yyyy년 M월').format(displayMonthDate),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.onSurface),
             ),
           ),
           
           SizedBox(
-            height: 90, // 🚀 1. 높이를 90으로 넉넉히 키워 이미지 깨짐 방지
+            height: 90, 
             child: PageView.builder(
               controller: _pageController,
               onPageChanged: (index) {
                 setState(() => _currentPageIndex = index);
-                // 🚀 유저가 달력을 넘기면, 해당 주(목요일 기준)가 포함된 달의 데이터를 미리 몰래 가져옵니다.
                 final int weekOffset = index - 500;
                 final DateTime visibleDate = _baseMonday.add(Duration(days: weekOffset * 7 + 3)); 
+
+                // 🚀 [최적화] 가입 월 이전이라면 월간 데이터 fetch도 막습니다.
+                if (joinDate != null) {
+                  final targetMonth = DateTime(visibleDate.year, visibleDate.month, 1);
+                  final joinMonth = DateTime(joinDate.year, joinDate.month, 1);
+                  if (targetMonth.isBefore(joinMonth)) return;
+                }
+                
                 context.read<RoutineProvider>().fetchMonthData(visibleDate);
               },
               itemBuilder: (context, pageIndex) {
@@ -290,20 +316,43 @@ class _HomeWeekCalendarState extends State<HomeWeekCalendar> {
                     final bool isSelected = DateUtils.isSameDay(selectedDate, date);
                     final bool isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
 
-                    // 🚀 2. 스탬프 상태 계산 (SelectedDate 체크 해제)
-                    // 현재 Provider는 선택된 날짜의 루틴만 들고 있으므로, 
-                    // 선택된 날짜에 대해서만 스탬프를 실시간으로 보여줍니다.
-                    DayCompletionStatus completionStatus = _getCompletionStatus(routineProvider, date);
+                    // 🚀 가입일 기준 날짜 정규화
+                    final normalizedDate = DateTime(date.year, date.month, date.day);
+                    final normalizedJoinDate = joinDate != null 
+                        ? DateTime(joinDate.year, joinDate.month, joinDate.day) 
+                        : null;
+
+                    // 🚀 가입일 이전 날짜인지 판단
+                    bool isBeforeJoin = normalizedJoinDate != null && normalizedDate.isBefore(normalizedJoinDate);
+
+                    // 가입일 이전이면 스탬프 안 보여줌
+                    DayCompletionStatus completionStatus = isBeforeJoin 
+                        ? DayCompletionStatus.none 
+                        : _getCompletionStatus(routineProvider, date);
 
                     return Expanded(
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTap: () => routineProvider.changeDateAndFetch(date), 
+                        onTap: () {
+                          // 🚀 [핵심 수정] 가입일 이전 날짜를 눌렀을 때
+                          if (isBeforeJoin) {
+                            // 1. 선택된 날짜는 바꿉니다 (유저가 눌렀다는 반응은 줘야 하니까요)
+                            // 2. 하지만 서버 통신은 막고, Provider의 리스트를 비워달라고 요청해야 합니다.
+                            routineProvider.setSelectedDateOnly(date); 
+                            CustomSnackBar.show(context, message: '가입 이전 기록은 볼 수 없어요!', isError: true);
+                            return;
+                          }
+                          
+                          // 가입일 이후일 때만 정상 통신
+                          routineProvider.changeDateAndFetch(date);
+                        },
                         child: _DayColumn(
                           label: DateFormat('E', 'ko_KR').format(date),
                           day: date.day.toString(),
                           isSelected: isSelected,
                           isWeekend: isWeekend,
+                          // 🚀 가입 전 날짜는 숫자 색을 흐리게 처리해서 "비활성" 느낌을 줍니다 (UX 센스)
+                          isDisabled: isBeforeJoin, 
                           completionStatus: completionStatus, 
                         ),
                       ),
@@ -343,12 +392,15 @@ class _HomeWeekCalendarState extends State<HomeWeekCalendar> {
 class _DayColumn extends StatelessWidget {
   static const double _homeStampSize = 46.0; 
 
+  final bool isDisabled;
+
   const _DayColumn({
     required this.label, 
     required this.day, 
     required this.isSelected,
     required this.isWeekend,
     required this.completionStatus,
+    required this.isDisabled,
   });
   
   final String label;
@@ -360,7 +412,10 @@ class _DayColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color labelColor = isWeekend ? const Color(0xFFF87171) : AppColors.secondary;
+    if (isDisabled) labelColor = labelColor.withOpacity(0.3);
+
     Color dayTextColor = isWeekend ? const Color(0xFFF87171) : AppColors.onSurface;
+    if (isDisabled) dayTextColor = dayTextColor.withOpacity(0.3);
     Color selectionBgColor = isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.15) : Colors.transparent;
 
     return Column(
