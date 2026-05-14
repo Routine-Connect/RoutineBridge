@@ -8,6 +8,7 @@ import java.util.List;
 public interface RoutineMapper {
     void insert(Routine routine);
     List<Routine> findByUserId(Long id);
+    List<Routine> findAllByUserId(Long userId);
     Routine findById(Long id);
     void delete(Long id);
     void update(Routine routine);

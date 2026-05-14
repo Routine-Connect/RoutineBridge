@@ -133,26 +133,41 @@ public class StatsService {
 
     // 스트릭 계산
     public Map<String, Object> getStreak(Long userId) {
+        System.out.println("getStreak userId = " + userId);
 
-        // 유저 가입일 가져오기
-        User user = userMapper.findById(userId);
-        String startDate = user.getCreatedAt().substring(0, 10);
+        String startDate = YearMonth.now().atDay(1).toString();
+        String endDate = LocalDate.now().toString();
 
-        List<Routine> routines = routineMapper.findByUserId(userId);
+        List<Routine> routines = routineMapper.findAllByUserId(userId);
 
-        // 전체 로그 날짜 중 완료된 날짜 Set으로 수집
-        Set<String> completedDates = new HashSet<>();
+        System.out.println("루틴 개수 : " + routines.size());
+
+        Map<String, Integer> totalPerDay = new HashMap<>();
+        Map<String, Integer> donePerDay = new HashMap<>();
         int totalCompleted = 0;
 
         for (Routine routine : routines) {
             List<RoutineLog> logs = routineLogMapper.findByRoutineIdAndPeriod(
-                    routine.getId(), startDate, LocalDate.now().toString()
+                    routine.getId(), startDate, endDate
             );
+            System.out.println("루틴 ID : " +  routine.getId() + " 로그 개수 : " + logs.size());
             for (RoutineLog log : logs) {
+                System.out.println("날짜 : " + log.getCheckDate() + " 완료 : " + log.isCompleted());
+                totalPerDay.merge(log.getCheckDate(), 1, Integer::sum);
                 if (log.isCompleted()) {
-                    completedDates.add(log.getCheckDate());
+                    donePerDay.merge(log.getCheckDate(), 1, Integer::sum);
                     totalCompleted++;
                 }
+            }
+        }
+
+        // 전부 완료한 날만 completedDates에 추가
+        Set<String> completedDates = new HashSet<>();
+        for (String d : totalPerDay.keySet()) {
+            int total = totalPerDay.get(d);
+            int done = donePerDay.getOrDefault(d, 0);
+            if (total == done) {
+                completedDates.add(d);
             }
         }
 
@@ -160,17 +175,17 @@ public class StatsService {
         int currentStreak = 0;
         LocalDate date = LocalDate.now();
 
-        if (completedDates.contains(date.toString())) {
+        if (!completedDates.contains(date.toString())) {
             date = date.minusDays(1);
         }
 
-        while (!completedDates.contains(date.toString())) {
+        while (completedDates.contains(date.toString())) {
             currentStreak++;
             date = date.minusDays(1);
         }
 
         // 최장 스트릭 계산
-        int logestStreak = 0;
+        int longestStreak = 0;
         int tempStreak = 0;
         List<String> sortedDates = new ArrayList<>(completedDates);
         Collections.sort(sortedDates);
@@ -187,12 +202,12 @@ public class StatsService {
                     tempStreak = 1;
                 }
             }
-            logestStreak = Math.max(tempStreak, logestStreak);
+            longestStreak = Math.max(tempStreak, longestStreak);
         }
 
         Map<String, Object> result = new HashMap<>();
         result.put("currentStreak", currentStreak);
-        result.put("longestStreak", logestStreak);
+        result.put("longestStreak", longestStreak);
         result.put("totalCompleted", totalCompleted);
         return result;
     }
