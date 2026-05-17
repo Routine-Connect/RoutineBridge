@@ -23,27 +23,31 @@ public class RoutineLogService {
 
     // 루틴 완료 체크 (토글)
     public void check(Long routineId, Long userId, String date) {
-        System.out.println("check 호출 - routineId: " + routineId + " date: " + date);
         Routine routine = routineMapper.findById(routineId);
         if (routine == null) {
             throw new IllegalArgumentException(ErrorCode.ROUTINE_NOT_FOUND.getMessage());
         }
-        if (!routine.getIsActive()) {
-            throw new IllegalArgumentException(ErrorCode.ROUTINE_INACTIVE.getMessage());
-        }
 
-        // 본인 루틴인지 확인
         if (!routine.getUserId().equals(userId)) {
-            throw new IllegalArgumentException(ErrorCode.ROUTINE_UNAUTHORIZED.getMessage());
+            throw new IllegalArgumentException(ErrorCode.ROUTINE_FORBBIDEN.getMessage());
         }
 
         if (!routine.getIsActive()) {
             throw new IllegalArgumentException(ErrorCode.ROUTINE_INACTIVE.getMessage());
         }
 
-
-        // date 없으면 오늘 날짜
         String checkDate = (date != null && !date.isEmpty()) ? date : LocalDate.now().toString();
+
+        // 과거 날짜 체크 방지
+        if (LocalDate.parse(checkDate).isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException(ErrorCode.INVALID_INPUT.getMessage());
+        }
+
+        // 루틴 생성일 이전 날짜 체크 방지
+        String routineCreatedDate = routine.getCreatedAt().substring(0, 10);
+        if (LocalDate.parse(checkDate).isBefore(LocalDate.parse(routineCreatedDate))) {
+            throw new IllegalArgumentException(ErrorCode.INVALID_INPUT.getMessage());
+        }
 
         RoutineLog existing = routineLogMapper.findByRoutineIdAndDate(routineId, checkDate);
 
