@@ -41,4 +41,11 @@ public class StatsController {
         Long userId = (Long) request.getAttribute("userId");
         return ApiResponse.success(statsService.getStreak(userId));
     }
+
+    @ApiOperation(value = "전체 스트릭 조회", notes = "가입일부터 전체 기간 스트릭 조회")
+    @GetMapping("/streak/all")
+    public ApiResponse<Map<String, Object>> getStreakAll(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return ApiResponse.success(statsService.getStreakAll(userId));
+    }
 }

@@ -23,6 +23,7 @@ public class RoutineLogService {
 
     // 루틴 완료 체크 (토글)
     public void check(Long routineId, Long userId, String date) {
+        System.out.println("check 호출 - routineId: " + routineId + " date: " + date);
         Routine routine = routineMapper.findById(routineId);
         if (routine == null) {
             throw new IllegalArgumentException(ErrorCode.ROUTINE_NOT_FOUND.getMessage());

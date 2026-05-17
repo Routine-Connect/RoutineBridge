@@ -16,6 +16,7 @@ public enum ErrorCode {
     ROUTINE_FORBBIDEN("R003", "본인의 루틴만 접근할 수 있습니다."),
     ROUTINE_INACTIVE("R004", "비활성화된 루틴입니다."),
 
+
     // 인증
     TOKEN_EXPIRED("A001", "토큰이 만료되었습니다"),
     TOKEN_INVALID("A002", "유효하지 않은 토큰입니다"),

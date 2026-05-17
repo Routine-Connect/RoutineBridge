@@ -211,4 +211,81 @@ public class StatsService {
         result.put("totalCompleted", totalCompleted);
         return result;
     }
+
+    // 전체 스트릭 계산
+    public Map<String, Object> getStreakAll(Long userId) {
+
+        User user = userMapper.findById(userId);
+        String startDate = user.getCreatedAt().substring(0, 10);
+        String endDate = LocalDate.now().toString();
+
+        List<Routine> routines = routineMapper.findAllByUserId(userId);
+
+        Map<String, Integer> totalPerDay = new HashMap<>();
+        Map<String, Integer> donePerDay = new HashMap<>();
+        int totalCompleted = 0;
+
+        for (Routine routine : routines) {
+            List<RoutineLog> logs = routineLogMapper.findByRoutineIdAndPeriod(
+                    routine.getId(), startDate, endDate
+            );
+            for (RoutineLog log : logs) {
+                totalPerDay.merge(log.getCheckDate(), 1, Integer::sum);
+                if (log.isCompleted()) {
+                    donePerDay.merge(log.getCheckDate(), 1, Integer::sum);
+                    totalCompleted++;
+                }
+            }
+        }
+
+        Set<String> completedDates = new HashSet<>();
+        for (String d : totalPerDay.keySet()) {
+            int total = totalPerDay.get(d);
+            int done = donePerDay.getOrDefault(d, 0);
+            if (total == done) {
+                completedDates.add(d);
+            }
+        }
+        
+        // 현재 스트릭
+        int currentStreak = 0;
+        LocalDate date = LocalDate.now();
+        
+        if (!completedDates.contains(date.toString())) {
+            date = date.minusDays(1);
+        }
+        
+        while (completedDates.contains(date.toString())) {
+            currentStreak++;
+            date = date.minusDays(1);
+        }
+        
+        
+        // 최장 스트릭
+        int longestStreak = 0;
+        int tempStreak = 0;
+        List<String> sortedDates = new ArrayList<>(completedDates);
+        Collections.sort(sortedDates);
+
+        for (int i = 0; i < sortedDates.size(); i++) {
+            if (i == 0) {
+                tempStreak = 1;
+            } else {
+                LocalDate prev = LocalDate.parse(sortedDates.get(i - 1));
+                LocalDate curr = LocalDate.parse(sortedDates.get(i));
+                if (curr.equals(prev.plusDays(1))) {
+                    tempStreak++;
+                } else {
+                    tempStreak = 1;
+                }
+            }
+            longestStreak = Math.max(tempStreak, longestStreak);
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("currentStreak", currentStreak);
+        result.put("longestStreak", longestStreak);
+        result.put("totalCompleted", totalCompleted);
+        return result;
+    }
 }
