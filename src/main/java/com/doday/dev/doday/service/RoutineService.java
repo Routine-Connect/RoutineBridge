@@ -70,6 +70,7 @@ public class RoutineService {
             map.put("alarmTime", routine.getAlarmTime());
             map.put("iconId", routine.getIconId());
             map.put("daysOfWeek", routine.getDaysOfWeek());
+            map.put("sortOrder", routine.getSortOrder());
             map.put("isCompleted", log != null && log.isCompleted());
             result.add(map);
         }
@@ -123,6 +124,7 @@ public class RoutineService {
                 map.put("alarmTime", routine.getAlarmTime());
                 map.put("iconId", routine.getIconId());
                 map.put("daysOfWeek", routine.getDaysOfWeek());
+                map.put("sortOrder", routine.getSortOrder());
 
                 boolean isCompleted = logMap
                         .getOrDefault(dateStr, Collections.emptyMap())
