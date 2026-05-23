@@ -60,6 +60,10 @@ public class RoutineService {
         for (Routine routine : routines) {
             RoutineLog log = routineLogMapper.findByRoutineIdAndDate(routine.getId(), date);
 
+            // 루틴 생성일 이전 날짜 제외
+            String routineCreatedDate = routine.getCreatedAt().substring(0, 10);
+            if (localDate.isBefore(LocalDate.parse(routineCreatedDate))) continue;
+
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("id", routine.getId());
             map.put("title", routine.getTitle());
@@ -107,6 +111,11 @@ public class RoutineService {
             for (Routine routine : routines) {
                 if (!routine.getIsActive()) continue;
                 if (!routine.getDaysOfWeek().contains(dayOfWeek)) continue;
+
+
+                // 루틴 생성일 이전 날짜 제외
+                String routineCreatedDate = routine.getCreatedAt().substring(0, 10);
+                if (date.isBefore(LocalDate.parse(routineCreatedDate))) continue;
 
                 Map<String, Object> map = new LinkedHashMap<>();
                 map.put("id", routine.getId());

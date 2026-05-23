@@ -38,11 +38,6 @@ public class RoutineLogService {
 
         String checkDate = (date != null && !date.isEmpty()) ? date : LocalDate.now().toString();
 
-        // 과거 날짜 체크 방지
-        if (LocalDate.parse(checkDate).isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException(ErrorCode.INVALID_INPUT.getMessage());
-        }
-
         // 루틴 생성일 이전 날짜 체크 방지
         String routineCreatedDate = routine.getCreatedAt().substring(0, 10);
         if (LocalDate.parse(checkDate).isBefore(LocalDate.parse(routineCreatedDate))) {
