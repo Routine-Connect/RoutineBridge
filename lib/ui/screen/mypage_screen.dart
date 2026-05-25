@@ -14,8 +14,30 @@ import '../widget/app_modal.dart';
 import '../widget/custom_snackbar.dart';
 import 'login_screen.dart';
 
-class MyPageScreen extends StatelessWidget {
+class MyPageScreen extends StatefulWidget {
   const MyPageScreen({super.key});
+
+  @override
+  State<MyPageScreen> createState() => _MyPageScreenState();
+}
+
+class _MyPageScreenState extends State<MyPageScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // 🚀 화면 뼈대가 그려진 직후, 비동기 초기화 함수를 실행합니다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeMyPage();
+    });
+  }
+
+  // 🚀 비동기(async)로 작동하는 전체 기간 통계 로딩 로직
+  Future<void> _initializeMyPage() async {
+    final statsProvider = context.read<StatisticsProvider>();
+    
+    // 🚀 마이페이지에 필요한 전체 기간 스트릭/누적 완료 데이터를 서버에서 불러옵니다.
+    await statsProvider.loadAllTimeStreak();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,8 +168,8 @@ class _StatsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     // 🚀 Provider를 구독하여 실제 통계 데이터를 실시간으로 가져옵니다.
     final statsProvider = context.watch<StatisticsProvider>();
-    final int longestStreak = statsProvider.longestStreak; // 최장 기록 변수
-    final int totalCompleted = statsProvider.totalCompleted; // 완료 루틴 변수
+    final int longestStreak = statsProvider.allTimeStreak?['longestStreak'] ?? 0; // 전체 최장 기록
+    final int totalCompleted = statsProvider.allTimeStreak?['totalCompleted'] ?? 0; // 전체 누적 완료 루틴 수
 
     return Row(
       children: [
