@@ -139,7 +139,7 @@ class _CheerPopupState extends State<_CheerPopup> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
-                color: AppColors.brandBeige.withOpacity(0.85),
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.85),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 12, offset: const Offset(0, 6))
