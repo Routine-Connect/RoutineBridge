@@ -23,6 +23,8 @@ dependencies:
   flutter_slidable: ^4.0.3
   phosphor_flutter: ^2.1.0
   fl_chart: ^1.2.0
+  video_player: ^2.11.1
+  flutter_native_splash: ^2.4.7
 
 
 dev_dependencies:
@@ -41,3 +43,10 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/images/app_icon.png"
+
+flutter_native_splash:
+  android: false
+  ios: true
+  web: false
+
+  color: "#F8EFD3"
