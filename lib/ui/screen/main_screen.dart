@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:routine_app/ui/widget/app_modal.dart';
 import '../theme/app_colors.dart';
 import 'home_screen.dart';
 import 'mypage_screen.dart';
@@ -29,15 +30,21 @@ class _MainScreenState extends State<MainScreen> {
   void _onTap(int index) {
     if (_currentIndex == index) return;
 
-    // 🚀 전환되는 탭에 맞는 데이터만 정확히 호출
+    // 🚀 [수정] 무조건적인 호출 대신 더티 플래그(_isDirty)가 true일 때만 서버 통신하도록 제어
     if (index == 1) {
-      // 통계 탭 진입 시
-      context.read<StatisticsProvider>().loadSummaryOnly(); // 숫자 최신화
-      context.read<StatisticsProvider>().loadFullStats();   // 그래프/달력 최신화
+      final statsProvider = context.read<StatisticsProvider>();
+      // 데이터 변경이 감지되었을 때만 API를 호출하여 최적화
+      if (statsProvider.isDirty) {
+        statsProvider.loadSummaryOnly(); // 숫자 최신화
+        statsProvider.loadFullStats();   // 그래프/달력 최신화
+      }
     }
     else if (index == 2) {
-      // 프로필 탭: 상세 프로필 + 요약 수치 호출
-      context.read<StatisticsProvider>().loadSummaryOnly();
+      final statsProvider = context.read<StatisticsProvider>();
+      // 프로필 탭 진입 시에도 변경사항이 있을 때만 요약 수치 갱신
+      if (statsProvider.isDirty) {
+        statsProvider.loadAllTimeStreak(); 
+      }
     }
     
     setState(() => _currentIndex = index);
@@ -78,7 +85,10 @@ class _MainScreenState extends State<MainScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              // 🚀 달력 아이콘 누르면 날짜 선택 모달 띄우기
+              AppModals.showDatePickerModal(context);
+            },
             icon: Icon(Icons.calendar_today_outlined, color: Theme.of(context).colorScheme.primary),
           ),
           const SizedBox(width: 8),
