@@ -6,6 +6,7 @@ import '../ui/theme/app_icon.dart';
 import '../ui/widget/custom_snackbar.dart';
 import 'statistics_provider.dart';
 import 'package:provider/provider.dart';
+import 'dart:convert';
 
 class RoutineProvider with ChangeNotifier {
   final RoutineService _routineService = RoutineService();
@@ -77,6 +78,10 @@ class RoutineProvider with ChangeNotifier {
       final Map<String, dynamic> response = await _routineService.getMonthlyRoutines(token, date.year, date.month);
       final Map<String, dynamic> dailyData = response['daily'] ?? response['data']?['daily'] ?? {};
 
+      // 백엔드에서 날아온 데이터 그대로 출력
+      debugPrint('🚨 [$monthKey] 백엔드 응답 쌩데이터:');
+      debugPrint(jsonEncode(dailyData));
+
       _monthlyCache[monthKey] = dailyData.map(
         (key, value) => MapEntry(key, List<dynamic>.from(value))
       );
@@ -97,13 +102,6 @@ class RoutineProvider with ChangeNotifier {
     _selectedDate = date;
     _updateCurrentRoutines(); // 🚀 날짜가 바뀌었으니 리스트 동기화
     fetchMonthData(date);
-  }
-
-  // 🚀 [중요] 가입일 이전 날짜를 눌렀을 때 호출할 함수
-  void setSelectedDateOnly(DateTime date) {
-    _selectedDate = date;
-    _routines = []; // 🚀 이제 _routines 변수가 존재하므로 에러 안 남! 확실하게 비워줌.
-    notifyListeners();
   }
 
   // 루틴 체크 토글
@@ -177,6 +175,73 @@ class RoutineProvider with ChangeNotifier {
     final routineData = { "userId": userId, "title": title, "iconId": mappedIconId == 0 ? 20 : mappedIconId, "daysOfWeek": daysOfWeek.join(','), "alarmTime": "$alarmTime:00", "isActive": true };
     await _routineService.updateRoutine(token, routineId, routineData);
     await _refreshAllData();
+  }
+
+  List<dynamic> _originalRoutines = []; // 드래그 시작 시점의 원본
+  bool _isReordering = false;
+  bool _hasChanges = false; // 🚀 변경이 일어났는지 추적
+
+  bool get isReordering => _isReordering;
+  bool get hasChanges => _hasChanges;
+
+  // 드래그 시작 시 원본 저장
+  void setReordering(bool value, List<dynamic> currentList) {
+    _isReordering = value;
+    if (value) {
+      _originalRoutines = List.from(currentList);
+      _hasChanges = false; // 시작할 땐 변경 없음
+    }
+    notifyListeners();
+  }
+
+  // 리스트 순서 변경 시마다 변경 여부 체크
+  void updateLocalRoutines(List<dynamic> newList) {
+    _routines = newList;
+    
+    // 원본과 비교 (ID 순서로 비교)
+    final originalIds = _originalRoutines.map((e) => e['id']).toList();
+    final newIds = newList.map((e) => e['id']).toList();
+    
+    // 순서가 다르면 true, 같으면 false
+    _hasChanges = originalIds.join(',') != newIds.join(',');
+    notifyListeners();
+  }
+
+  // 순서 저장 API
+  Future<void> saveRoutineOrder(List<dynamic> updatedRoutines) async {
+    print("🚀 [API 통신] 순서 저장 요청 시작...");
+    final token = await _storage.read(key: 'jwt_token') ?? '';
+    
+    final List<Map<String, dynamic>> orderData = updatedRoutines.asMap().entries.map((entry) {
+      return {
+        "id": entry.value['id'] ?? entry.value['routineId'],
+        "sortOrder": entry.key + 1,
+      };
+    }).toList();
+
+    try {
+      // 1. 서버에 순서 변경 요청
+      await _routineService.updateOrder(token, orderData);
+      print("✅ [API 통신] 순서 저장 API 호출 성공!");
+
+      // 2. [캐시 갱신 로직]
+      await _refreshAllData();
+
+      // 3. 상태 초기화 (버튼 원상복구)
+      _isReordering = false;
+      _hasChanges = false;
+      _originalRoutines = [];
+      
+      notifyListeners();
+      print("✅ 로컬 상태 초기화 완료 (순서 저장 버튼 다시 추가하기로 복귀)");
+
+    } catch (e) {
+      print("❌ [API 통신] 순서 저장 실패: $e");
+      
+      // 실패 시에도 버튼은 원래대로 돌려줘야 유저가 다시 시도 가능
+      _isReordering = false;
+      notifyListeners();
+    }
   }
 
   void clearRoutines() {
