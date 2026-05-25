@@ -60,7 +60,7 @@
 
     <select id="countByUserId" resultType="int">
         SELECT COUNT(*) FROM Routines WHERE user_id = #{userId}
-    </select>
+    </select>rn
 
     <update id="updateOrder">
         UPDATE Routines
