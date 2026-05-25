@@ -99,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           
           // 로그인 폼 영역
-          Center(
+          Center(                                     
             child: Container(
               width: 320,
               padding: const EdgeInsets.all(24),
@@ -155,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: 50,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        backgroundColor: AppColors.primary,
                         foregroundColor: AppColors.onPrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -196,7 +196,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           '회원가입',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary, 
+                            color: AppColors.primary, 
                           ),
                         ),
                       ),
