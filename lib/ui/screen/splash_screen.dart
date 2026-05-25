@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:provider/provider.dart';
+import 'package:video_player/video_player.dart';
 import '../../provider/auth_provider.dart';
 import '../../provider/user_provider.dart';
 import '../theme/app_colors.dart';
 import 'login_screen.dart';
-import 'main_screen.dart'; 
+import 'main_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,34 +17,57 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  late VideoPlayerController _controller;
+  bool _isInitialized = false;
+
   @override
   void initState() {
     super.initState();
+    
+    _controller = VideoPlayerController.asset('assets/images/quokka_splash.mp4')
+      ..initialize().then((_) {
+        setState(() {
+          _isInitialized = true;
+          _controller.setLooping(true);
+          _controller.play();
+        });
+        
+        // 💡 2. 영상이 화면에 그려질 준비가 끝났으므로 네이티브 스플래시를 걷어냅니다!
+        FlutterNativeSplash.remove(); 
+        
+      }).catchError((error) {
+        debugPrint("💡 비디오 초기화 에러 발생: $error");
+        
+        // 💡 3. 에러가 나더라도 앱이 멈추면 안 되므로 여기서도 걷어내 줍니다.
+        FlutterNativeSplash.remove(); 
+      });
+
     _initializeApp();
   }
 
-  // 💡 앱 진입 시 필요한 초기화 작업 진행
+  @override
+  void dispose() {
+    // 💡 메모리 누수 방지를 위한 컨트롤러 해제
+    _controller.dispose();
+    super.dispose();
+  }
+
   Future<void> _initializeApp() async {
-    // 1. 알림 권한 묻기
+    // 알림 권한 요청
     await Permission.notification.request();
 
-    // 2. 유저가 로고를 볼 수 있도록 약간의 딜레이 (1.5초)
+    // 쿼카 인사를 충분히 볼 수 있도록 최소 1.5초 대기
     await Future.delayed(const Duration(milliseconds: 1500));
 
     if (!mounted) return;
 
-    // 3. 스토리지에서 JWT 토큰 확인
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     await authProvider.loadToken();
 
     if (!mounted) return;
 
-    // 4. 토큰 유무에 따라 라우팅
     if (authProvider.isAuthenticated) {
-      
-      // 메인 화면으로 넘어가기 '직전'에 내 최신 프로필 정보를 백엔드에서 싹 당겨옵니다!
       await context.read<UserProvider>().loadMyProfile();
-
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const MainScreen()),
@@ -57,32 +82,28 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background, 
+      backgroundColor: AppColors.splashBackground,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 💡 추후 로고가 들어갈 자리 (반드시 .webp 확장자 사용!)
-            /*
-            Image.asset(
-              'assets/images/logo.webp', 
+            // 💡 비디오 재생 영역
+            SizedBox(
               width: 150,
+              height: 150,
+              child: _isInitialized
+                  ? VideoPlayer(_controller)
+                  : const SizedBox.shrink(), // 초기화 전에는 빈 공간
             ),
             const SizedBox(height: 24),
-            */
             Text(
               "Doday",
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.w900,
-                color: Theme.of(context).colorScheme.primary,
+                color: AppColors.primary,
                 letterSpacing: -0.5,
               ),
-            ),
-            const SizedBox(height: 24),
-            // 테마에 맞는 로딩 인디케이터
-            CircularProgressIndicator(
-              color: Theme.of(context).colorScheme.primary,
             ),
           ],
         ),
