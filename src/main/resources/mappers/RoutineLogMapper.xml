@@ -25,4 +25,8 @@
           AND check_date BETWEEN #{startDate} AND #{endDate}
     </select>
 
+    <delete id="deleteByRoutineId">
+        DELETE FROM RoutineLogs WHERE routine_id = #{routineId}
+    </delete>
+
 </mapper>

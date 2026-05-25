@@ -25,6 +25,9 @@ public class RoutineService {
 
     // 루틴 생성
     public void create(Routine routine) {
+        // 현재 유저의 루틴 개수 + 1 로 sort_order 자동 부여
+        int count = routineMapper.countByUserId(routine.getUserId());
+        routine.setSortOrder(count + 1);
         routineMapper.insert(routine);
     }
 
@@ -163,15 +166,17 @@ public class RoutineService {
     }
 
     // 루틴 삭제
-    public void delete(Long id, Long userid) {
+    public void delete(Long id, Long userId) {
         Routine existing = routineMapper.findById(id);
         if (existing == null) {
             throw new IllegalArgumentException(ErrorCode.ROUTINE_NOT_FOUND.getMessage());
         }
-
-        if (!existing.getUserId().equals(userid)) {
+        if (!existing.getUserId().equals(userId)) {
             throw new IllegalArgumentException(ErrorCode.ROUTINE_FORBBIDEN.getMessage());
         }
+        // 로그 먼저 삭제
+        routineLogMapper.deleteByRoutineId(id);
+        // 루틴 삭제
         routineMapper.delete(id);
     }
     

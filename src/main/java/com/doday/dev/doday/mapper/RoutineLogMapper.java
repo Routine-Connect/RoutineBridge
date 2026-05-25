@@ -11,4 +11,6 @@ public interface RoutineLogMapper {
     RoutineLog findByRoutineIdAndDate(@Param("routineId") Long routineId, @Param("checkDate") String checkDate);
     void updateCompleted(@Param("routineId") Long routineId, @Param("checkDate") String checkDate, @Param("isCompleted") boolean isCompleted);
     List<RoutineLog> findByRoutineIdAndPeriod(@Param("routineId") Long routineId, @Param("startDate") String startDate, @Param("endDate") String endDate);  // 통계용
+
+    void deleteByRoutineId(Long routineId);
 }

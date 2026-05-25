@@ -15,4 +15,6 @@ public interface RoutineMapper {
     List<Routine> findTodayRoutines(@Param("userId") Long userId, @Param("dayOfWeek") String dayOfWeek); // 오늘 루틴 조회
     List<Routine> findByUserIdAndDayOfWeek(@Param("userId") Long userId, @Param("dayOfWeek") String dayOfWeek);
     void updateOrder(@Param("id") Long id, @Param("sortOrder") int sortOrder);
+
+    int countByUserId(Long userId);
 }

@@ -58,6 +58,10 @@
         ORDER BY sort_order ASC
     </select>
 
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM Routines WHERE user_id = #{userId}
+    </select>
+
     <update id="updateOrder">
         UPDATE Routines
         SET sort_order = #{sortOrder}
