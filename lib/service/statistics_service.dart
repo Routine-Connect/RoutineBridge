@@ -4,6 +4,26 @@ import 'package:http/http.dart' as http;
 class StatisticsService {
   final String _baseUrl = 'https://nonextendible-kandace-gratifyingly.ngrok-free.dev/api/stats';
 
+  // GET /api/stats/streak/all - 가입일 기준 전체 기간 요약 통계 (마이페이지용)
+  Future<Map<String, dynamic>> getAllTimeStreak(String token) async {
+    final url = Uri.parse('$_baseUrl/streak/all');
+    final response = await http.get(
+      url, 
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      }
+    );
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      // 백엔드 응답 포맷에 맞춰 데이터 파싱 처리
+      return decoded['data'] ?? decoded;
+    } else {
+      throw Exception('전체 기간 스트릭 통계를 불러오지 못했습니다.');
+    }
+  }
+
   // GET /api/stats/streak - 상단 요약 통계 (스트릭 + 총 완료 개수 한 번에 가져오기)
   Future<Map<String, dynamic>> fetchSummaryStats(String token) async {
     final url = Uri.parse('$_baseUrl/streak'); 
@@ -11,7 +31,7 @@ class StatisticsService {
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-      return decoded['data'] ?? decoded; 
+      return decoded['data'] ?? decoded;
     } else {
       throw Exception('통계 요약을 불러오지 못했습니다.');
     }

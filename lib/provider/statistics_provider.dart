@@ -12,7 +12,10 @@ class StatisticsProvider with ChangeNotifier {
   int _totalCompleted = 0; 
   int _longestStreak = 0; 
   
-  // 2. 그래프 데이터
+  // 2. 마이페이지 전체 스트릭 데이터
+  Map<String, dynamic>? _allTimeStreak;
+
+  // 3. 그래프 데이터
   Map<String, double> _weeklyStats = {};
   
   // 🚀 [핵심] 3개월치(또는 그 이상) 월간 데이터를 쟁여둘 캐시 창고
@@ -67,6 +70,23 @@ class StatisticsProvider with ChangeNotifier {
     _isDirty = true;
   }
 
+  Map<String, dynamic>? get allTimeStreak => _allTimeStreak;
+  bool get isDirty => _isDirty;
+
+  // 가입일 기준 전체 기간 스트릭 로드 API 연동 - myPage에서 사용
+  Future<void> loadAllTimeStreak() async {
+    try {
+      final token = await _storage.read(key: 'jwt_token') ?? '';
+      if (token.isEmpty) return;
+
+      // 💡 통신 레이어 호출 (StatisticsService에 구현 필수)
+      _allTimeStreak = await _statisticsService.getAllTimeStreak(token);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ 전체 스트릭 로드 에러: $e');
+    }
+  }
+
   // 🚀 [추가] 달력 월 변경 시 호출할 함수 (스와이프 시)
   void changeMonth(DateTime newMonth) {
     _currentMonth = newMonth;
@@ -79,27 +99,17 @@ class StatisticsProvider with ChangeNotifier {
     notifyListeners(); // 화면 즉시 전환 (캐시에 있으면 딜레이 0초)
   }
 
-  // 🚀 단일 월 통계 데이터 로드 (캐싱 로직)
-  Future<void> _fetchMonthData(DateTime date) async {
+  // 🚀 단일 월 통계 데이터 로드 (캐싱 로직) - forceRefresh 플래그 주입 가능하도록 확장
+  Future<void> _fetchMonthData(DateTime date, {bool forceRefresh = false}) async {
     final monthKey = DateFormat('yyyy-MM').format(date);
-    if (_monthlyCache.containsKey(monthKey)) return;
+    
+    // 🚀 [수정] 강제 새로고침(forceRefresh)이 아닐 때만 기존 캐시를 신뢰하고 통신 차단
+    if (!forceRefresh && _monthlyCache.containsKey(monthKey)) return;
 
     // _userCreatedAt을 사용해 과거 데이터 호출차단
     if (_userCreatedAt != null) {
       final targetMonth = DateTime(date.year, date.month, 1);
       final joinMonth = DateTime(_userCreatedAt!.year, _userCreatedAt!.month, 1);
-      
-      if (targetMonth.isBefore(joinMonth)) {
-
-        debugPrint('방어로직 $monthKey는 가입 이전이므로 통신을 차단합니다.');
-
-        _monthlyCache[monthKey] = {
-          'daily': <String, double>{},
-          'totalRoutineCount': 0, 'completedRoutineCount': 0,
-        };
-        notifyListeners();
-        return; 
-      }
 
       if (targetMonth.isAfter(currentMonth)) {
       debugPrint('⏳ $monthKey는 미래이므로 통계 API를 호출하지 않습니다.');
@@ -134,6 +144,7 @@ class StatisticsProvider with ChangeNotifier {
     }
   }
 
+  // 통계 페이지 하단 최근 스트릭 GET /api/stats/streak 에서 _currentStreak
   Future<void> loadSummaryOnly() async {
     try {
       final token = await _storage.read(key: 'jwt_token') ?? '';
@@ -141,14 +152,16 @@ class StatisticsProvider with ChangeNotifier {
 
       final summary = await _statisticsService.fetchSummaryStats(token);
       _currentStreak = summary['currentStreak'] ?? 0;
-      _totalCompleted = summary['totalCompleted'] ?? 0;
-      _longestStreak = summary['longestStreak'] ?? 0;
+
+      debugPrint('✅ 요약 통계 로드 성공! 현재 스트릭: $_currentStreak, 총 완료: $_totalCompleted, 최장 스트릭: $_longestStreak');
       
       notifyListeners(); 
     } catch (e) {
       debugPrint('요약 통계 로드 에러: $e');
     }
   }
+
+
 
   // 🚀 [수정] 통계 탭 최초 진입 시, 주간 데이터와 함께 '3개월치'를 한 번에 긁어옵니다.
   Future<void> loadFullStats() async {
@@ -163,15 +176,17 @@ class StatisticsProvider with ChangeNotifier {
       final weeklyData = await _statisticsService.fetchWeeklyStats(token);
       _weeklyStats = weeklyData.map((key, value) => MapEntry(key, value.toDouble()));
 
-      // 2. 🚀 월간 데이터 3개월치 병렬 로드 (현재, 이전, 다음 달)
+      // 2. 🚀 월간 데이터 3개월치 병렬 로드 (현재, 이전, 다음 달) 
+      // 더티 깃발이 올라간 상태이므로 forceRefresh: true를 주입해 캐시 방어막을 뚫고 최신화시킵니다.
       await Future.wait([
-        _fetchMonthData(_currentMonth),
-        _fetchMonthData(DateTime(_currentMonth.year, _currentMonth.month - 1, 1)),
-        _fetchMonthData(DateTime(_currentMonth.year, _currentMonth.month + 1, 1)),
+        _fetchMonthData(_currentMonth, forceRefresh: true),
+        _fetchMonthData(DateTime(_currentMonth.year, _currentMonth.month - 1, 1), forceRefresh: true),
+        _fetchMonthData(DateTime(_currentMonth.year, _currentMonth.month + 1, 1), forceRefresh: true),
       ]);
 
+      // 🚀 통신이 끝났으므로 깃발을 내립니다. 다음번엔 탭 전환을 해도 무지성 API 낭비를 차단합니다.
       _isDirty = false;
-      debugPrint('✅ 통계 3개월치 로드 완료!');
+      debugPrint('✅ 통계 3개월치 로드 완료 및 Dirty Flag 해제 완료!');
     } catch (e) {
       debugPrint('❌ 전체 통계 데이터 로드 에러: $e');
     } finally {
