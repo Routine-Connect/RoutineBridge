@@ -123,6 +123,8 @@ abstract final class AppColors {
   static const Color brandBeige = Color(0xFFFBF1E6);
   static const Color coralAccent = Color(0xFFFFCBBF);
 
+  static const Color splashBackground = Color(0xFFF8EFD3);
+
   // —— 홈 루틴 카드 등 인라인 색 ——
   static const Color routineIconBrown = Color(0xFFA67C52);
   static const Color routineCardGreenTint = Color(0xFFF1F8F1);
