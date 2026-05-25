@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_shadow.dart';
@@ -563,5 +564,220 @@ class AppModals {
       );
     },
   );
+  }
+  // 🚀 상단바 달력 바텀 시트 (워프 기능)
+  static Future<void> showDatePickerModal(BuildContext context) async {
+    final routineProvider = context.read<RoutineProvider>();
+    final initialDate = routineProvider.selectedDate;
+
+    final DateTime? pickedDate = await showModalBottomSheet<DateTime>(
+      context: context,
+      isScrollControlled: true, 
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (BuildContext context) {
+        // 🚀 커스텀 달력 위젯 호출
+        return _CustomCalendarModal(initialDate: initialDate);
+      },
+    );
+
+    // 4. 유저가 날짜를 골랐다면 Provider를 업데이트해서 워프!
+    if (pickedDate != null && context.mounted) {
+      context.read<RoutineProvider>().changeDateAndFetch(pickedDate);
+    }
+  }
+}
+
+// ============================================================================
+// 커스텀 달력
+// ============================================================================
+class _CustomCalendarModal extends StatefulWidget {
+  final DateTime initialDate;
+  const _CustomCalendarModal({required this.initialDate});
+
+  @override
+  State<_CustomCalendarModal> createState() => _CustomCalendarModalState();
+}
+
+class _CustomCalendarModalState extends State<_CustomCalendarModal> {
+  late DateTime _displayedMonth;
+
+  @override
+  void initState() {
+    super.initState();
+    // 달력 처음 열었을 때 보여줄 달 (1일로 초기화)
+    _displayedMonth = DateTime(widget.initialDate.year, widget.initialDate.month, 1);
+  }
+
+  // 🚀 [핵심] 위아래로 굴리는(Wheel) 년도 선택기 띄우기
+  void _showYearPicker() {
+    int tempYear = _displayedMonth.year;
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SizedBox(
+          height: 300,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    // 확인 누르면 달력의 년도 업데이트
+                    setState(() {
+                      _displayedMonth = DateTime(tempYear, _displayedMonth.month, 1);
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: Text('확인', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.primary)),
+                ),
+              ),
+              Expanded(
+                child: CupertinoPicker(
+                  // 2000년을 인덱스 0으로 잡음
+                  scrollController: FixedExtentScrollController(initialItem: tempYear - 2000), 
+                  itemExtent: 45,
+                  onSelectedItemChanged: (index) {
+                    tempYear = 2000 + index; // 선택한 년도 저장
+                  },
+                  // 2000년부터 2100년까지 리스트 생성
+                  children: List.generate(101, (index) => Center(child: Text('${2000 + index}년', style: TextStyle(fontSize: 22, color: Theme.of(context).colorScheme.onSurface)))),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 🚀 원하시는 대로 [월 화 수 목 금 토 일] 순서 고정!
+    final weekDays = ['월', '화', '수', '목', '금', '토', '일'];
+
+    int daysInMonth = DateTime(_displayedMonth.year, _displayedMonth.month + 1, 0).day;
+    // 1(월요일) ~ 7(일요일)
+    int firstWeekday = DateTime(_displayedMonth.year, _displayedMonth.month, 1).weekday; 
+    int offset = firstWeekday - 1; // 그리드뷰 앞쪽 빈칸 계산 (월요일 시작이므로 -1)
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 12, bottom: 24, left: 16, right: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 손잡이
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withOpacity(0.3), borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 16),
+
+            // 🚀 달력 헤더 (년도 선택기 호출 + 이전/다음 달 이동)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left, size: 28),
+                  onPressed: () => setState(() => _displayedMonth = DateTime(_displayedMonth.year, _displayedMonth.month - 1, 1)),
+                ),
+                GestureDetector(
+                  onTap: _showYearPicker, // 🚀 년/월 부분을 누르면 드래그 창 팝업!
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12)
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          '${_displayedMonth.year}년 ${_displayedMonth.month}월', 
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.primary)
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(Icons.arrow_drop_down, color: Theme.of(context).colorScheme.primary),
+                      ]
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right, size: 28),
+                  onPressed: () => setState(() => _displayedMonth = DateTime(_displayedMonth.year, _displayedMonth.month + 1, 1)),
+                ),
+              ]
+            ),
+            const SizedBox(height: 20),
+
+            // 요일 헤더 (월~일)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: weekDays.map((day) {
+                Color color = Colors.grey;
+                if (day == '토') color = Color(0xFFF87171);
+                if (day == '일') color = Color(0xFFF87171);
+                return Expanded(child: Center(child: Text(day, style: TextStyle(color: color, fontWeight: FontWeight.bold))));
+              }).toList(),
+            ),
+            const SizedBox(height: 8),
+
+            // 달력 그리드 (일자)
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 7, // 7일 고정
+                childAspectRatio: 1.0, 
+              ),
+              itemCount: offset + daysInMonth,
+              itemBuilder: (context, index) {
+                if (index < offset) return const SizedBox.shrink(); // 1일 시작 전 빈칸
+                
+                int day = index - offset + 1;
+                DateTime currentItemDate = DateTime(_displayedMonth.year, _displayedMonth.month, day);
+                
+                // 선택된 날짜인지, 오늘 날짜인지 판별
+                bool isSelected = currentItemDate.year == widget.initialDate.year && currentItemDate.month == widget.initialDate.month && currentItemDate.day == widget.initialDate.day;
+                bool isToday = currentItemDate.year == DateTime.now().year && currentItemDate.month == DateTime.now().month && currentItemDate.day == DateTime.now().day;
+
+                // 주말 색상 처리
+                Color textColor = Theme.of(context).colorScheme.onSurface;
+                if (currentItemDate.weekday == 6) textColor = Color(0xFFF87171);
+                if (currentItemDate.weekday == 7) textColor = Color(0xFFF87171);
+
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context, currentItemDate); // 날짜 누르면 팝업 닫히고 이동!
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Theme.of(context).colorScheme.primaryContainer : Colors.transparent,
+                      shape: BoxShape.circle,
+                      border: isToday && !isSelected ? Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.5), width: 2) : null,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '$day',
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 15,
+                        fontWeight: isSelected || isToday ? FontWeight.w800 : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
