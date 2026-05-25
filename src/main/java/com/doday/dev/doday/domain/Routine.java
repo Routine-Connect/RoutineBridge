@@ -17,4 +17,5 @@ public class Routine {
     private String createdAt;
     private Integer iconId;
     private Integer sortOrder;
+    private Boolean isAlarmEnabled;
 }

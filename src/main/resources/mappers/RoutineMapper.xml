@@ -10,6 +10,9 @@
         <result property="daysOfWeek" column="days_of_week"/>
         <result property="alarmTime" column="alarm_time"/>
         <result property="isActive" column="is_active"/>
+        <result property="iconId" column="icon_id"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="isAlarmEnabled" column="is_alarm_enabled"/>
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
@@ -30,14 +33,19 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO Routines (user_id, title, days_of_week, alarm_time, is_active, icon_id)
-        VALUES (#{userId}, #{title}, #{daysOfWeek}, #{alarmTime}, #{isActive}, #{iconId})
+        INSERT INTO Routines (user_id, title, days_of_week, alarm_time, is_active, icon_id, sort_order, is_alarm_enabled)
+        VALUES (#{userId}, #{title}, #{daysOfWeek}, #{alarmTime}, #{isActive}, #{iconId}, #{sortOrder}, #{isAlarmEnabled})
     </insert>
 
     <update id="update">
         UPDATE Routines
-        SET title = #{title}, days_of_week = #{daysOfWeek},
-            alarm_time = #{alarmTime}, is_active = #{isActive}, icon_id = #{iconId}
+        SET title = #{title},
+            days_of_week = #{daysOfWeek},
+            alarm_time = #{alarmTime},
+            is_active = #{isActive},
+            icon_id = #{iconId},
+            sort_order = #{sortOrder},
+            is_alarm_enabled = #{isAlarmEnabled}
         WHERE id = #{id}
     </update>
 
@@ -60,12 +68,11 @@
 
     <select id="countByUserId" resultType="int">
         SELECT COUNT(*) FROM Routines WHERE user_id = #{userId}
-    </select>rn
+    </select>
 
     <update id="updateOrder">
         UPDATE Routines
         SET sort_order = #{sortOrder}
         WHERE id = #{id}
     </update>
-
 </mapper>

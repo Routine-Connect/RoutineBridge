@@ -24,7 +24,9 @@ public class RoutineController {
 
     @ApiOperation(value = "루틴 생성", notes = "새 루틴 추가")
     @PostMapping
-    public ApiResponse<Void> create(@RequestBody Routine routine) {
+    public ApiResponse<Void> create(@RequestBody Routine routine, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        routine.setUserId(userId);
         routineService.create(routine);
         return ApiResponse.success(null);
     }
