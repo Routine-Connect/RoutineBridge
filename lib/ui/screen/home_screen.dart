@@ -9,6 +9,8 @@ import '../widget/app_modal.dart';
 import '../../provider/routine_provider.dart';
 import '../widget/custom_snackbar.dart';
 import '../widget/routine_card.dart';
+import 'dart:ui';
+import 'dart:async';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,12 +23,39 @@ class _HomeScreenState extends State<HomeScreen> {
   static const double _horizontalPadding = 18;
   static const double _sectionGap = 24;
 
+  // 🚀 [추가] 자동 숨김 기능을 위한 변수들
+  bool _isButtonVisible = true; // 버튼이 보이는지 여부
+  Timer? _hideTimer; // 시간을 잴 타이머
+
   @override
   void initState() {
     super.initState();
-    // 🚀 화면 시작할 때 이번 달 기준으로 3개월치(전달, 이번달, 다음달) 데이터를 한 번에 싹 캐싱합니다.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<RoutineProvider>().initMonthlyData();
+    });
+    _startHideTimer(); // 🚀 화면이 켜지면 타이머 시작!
+  }
+
+  @override
+  void dispose() {
+    _hideTimer?.cancel(); // 🚀 화면 꺼질 때 타이머가 계속 도는 걸 막음 (메모리 누수 방지)
+    super.dispose();
+  }
+
+  // 🚀 [추가] 사용자가 화면을 건드렸을 때 실행될 함수
+  void _handleInteraction() {
+    if (!_isButtonVisible) {
+      setState(() => _isButtonVisible = true); // 숨어있었다면 다시 보여줌!
+    }
+    _startHideTimer(); // 타이머를 초기화하고 다시 2초를 잽니다.
+  }
+
+  // 🚀 [추가] 2초 동안 터치 안 하면 스르륵 숨기는 함수
+  void _startHideTimer() {
+    _hideTimer?.cancel(); // 기존 타이머 취소
+    _hideTimer = Timer(const Duration(seconds: 2), () {
+      // 2초가 지났는데도 화면이 살아있다면 버튼 숨기기
+      if (mounted) setState(() => _isButtonVisible = false);
     });
   }
 
@@ -36,28 +65,48 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          const SizedBox(height: 24),
-          // 상단 달력
-          const HomeWeekCalendar(),
-          const SizedBox(height: _sectionGap),
-          
-          // 루틴 리스트 헤더
-          const RoutineListHeader(),
-          const SizedBox(height: 16),
+      // 🚀 1. Listener로 화면 전체를 감싸서 유저의 모든 터치/스크롤을 감지합니다!
+      body: Listener(
+        onPointerDown: (_) => _handleInteraction(), // 손가락이 닿을 때
+        onPointerMove: (_) => _handleInteraction(), // 손가락이 움직일 때 (스크롤)
+        child: Stack(
+          children: [
+            // 스크롤 되는 메인 콘텐츠 영역
+            ListView(
+              padding: EdgeInsets.only(
+                left: _horizontalPadding,
+                right: _horizontalPadding,
+                bottom: 100 + bottomInset, 
+              ),
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(height: 24),
+                HomeWeekCalendar(),
+                SizedBox(height: _sectionGap),
+                RoutineListHeader(),
+                SizedBox(height: 16),
+                HomeRoutineList(),
+              ],
+            ),
 
-          // 데이터 연동 루틴 리스트
-          const HomeRoutineList(),
-          const SizedBox(height: _sectionGap),
-
-          // 루틴 추가 버튼
-          const HomeAddRoutineButton(),
-          
-          SizedBox(height: 25 + bottomInset),
-        ],
+            // 2. 하단 버튼 (애니메이션 적용!)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 24 + bottomInset, 
+              // 🚀 2. AnimatedOpacity로 0.3초 만에 스르륵 나타나고 사라지게 만듭니다.
+              child: AnimatedOpacity(
+                opacity: _isButtonVisible ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                // 🚀 3. IgnorePointer를 쓰면 버튼이 투명해졌을 때 뒤에 있는 루틴을 터치할 수 있습니다!
+                child: IgnorePointer(
+                  ignoring: !_isButtonVisible, // 숨어있을 땐 터치 무시!
+                  child: const HomeAddRoutineButton(),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -126,45 +175,68 @@ class HomeRoutineList extends StatelessWidget {
                 ),
               ),
 
-            // 루틴 리스트 렌더링
-            if (routines.isNotEmpty || isLoading)
-              Opacity(
-                opacity: isLoading ? 0.4 : 1.0, 
-                child: IgnorePointer(
-                  ignoring: isLoading, 
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: isLoading && routines.isEmpty ? 0 : routines.length,
-                    itemBuilder: (context, index) {
-                      final routine = routines[index];
-                      
-                      final int iconId = routine['icon_id'] ?? routine['iconId'] ?? 1; 
-                      final IconData matchedIcon = AppIcons.routineIcons[(iconId - 1).clamp(0, 19)];
-                      final Color matchedBackgroundColor = Theme.of(context).colorScheme.primaryContainer;
-                      final Color matchedForegroundColor = AppIcons.routineIconForegroundColors[(iconId - 1).clamp(0, 19)];
+          // 루틴 리스트 렌더링
+          if (routines.isNotEmpty || isLoading)
+            Opacity(
+              opacity: isLoading ? 0.4 : 1.0, 
+              child: IgnorePointer(
+                ignoring: isLoading, 
+                // 🚀 [수정] ReorderableListView.builder로 교체
+                child: ReorderableListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
 
-                      String timeRaw = routine['alarm_time'] ?? routine['alarmTime'] ?? '';
-                      String displayTime = timeRaw.length >= 5 ? timeRaw.substring(0, 5) : timeRaw;
+                  proxyDecorator: (Widget child, int index, Animation<double> animation) {
+                    return Material(
+                      color: Colors.transparent, // 기본 배경 투명하게
+                      elevation: 0,              // 플러터 기본 그림자 제거
+                      child: child,              // 네 RoutineCard 자체 그림자만 남음
+                    );
+                  },
+                  
+                  itemCount: isLoading && routines.isEmpty ? 0 : routines.length,
+                  // 🚀 드래그 시작: 원본 리스트를 Provider에 전달
+                  onReorderStart: (index) => context.read<RoutineProvider>().setReordering(true, routines),
+                  onReorder: (int oldIndex, int newIndex) {
+                    final provider = context.read<RoutineProvider>();
+                    List<dynamic> updated = List.from(routines);
+                    if (oldIndex < newIndex) newIndex -= 1;
+                    final item = updated.removeAt(oldIndex);
+                    updated.insert(newIndex, item);
+                    
+                    // 🚀 데이터 갱신 시마다 변경 여부 자동 체크
+                    provider.updateLocalRoutines(updated);
+                  },
+                  itemBuilder: (context, index) {
+                    final routine = routines[index];
+                    
+                    final int iconId = routine['icon_id'] ?? routine['iconId'] ?? 1; 
+                    final IconData matchedIcon = AppIcons.routineIcons[(iconId - 1).clamp(0, 19)];
+                    final Color matchedBackgroundColor = Theme.of(context).colorScheme.primaryContainer;
+                    final Color matchedForegroundColor = AppIcons.routineIconForegroundColors[(iconId - 1).clamp(0, 19)];
 
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: RoutineCard(
-                          routineId: routine['id'] ?? 0,
-                          icon: matchedIcon, 
-                          backgroundColor: matchedBackgroundColor,
-                          foregroundColor: matchedForegroundColor,
-                          title: routine['title'] ?? '이름 없음',
-                          subtitle: displayTime, 
-                          completed: routine['is_completed'] ?? routine['isCompleted'] ?? false, 
-                          rawData: routine, 
-                          isFuture: isFutureDate,
-                        ),
-                      );
-                    },
-                  ),
+                    String timeRaw = routine['alarm_time'] ?? routine['alarmTime'] ?? '';
+                    String displayTime = timeRaw.length >= 5 ? timeRaw.substring(0, 5) : timeRaw;
+
+                    return Padding(
+                      key: ValueKey(routine['id']), // 🚀 필수: 드래그를 위한 고유 키값
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: RoutineCard(
+                        routineId: routine['id'] ?? 0,
+                        icon: matchedIcon, 
+                        backgroundColor: matchedBackgroundColor,
+                        foregroundColor: matchedForegroundColor,
+                        title: routine['title'] ?? '이름 없음',
+                        subtitle: displayTime, 
+                        completed: routine['is_completed'] ?? routine['isCompleted'] ?? false, 
+                        rawData: routine, 
+                        isFuture: isFutureDate,
+                      ),
+                    );
+                  },
                 ),
               ),
+            ),
           ],
         );
       },
@@ -178,28 +250,47 @@ class HomeAddRoutineButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 🚀 Provider 상태 구독
+    final provider = context.watch<RoutineProvider>();
+    
+    // 🚀 순서 변경 모드이면서, 실제로 변경이 일어났을 때만 버튼 활성화
+    final bool showSaveButton = provider.isReordering && provider.hasChanges;
+
     return Center(
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
           boxShadow: [
-            BoxShadow(color: Theme.of(context).colorScheme.primary.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 8))
+            BoxShadow(
+              // 🚀 버튼 색상에 맞춰 그림자 색도 연동
+              color: (showSaveButton ? Colors.green : Theme.of(context).colorScheme.primary).withOpacity(0.25), 
+              blurRadius: 12, 
+              offset: const Offset(0, 6)
+            )
           ],
         ),
         child: Material(
-          color: Theme.of(context).colorScheme.primary,
+          // 🚀 [UI] 저장 모드면 녹색, 아니면 프라이머리 색상
+          color: showSaveButton ? Colors.green : Theme.of(context).colorScheme.primary,
           borderRadius: BorderRadius.circular(999),
           child: InkWell(
-            onTap: () => AppModals.showRoutineFormBottomSheet(context), 
+            // 🚀 [기능] showSaveButton 조건에 따라 API 호출 또는 모달 호출
+            onTap: showSaveButton 
+                ? () => provider.saveRoutineOrder(provider.routines)
+                : () => AppModals.showRoutineFormBottomSheet(context),
+            splashColor: Colors.white.withOpacity(0.35),
             borderRadius: BorderRadius.circular(999),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.add, color: Colors.white, size: 22),
-                  SizedBox(width: 8),
-                  Text('루틴 추가하기', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                  Icon(showSaveButton ? Icons.save_alt : Icons.add, color: Colors.white, size: 22),
+                  const SizedBox(width: 8),
+                  Text(
+                    showSaveButton ? '순서 저장하기' : '루틴 추가하기', 
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)
+                  ),
                 ],
               ),
             ),
@@ -225,6 +316,7 @@ class _HomeWeekCalendarState extends State<HomeWeekCalendar> {
   late final PageController _pageController;
   late final DateTime _baseMonday;
   int _currentPageIndex = 500;
+  DateTime? _lastSelectedDate;
 
   @override
   void initState() {
@@ -245,8 +337,6 @@ class _HomeWeekCalendarState extends State<HomeWeekCalendar> {
 @override
   Widget build(BuildContext context) {
     final routineProvider = context.watch<RoutineProvider>();
-    final userProvider = context.watch<UserProvider>();
-    final joinDate = userProvider.currentUser?.createdAt;
     final selectedDate = routineProvider.selectedDate;
 
     final int currentWeekOffset = _currentPageIndex - 500;
@@ -266,6 +356,23 @@ class _HomeWeekCalendarState extends State<HomeWeekCalendar> {
       displayMonthDate = selectedDate;
     } else {
       displayMonthDate = visibleWeekStart.add(const Duration(days: 3));
+    }
+
+    if (_lastSelectedDate != selectedDate) {
+      _lastSelectedDate = selectedDate; // 최신 날짜로 업데이트
+
+      final int targetWeekOffset = (DateTime(selectedDate.year, selectedDate.month, selectedDate.day).difference(_baseMonday).inDays / 7).floor();
+      final int targetPageIndex = 500 + targetWeekOffset;
+
+      if (_currentPageIndex != targetPageIndex && _pageController.hasClients) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _pageController.animateToPage(
+            targetPageIndex,
+            duration: const Duration(milliseconds: 300), 
+            curve: Curves.easeInOut,
+          );
+        });
+      }
     }
 
     return Container(
@@ -295,13 +402,6 @@ class _HomeWeekCalendarState extends State<HomeWeekCalendar> {
                 setState(() => _currentPageIndex = index);
                 final int weekOffset = index - 500;
                 final DateTime visibleDate = _baseMonday.add(Duration(days: weekOffset * 7 + 3)); 
-
-                // 🚀 [최적화] 가입 월 이전이라면 월간 데이터 fetch도 막습니다.
-                if (joinDate != null) {
-                  final targetMonth = DateTime(visibleDate.year, visibleDate.month, 1);
-                  final joinMonth = DateTime(joinDate.year, joinDate.month, 1);
-                  if (targetMonth.isBefore(joinMonth)) return;
-                }
                 
                 context.read<RoutineProvider>().fetchMonthData(visibleDate);
               },
@@ -316,43 +416,21 @@ class _HomeWeekCalendarState extends State<HomeWeekCalendar> {
                     final bool isSelected = DateUtils.isSameDay(selectedDate, date);
                     final bool isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
 
-                    // 🚀 가입일 기준 날짜 정규화
-                    final normalizedDate = DateTime(date.year, date.month, date.day);
-                    final normalizedJoinDate = joinDate != null 
-                        ? DateTime(joinDate.year, joinDate.month, joinDate.day) 
-                        : null;
-
-                    // 🚀 가입일 이전 날짜인지 판단
-                    bool isBeforeJoin = normalizedJoinDate != null && normalizedDate.isBefore(normalizedJoinDate);
-
-                    // 가입일 이전이면 스탬프 안 보여줌
-                    DayCompletionStatus completionStatus = isBeforeJoin 
-                        ? DayCompletionStatus.none 
-                        : _getCompletionStatus(routineProvider, date);
+                    DayCompletionStatus completionStatus = _getCompletionStatus(routineProvider, date);
 
                     return Expanded(
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () {
-                          // 🚀 [핵심 수정] 가입일 이전 날짜를 눌렀을 때
-                          if (isBeforeJoin) {
-                            // 1. 선택된 날짜는 바꿉니다 (유저가 눌렀다는 반응은 줘야 하니까요)
-                            // 2. 하지만 서버 통신은 막고, Provider의 리스트를 비워달라고 요청해야 합니다.
-                            routineProvider.setSelectedDateOnly(date); 
-                            CustomSnackBar.show(context, message: '가입 이전 기록은 볼 수 없어요!', isError: true);
-                            return;
-                          }
-                          
-                          // 가입일 이후일 때만 정상 통신
                           routineProvider.changeDateAndFetch(date);
                         },
                         child: _DayColumn(
+                          date: date,
                           label: DateFormat('E', 'ko_KR').format(date),
                           day: date.day.toString(),
                           isSelected: isSelected,
                           isWeekend: isWeekend,
-                          // 🚀 가입 전 날짜는 숫자 색을 흐리게 처리해서 "비활성" 느낌을 줍니다 (UX 센스)
-                          isDisabled: isBeforeJoin, 
+                          isDisabled: false, 
                           completionStatus: completionStatus, 
                         ),
                       ),
@@ -393,8 +471,10 @@ class _DayColumn extends StatelessWidget {
   static const double _homeStampSize = 46.0; 
 
   final bool isDisabled;
+  final DateTime date;
 
   const _DayColumn({
+    required this.date,
     required this.label, 
     required this.day, 
     required this.isSelected,
@@ -411,13 +491,15 @@ class _DayColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color labelColor = isWeekend ? const Color(0xFFF87171) : AppColors.secondary;
+
+   bool isSunday = date.weekday == DateTime.sunday;
+    
+    Color labelColor = isSunday ? const Color(0xFFF87171) : AppColors.secondary;
     if (isDisabled) labelColor = labelColor.withOpacity(0.3);
 
-    Color dayTextColor = isWeekend ? const Color(0xFFF87171) : AppColors.onSurface;
+    Color dayTextColor = isSunday ? const Color(0xFFF87171) : AppColors.onSurface;
     if (isDisabled) dayTextColor = dayTextColor.withOpacity(0.3);
-    Color selectionBgColor = isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.15) : Colors.transparent;
-
+    
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -436,7 +518,9 @@ class _DayColumn extends StatelessWidget {
               Container(
                 width: 38, height: 38,
                 decoration: BoxDecoration(
-                  color: selectionBgColor, 
+                  color: isSelected 
+                    ? Theme.of(context).colorScheme.primary.withOpacity(0.15) 
+                    : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
               ),
