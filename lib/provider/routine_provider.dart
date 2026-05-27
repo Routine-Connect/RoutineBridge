@@ -7,9 +7,11 @@ import '../ui/widget/custom_snackbar.dart';
 import 'statistics_provider.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert';
+import '../service/notification_service.dart';
 
 class RoutineProvider with ChangeNotifier {
   final RoutineService _routineService = RoutineService();
+  final NotificationService _notificationService = NotificationService();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   String _lastCheeredDateKey = ''; 
 
@@ -152,6 +154,32 @@ class RoutineProvider with ChangeNotifier {
     _monthlyCache.clear();
     await initMonthlyData();
     _updateCurrentRoutines(); 
+
+    // 💡 현재 정렬되어 캐싱된 오늘의 루틴 목록을 순회하며 폰 스케줄러에 알림 등록/취소 진행!
+    // 마이페이지의 '전체 앱 알림 켜기' 스토리지 값까지 함께 분기 처리해 주면 완벽해.
+    final String? globalNotiRaw = await _storage.read(key: 'isRoutineNotiEnabled');
+    bool isGlobalNotiEnabled = globalNotiRaw == null ? true : (globalNotiRaw == 'true');
+
+    for (var routine in _routines) {
+      int id = routine['id'];
+      String title = routine['title'] ?? '';
+      String time = routine['alarmTime'] ?? routine['alarm_time'] ?? '09:00:00';
+      
+      // 스네이크/카멜 케이스 양방향 방어 및 null인 경우 false 처리
+      bool isAlarmEnabled = routine['isAlarmEnabled'] ?? routine['is_alarm_enabled'] ?? false;
+
+      // 🚀 앱 전체 알림이 켜져 있고 + 해당 루틴 푸시(isAlarmEnabled)도 켜져 있을 때만 실제 알림 예약!
+      if (isGlobalNotiEnabled && isAlarmEnabled) {
+        await _notificationService.scheduleDailyRoutineNotification(
+          routineId: id,
+          title: title,
+          alarmTime: time,
+        );
+      } else {
+        // 둘 중 하나라도 꺼져 있으면 기기 예약 알림 파기
+        await _notificationService.cancelNotification(id);
+      }
+    }
   }
 
   // 추가/삭제/수정 로직은 동일... (생략하되 내부에서 _refreshAllData 호출 유지)
@@ -165,6 +193,7 @@ class RoutineProvider with ChangeNotifier {
 
   Future<void> deleteRoutine(int routineId) async {
     final token = await _getToken();
+    await _notificationService.cancelNotification(routineId);
     await _routineService.deleteRoutine(token, routineId);
     await _refreshAllData();
   }
