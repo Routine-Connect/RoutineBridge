@@ -95,12 +95,27 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
     
     try {
-      // 2. 백엔드 서버에 변경값 전송
-      await _userService.updateNotificationSettings(newSettings);
+      // 🚀 2. 기기 로컬 스토리지에 캐싱
+      await _storage.write(
+        key: 'isRoutineNotiEnabled', 
+        value: newSettings.isRoutineNotiEnabled.toString()
+      );
+
+    // 3. 백엔드 서버에 변경값 전송
+    await _userService.updateNotificationSettings(newSettings);
+
     } catch (e) {
        debugPrint("알림 설정 업데이트 실패: $e");
-       // 3. 실패하면 서버에서 원래 데이터를 다시 가져와서 원상복구
+       // 실패하면 서버에서 원래 데이터를 다시 가져와서 원상복구
        await loadNotificationSettings(); 
+       
+       // 🚀 [선배의 추가 코드] 로컬 스토리지도 원상복구
+       if (_notificationSettings != null) {
+         await _storage.write(
+           key: 'isRoutineNotiEnabled', 
+           value: _notificationSettings!.isRoutineNotiEnabled.toString()
+         );
+       }
     }
   }
   

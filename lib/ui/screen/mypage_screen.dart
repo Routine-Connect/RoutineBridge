@@ -34,9 +34,16 @@ class _MyPageScreenState extends State<MyPageScreen> {
   // 🚀 비동기(async)로 작동하는 전체 기간 통계 로딩 로직
   Future<void> _initializeMyPage() async {
     final statsProvider = context.read<StatisticsProvider>();
+    final userProvider = context.read<UserProvider>();
     
-    // 🚀 마이페이지에 필요한 전체 기간 스트릭/누적 완료 데이터를 서버에서 불러옵니다.
-    await statsProvider.loadAllTimeStreak();
+    // 🚀 마이페이지에 필요한 전체 기간 스트릭/누적 완료 데이터, 알림설정 데이터를 서버에서 불러옵니다.
+    await Future.wait([
+      // 1. 전체 기간 스트릭/누적 완료 데이터 로드
+      if (statsProvider.isDirty) statsProvider.loadAllTimeStreak(),
+      
+      // 2. 🚀 유저 알림 설정 로드 (바텀시트 열기 전에 미리 준비 완료)
+      userProvider.loadNotificationSettings(),
+    ]);
   }
 
   @override

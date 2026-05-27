@@ -273,12 +273,12 @@ class AppModals {
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               // 켜졌을 때 살짝 노란 배경 하이라이트 (원치 않으면 Colors.transparent로 변경)
-                              color: isAlarmEnabled ? Colors.amber.withOpacity(0.15) : Colors.transparent,
+                              color: isAlarmEnabled ? AppColors.routineAlarmToggle.withOpacity(0.15) : Colors.transparent,
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               isAlarmEnabled ? Icons.notifications_active : Icons.notifications_none,
-                              color: isAlarmEnabled ? Colors.amber : AppColors.onSurfaceVariant,
+                              color: isAlarmEnabled ? AppColors.routineAlarmToggle : AppColors.onSurfaceVariant,
                               size: 26,
                             ),
                           ),
@@ -442,29 +442,24 @@ class AppModals {
 
   // 🚀 5. 알림 설정 메뉴
   static Future<void> showNotificationSettingsBottomSheet(BuildContext context) async {
+    // 1. 권한 체크 (열리긴 열리되 상태만 확인)
     PermissionStatus status = await Permission.notification.status;
+    bool isOsPermissionGranted = status.isGranted;
+
+    // 만약 처음 요청하는 상태라면 권한 요청
     if (status.isDenied) {
       status = await Permission.notification.request();
-      if (!status.isGranted && !status.isPermanentlyDenied) return;
-    }
-    if (status.isPermanentlyDenied) {
-      if (!context.mounted) return;
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('알림 권한 필요'),
-          content: const Text('스마트폰 설정에서 알림 권한을 허용해 주세요.'),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
-            TextButton(onPressed: () { openAppSettings(); Navigator.pop(context); }, child: const Text('설정으로 이동')),
-          ],
-        ),
-      );
-      return; 
+      isOsPermissionGranted = status.isGranted;
     }
 
     if (!context.mounted) return;
-    Provider.of<UserProvider>(context, listen: false).loadNotificationSettings();
+
+    // 2. 🚀 [핵심] 이미 마이페이지 진입 시 데이터가 로드되어 있다면, 다시 호출하지 않음!
+    final userProvider = context.read<UserProvider>();
+    if (userProvider.notificationSettings == null) {
+      // 혹시라도 데이터가 없는 경우에만 방어적으로 호출
+      await userProvider.loadNotificationSettings();
+    }
 
     showModalBottomSheet(
       context: context,
@@ -473,8 +468,9 @@ class AppModals {
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (BuildContext context) {
         return Consumer<UserProvider>(
-          builder: (context, userProvider, child) {
-            final settings = userProvider.notificationSettings;
+          builder: (context, provider, child) {
+            final settings = provider.notificationSettings;
+            // 널 체크 방어 코드
             if (settings == null) return const SizedBox(height: 300, child: Center(child: CircularProgressIndicator()));
 
             return Padding(
@@ -485,24 +481,64 @@ class AppModals {
                 children: [
                   const Text('알림 세부 설정', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 24),
+
+                  // 🚀 [추가 UX] OS 권한이 막혀있을 때 친절한 안내 배너 띄워주기
+                  if (!isOsPermissionGranted) ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(color: AppColors.error.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: AppColors.error),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text('기기 알림이 차단되어 있습니다.\n앱 알림을 받으려면 권한을 허용해주세요.', style: TextStyle(fontSize: 13, color: AppColors.error)),
+                          ),
+                          TextButton(
+                            onPressed: () { openAppSettings(); },
+                            child: const Text('설정', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.error)),
+                          )
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero, title: const Text('앱 알림 전체 켜기'), subtitle: const Text('앱에서 보내는 모든 알림을 제어합니다.'),
+                    contentPadding: EdgeInsets.zero, 
+                    title: const Text('앱 알림 전체 켜기'), 
+                    subtitle: const Text('앱에서 보내는 모든 알림을 제어합니다.'),
                     value: settings.isPushEnabled,
                     onChanged: (value) {
-                      userProvider.updateNotification(settings.copyWith(isPushEnabled: value, isRoutineNotiEnabled: value ? settings.isRoutineNotiEnabled : false, isMarketingEnabled: value ? settings.isMarketingEnabled : false));
+                      // 💡 만약 켜려고 하는데 OS 권한이 없다면 토글 작동을 막고 경고 띄움
+                      if (value && !isOsPermissionGranted) {
+                        CustomSnackBar.show(context, message: '기기 설정에서 알림 권한을 먼저 허용해주세요.', isError: true);
+                        return;
+                      }
+                      provider.updateNotification(settings.copyWith(
+                        isPushEnabled: value, 
+                        isRoutineNotiEnabled: value ? settings.isRoutineNotiEnabled : false, 
+                        isMarketingEnabled: value ? settings.isMarketingEnabled : false
+                      ));
                     },
                   ),
                   const Divider(),
+                  
+                  // 메인 알림이 꺼져있거나, OS 권한이 없으면 아래 스위치들은 비활성화(흐리게) 처리
                   SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero, title: const Text('루틴 리마인더'),
+                    contentPadding: EdgeInsets.zero, 
+                    title: const Text('루틴 리마인더'),
                     value: settings.isRoutineNotiEnabled,
-                    onChanged: settings.isPushEnabled ? (value) => userProvider.updateNotification(settings.copyWith(isRoutineNotiEnabled: value)) : null,
+                    onChanged: (settings.isPushEnabled && isOsPermissionGranted) ? (value) => provider.updateNotification(settings.copyWith(isRoutineNotiEnabled: value)) : null,
                   ),
                   SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero, title: const Text('이벤트 및 혜택 알림'),
+                    contentPadding: EdgeInsets.zero, 
+                    title: const Text('이벤트 및 혜택 알림'),
                     value: settings.isMarketingEnabled,
-                    onChanged: settings.isPushEnabled ? (value) => userProvider.updateNotification(settings.copyWith(isMarketingEnabled: value)) : null,
+                    onChanged: (settings.isPushEnabled && isOsPermissionGranted) ? (value) => provider.updateNotification(settings.copyWith(isMarketingEnabled: value)) : null,
                   ),
+                  
+                  // 방해 금지 기능은 나중에 여기에 추가하면 완벽함!
                   const SizedBox(height: 24),
                 ],
               ),
