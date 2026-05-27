@@ -73,8 +73,6 @@ abstract final class AppColors {
 
   // —— 🚀 [신규 추가] UI 디테일 전용 색상 ——
   static const Color dividerFaint = Color(0xFFE8E4E1); // 앱바, 하단바 밋밋함 방지용 아주 연한 구분선 색상
-  static const Color swipeEdit = Color(0xFF93C5FD); // 스와이프 '수정' 배경 (파스텔 블루)
-  static const Color swipeDelete = Color(0xFFFCA5A5); // 스와이프 '삭제' 배경 (파스텔 코랄 레드)
 
   // —— 루틴 아이콘용 색상 팔레트 (20가지) ——
   // —— 가독성과 부드러움을 모두 잡은 미드톤 파스텔 ——
@@ -86,37 +84,6 @@ abstract final class AppColors {
   static const Color iconMidPurple = Color(0xFFC084FC); // 라일락 퍼플
   static const Color iconMidPink = Color(0xFFF472B6);   // 딸기우유 핑크
   static const Color iconMidBrown = Color(0xFFA1887F);  // 부드러운 모카 브라운
-  // Blue (보내주신 샘플 기준)
-  static const Color iconSkyLight = Color(0xFFE0F2FE);
-  static const Color iconSkyDark = Color(0xFF0EA5E9);
-
-  // Red
-  static const Color iconRedLight = Color(0xFFFEE2E2);
-  static const Color iconRedDark = Color(0xFFEF4444);
-
-  // Orange
-  static const Color iconOrangeLight = Color(0xFFFFEDD5);
-  static const Color iconOrangeDark = Color(0xFFF97316);
-
-  // Yellow
-  static const Color iconYellowLight = Color(0xFFFEF9C3);
-  static const Color iconYellowDark = Color(0xFFEAB308);
-
-  // Green
-  static const Color iconGreenLight = Color(0xFFDCFCE7);
-  static const Color iconGreenDark = Color(0xFF22C55E);
-
-  // Purple
-  static const Color iconPurpleLight = Color(0xFFF3E8FF);
-  static const Color iconPurpleDark = Color(0xFFA855F7);
-
-  // Pink
-  static const Color iconPinkLight = Color(0xFFFCE7F3);
-  static const Color iconPinkDark = Color(0xFFEC4899);
-
-  // Brown / Stone
-  static const Color iconStoneLight = Color(0xFFF5F5F4);
-  static const Color iconStoneDark = Color(0xFF78716C);
 
   // —— 리포트 시안 추가 브랜드 토큰 ——
   static const Color brandCaramel = Color(0xFFDCAE87);
@@ -129,6 +96,7 @@ abstract final class AppColors {
   static const Color routineIconBrown = Color(0xFFA67C52);
   static const Color routineCardGreenTint = Color(0xFFF1F8F1);
   static const Color routineCardBlueTint = Color(0xFFEEF6FC);
+  static const Color routineAlarmToggle = Color(0xFFFFC107);
   
   // —— 마이페이지 시안 포인트 ——
   static const Color streakOrange = Color(0xFFFF9800);

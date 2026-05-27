@@ -133,6 +133,9 @@ class AppModals {
     final String daysRaw = isEditMode ? (routine['days_of_week'] ?? routine['daysOfWeek'] ?? 'MON,TUE,WED,THU,FRI,SAT,SUN') : 'MON,TUE,WED,THU,FRI,SAT,SUN';
     List<String> selectedDays = daysRaw.split(',');
 
+    // 🚀 [추가] 알림 설정 상태값 (기본값 false, 수정 시 DB 값 복구)
+    bool isAlarmEnabled = isEditMode ? (routine['isAlarmEnabled'] ?? routine['is_alarm_enabled'] ?? false) : false;
+
     final List<Map<String, String>> weekDays = [
       {'key': 'MON', 'label': '월'}, {'key': 'TUE', 'label': '화'}, {'key': 'WED', 'label': '수'},
       {'key': 'THU', 'label': '목'}, {'key': 'FRI', 'label': '금'}, {'key': 'SAT', 'label': '토'}, {'key': 'SUN', 'label': '일'},
@@ -162,17 +165,15 @@ class AppModals {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 🚀 수정: 제목 텍스트를 Row로 감싸고 우측 끝에 휴지통 버튼을 추가합니다.
+                    // --- 제목 및 삭제 버튼 ---
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(isEditMode ? '루틴 수정하기' : '새로운 루틴 추가', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.onSurface)),
                         
-                        // 🚀 수정 모드일 때만 휴지통 아이콘 노출
                         if (isEditMode)
                           IconButton(
                             onPressed: () async {
-                              // routine은 null이 아님이 보장되므로 ! 사용
                               await context.read<RoutineProvider>().deleteRoutine(routine!['id']);
                               if (context.mounted) {
                                 Navigator.pop(context); // 창 닫기
@@ -191,18 +192,15 @@ class AppModals {
                         GestureDetector(
                           onTap: () async {
                             final IconData? pickedIcon = await showIconPickerBottomSheet(context);
-                            // 아이콘이 바뀌면 setState가 호출되어 색상도 즉시 변합니다!
                             if (pickedIcon != null) setState(() => selectedIcon = pickedIcon); 
                           },
                           child: Container(
                             width: 56, height: 56,
-                            // 🚀 선택된 아이콘에 맞는 배경색 적용, 테두리도 해당 아이콘의 전경색(연하게) 적용
                             decoration: BoxDecoration(
                               color: currentBgColor, 
                               borderRadius: BorderRadius.circular(16), 
                               border: Border.all(color: currentFgColor.withOpacity(0.3))
                             ),
-                            // 🚀 선택된 아이콘에 맞는 전경색 적용
                             child: Icon(selectedIcon, color: currentFgColor, size: 28),
                           ),
                         ),
@@ -259,31 +257,64 @@ class AppModals {
                     ),
                     const SizedBox(height: 28),
 
-                    // --- 🚀 알림 시간 직접 입력 ---
-                    const Text('알림 시간', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.secondary)),
-                    const SizedBox(height: 12),
+                    // --- 🚀 알림 설정 및 알림 시간 (수정된 부분) ---
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        SizedBox(
-                          width: 60,
-                          child: TextField(
-                            controller: hourController,
-                            keyboardType: TextInputType.number, maxLength: 2, textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                            decoration: InputDecoration(counterText: "", filled: true, fillColor: AppColors.surfaceContainer, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none), contentPadding: const EdgeInsets.symmetric(vertical: 12)),
-                          ),
-                        ),
-                        const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text(':', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.onSurfaceVariant))),
-                        SizedBox(
-                          width: 60,
-                          child: TextField(
-                            controller: minuteController,
-                            keyboardType: TextInputType.number, maxLength: 2, textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                            decoration: InputDecoration(counterText: "", filled: true, fillColor: AppColors.surfaceContainer, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none), contentPadding: const EdgeInsets.symmetric(vertical: 12)),
+                        const Text('알림 시간', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.secondary)),
+                        
+                        // 🚀 스위치 대신 [종 모양 아이콘 토글] 적용
+                        GestureDetector(
+                          onTap: () {
+                            setState(() => isAlarmEnabled = !isAlarmEnabled);
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              // 켜졌을 때 살짝 노란 배경 하이라이트 (원치 않으면 Colors.transparent로 변경)
+                              color: isAlarmEnabled ? Colors.amber.withOpacity(0.15) : Colors.transparent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isAlarmEnabled ? Icons.notifications_active : Icons.notifications_none,
+                              color: isAlarmEnabled ? Colors.amber : AppColors.onSurfaceVariant,
+                              size: 26,
+                            ),
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // 알림 시간이 꺼져있을 땐 입력창을 흐리게 보이게 처리 (UX 디테일)
+                    Opacity(
+                      opacity: isAlarmEnabled ? 1.0 : 0.4,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 60,
+                            child: TextField(
+                              controller: hourController,
+                              enabled: isAlarmEnabled, // 알림 꺼지면 수정 불가
+                              keyboardType: TextInputType.number, maxLength: 2, textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              decoration: InputDecoration(counterText: "", filled: true, fillColor: AppColors.surfaceContainer, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none), contentPadding: const EdgeInsets.symmetric(vertical: 12)),
+                            ),
+                          ),
+                          const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text(':', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.onSurfaceVariant))),
+                          SizedBox(
+                            width: 60,
+                            child: TextField(
+                              controller: minuteController,
+                              enabled: isAlarmEnabled, // 알림 꺼지면 수정 불가
+                              keyboardType: TextInputType.number, maxLength: 2, textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              decoration: InputDecoration(counterText: "", filled: true, fillColor: AppColors.surfaceContainer, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none), contentPadding: const EdgeInsets.symmetric(vertical: 12)),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 36),
                     
@@ -314,13 +345,14 @@ class AppModals {
                           try {
                             String formattedTime = '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
 
+                            // 🚀 [핵심] 이제 Provider 메서드에 isAlarmEnabled 값을 같이 넘겨줍니다!
                             if (routine != null) {
                               await context.read<RoutineProvider>().updateRoutine(
-                                routine['id'], userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime
+                                routine['id'], userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime, isAlarmEnabled
                               );
                             } else {
                               await context.read<RoutineProvider>().addRoutine(
-                                userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime
+                                userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime, isAlarmEnabled
                               );
                             }
                             
@@ -346,7 +378,7 @@ class AppModals {
               ),
             );
           },
-        );
+        );  
       },
     );
   }

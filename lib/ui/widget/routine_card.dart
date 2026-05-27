@@ -69,9 +69,10 @@ class RoutineCard extends StatelessWidget {
                             final int userId = rawData['user_id'] ?? rawData['userId'] ?? 1;
                             final String timeRaw = rawData['alarm_time'] ?? rawData['alarmTime'] ?? '09:00:00';
                             final String daysRaw = rawData['days_of_week'] ?? rawData['daysOfWeek'] ?? 'MON,TUE,WED,THU,FRI,SAT,SUN';
+                            final bool isAlarmEnabled = rawData['is_alarm_enabled'] == true || rawData['isAlarmEnabled'] == 1;
                             
                             await provider.updateRoutine(
-                              routineId, userId, title, pickedIcon, daysRaw.split(','), timeRaw
+                              routineId, userId, title, pickedIcon, daysRaw.split(','), timeRaw, isAlarmEnabled
                             );
                           }
                         },

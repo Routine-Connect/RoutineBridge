@@ -155,10 +155,10 @@ class RoutineProvider with ChangeNotifier {
   }
 
   // 추가/삭제/수정 로직은 동일... (생략하되 내부에서 _refreshAllData 호출 유지)
-  Future<void> addRoutine(int userId, String title, IconData icon, List<String> daysOfWeek, String alarmTime) async {
+  Future<void> addRoutine(int userId, String title, IconData icon, List<String> daysOfWeek, String alarmTime, bool isAlarmEnabled) async {
     final token = await _getToken();
     int mappedIconId = AppIcons.routineIcons.indexOf(icon) + 1;
-    final routineData = { "userId": userId, "title": title, "iconId": mappedIconId == 0 ? 20 : mappedIconId, "daysOfWeek": daysOfWeek.join(','), "alarmTime": "$alarmTime:00", "isActive": true };
+    final routineData = { "userId": userId, "title": title, "iconId": mappedIconId == 0 ? 20 : mappedIconId, "daysOfWeek": daysOfWeek.join(','), "alarmTime": "$alarmTime:00", "isActive": true, "isAlarmEnabled": isAlarmEnabled, };
     await _routineService.createRoutine(token, routineData);
     await _refreshAllData();
   }
@@ -169,10 +169,10 @@ class RoutineProvider with ChangeNotifier {
     await _refreshAllData();
   }
 
-  Future<void> updateRoutine(int routineId, int userId, String title, IconData icon, List<String> daysOfWeek, String alarmTime) async {
+  Future<void> updateRoutine(int routineId, int userId, String title, IconData icon, List<String> daysOfWeek, String alarmTime, bool isAlarmEnabled) async {
     final token = await _getToken();
     int mappedIconId = AppIcons.routineIcons.indexOf(icon) + 1;
-    final routineData = { "userId": userId, "title": title, "iconId": mappedIconId == 0 ? 20 : mappedIconId, "daysOfWeek": daysOfWeek.join(','), "alarmTime": "$alarmTime:00", "isActive": true };
+    final routineData = { "userId": userId, "title": title, "iconId": mappedIconId == 0 ? 20 : mappedIconId, "daysOfWeek": daysOfWeek.join(','), "alarmTime": "$alarmTime:00", "isActive": true, "isAlarmEnabled": isAlarmEnabled, };
     await _routineService.updateRoutine(token, routineId, routineData);
     await _refreshAllData();
   }
