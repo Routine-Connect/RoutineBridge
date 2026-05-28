@@ -149,26 +149,29 @@ class RoutineProvider with ChangeNotifier {
     }
   }
 
-  // 데이터 갱신 후 리스트 업데이트를 위한 헬퍼
   Future<void> _refreshAllData() async {
     _monthlyCache.clear();
     await initMonthlyData();
     _updateCurrentRoutines(); 
 
-    // 💡 현재 정렬되어 캐싱된 오늘의 루틴 목록을 순회하며 폰 스케줄러에 알림 등록/취소 진행!
-    // 마이페이지의 '전체 앱 알림 켜기' 스토리지 값까지 함께 분기 처리해 주면 완벽해.
     final String? globalNotiRaw = await _storage.read(key: 'isRoutineNotiEnabled');
     bool isGlobalNotiEnabled = globalNotiRaw == null ? true : (globalNotiRaw == 'true');
+
+    // 🚀 [디버깅 1] 마스터 스위치 상태 확인
+    debugPrint("================[ 알림 엔진 검문소 ]================");
+    debugPrint("🎛️ 두꺼비집(마스터 스위치) 상태: $isGlobalNotiEnabled (스토리지 원본: $globalNotiRaw)");
 
     for (var routine in _routines) {
       int id = routine['id'];
       String title = routine['title'] ?? '';
       String time = routine['alarmTime'] ?? routine['alarm_time'] ?? '09:00:00';
       
-      // 스네이크/카멜 케이스 양방향 방어 및 null인 경우 false 처리
+      // 🚀 [디버깅 2] 백엔드가 루틴 리스트 줄 때 개별 스위치 값을 잘 주는지 확인
       bool isAlarmEnabled = routine['isAlarmEnabled'] ?? routine['is_alarm_enabled'] ?? false;
+      
+      debugPrint("🔍 [루틴 ID: $id] 백엔드 원본 데이터: $routine");
+      debugPrint("🔍 [루틴 ID: $id] 파싱된 개별 스위치 값: $isAlarmEnabled | 파싱된 시간: $time");
 
-      // 🚀 앱 전체 알림이 켜져 있고 + 해당 루틴 푸시(isAlarmEnabled)도 켜져 있을 때만 실제 알림 예약!
       if (isGlobalNotiEnabled && isAlarmEnabled) {
         await _notificationService.scheduleDailyRoutineNotification(
           routineId: id,
@@ -176,10 +179,11 @@ class RoutineProvider with ChangeNotifier {
           alarmTime: time,
         );
       } else {
-        // 둘 중 하나라도 꺼져 있으면 기기 예약 알림 파기
         await _notificationService.cancelNotification(id);
+        debugPrint("⛔ [루틴 ID: $id] 알림 취소됨 사유 -> 마스터 켜짐?: $isGlobalNotiEnabled / 개별 켜짐?: $isAlarmEnabled");
       }
     }
+    debugPrint("====================================================");
   }
 
   // 추가/삭제/수정 로직은 동일... (생략하되 내부에서 _refreshAllData 호출 유지)

@@ -14,7 +14,7 @@ Future<void> main() async {
   // 스플래시 화면이 앱 초기화 동안 유지되도록 설정
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-
+  // 알림 
   await NotificationService().initNotification();
   // 플러터 엔진 초기화 및 한국어 달력 데이터 로딩
   WidgetsFlutterBinding.ensureInitialized(); 
