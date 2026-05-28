@@ -164,6 +164,19 @@ public class RoutineService {
         if (!existing.getUserId().equals(userId)) {
             throw new IllegalArgumentException(ErrorCode.ROUTINE_FORBBIDEN.getMessage());
         }
+
+        if (routine.getSortOrder() == null) {
+            routine.setSortOrder(existing.getSortOrder());
+        }
+
+        if (routine.getIconId() == null) {
+            routine.setIconId(existing.getIconId());
+        }
+
+        if (routine.getIsAlarmEnabled() == null) {
+            routine.setIsAlarmEnabled(existing.getIsAlarmEnabled());
+        }
+
         routineMapper.update(routine);
     }
 
