@@ -504,7 +504,7 @@ class AppModals {
                     const SizedBox(height: 16),
                   ],
 
-                  SwitchListTile.adaptive(
+                 SwitchListTile.adaptive(
                     contentPadding: EdgeInsets.zero, 
                     title: const Text('앱 알림 전체 켜기'), 
                     subtitle: const Text('앱에서 보내는 모든 알림을 제어합니다.'),
@@ -515,10 +515,12 @@ class AppModals {
                         CustomSnackBar.show(context, message: '기기 설정에서 알림 권한을 먼저 허용해주세요.', isError: true);
                         return;
                       }
+                      
+                      // 🚀 [수정 1] 마스터 스위치를 껐다 켜도, 하위 스위치들의 원본 DB 값은 절대 건드리지 않음!
                       provider.updateNotification(settings.copyWith(
                         isPushEnabled: value, 
-                        isRoutineNotiEnabled: value ? settings.isRoutineNotiEnabled : false, 
-                        isMarketingEnabled: value ? settings.isMarketingEnabled : false
+                        // 삭제됨: isRoutineNotiEnabled 억지로 끄는 로직 제거
+                        // 삭제됨: isMarketingEnabled 억지로 끄는 로직 제거
                       ));
                     },
                   ),
@@ -528,14 +530,20 @@ class AppModals {
                   SwitchListTile.adaptive(
                     contentPadding: EdgeInsets.zero, 
                     title: const Text('루틴 리마인더'),
-                    value: settings.isRoutineNotiEnabled,
-                    onChanged: (settings.isPushEnabled && isOsPermissionGranted) ? (value) => provider.updateNotification(settings.copyWith(isRoutineNotiEnabled: value)) : null,
+                    // 🚀 [수정 2 UX 디테일] 마스터 스위치가 꺼지면 시각적으로만 꺼진 상태(false)로 보여줌
+                    value: settings.isPushEnabled ? settings.isRoutineNotiEnabled : false,
+                    onChanged: (settings.isPushEnabled && isOsPermissionGranted) 
+                        ? (value) => provider.updateNotification(settings.copyWith(isRoutineNotiEnabled: value)) 
+                        : null,
                   ),
                   SwitchListTile.adaptive(
                     contentPadding: EdgeInsets.zero, 
                     title: const Text('이벤트 및 혜택 알림'),
-                    value: settings.isMarketingEnabled,
-                    onChanged: (settings.isPushEnabled && isOsPermissionGranted) ? (value) => provider.updateNotification(settings.copyWith(isMarketingEnabled: value)) : null,
+                    // 🚀 [수정 3 UX 디테일] 마스터 스위치가 꺼지면 시각적으로만 꺼진 상태(false)로 보여줌
+                    value: settings.isPushEnabled ? settings.isMarketingEnabled : false,
+                    onChanged: (settings.isPushEnabled && isOsPermissionGranted) 
+                        ? (value) => provider.updateNotification(settings.copyWith(isMarketingEnabled: value)) 
+                        : null,
                   ),
                   
                   // 방해 금지 기능은 나중에 여기에 추가하면 완벽함!

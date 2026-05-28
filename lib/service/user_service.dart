@@ -104,8 +104,15 @@ class UserService {
       headers: {'Authorization': 'Bearer $token'},
     );
 
+    debugPrint("🔔 [GET 알림 설정] 상태코드: ${response.statusCode}");
+    debugPrint("🔔 [GET 알림 설정] 응답 바디: ${response.body}");
+
     if (response.statusCode == 200) {
-      return NotificationSettings.fromJson(jsonDecode(response.body));
+      final Map<String, dynamic> decoded = jsonDecode(response.body);
+      
+      final Map<String, dynamic> realData = decoded['data'] ?? decoded; 
+      
+      return NotificationSettings.fromJson(realData);
     } else {
       throw Exception('알림 설정을 불러오는데 실패했습니다.');
     }

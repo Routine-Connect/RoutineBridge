@@ -82,6 +82,17 @@ class UserProvider with ChangeNotifier {
   Future<void> loadNotificationSettings() async {
     try {
       _notificationSettings = await _userService.getNotificationSettings();
+
+      debugPrint("🔔 [파싱 완료] 루틴 알림 켜짐 여부: ${_notificationSettings?.isRoutineNotiEnabled}");
+
+      if (_notificationSettings != null) {
+        await _storage.write(
+          key: 'isRoutineNotiEnabled', 
+          value: _notificationSettings!.isRoutineNotiEnabled.toString()
+        );
+        debugPrint("🔔 [로컬 스토리지 동기화 완료]");
+      }
+
       notifyListeners();
     } catch (e) {
       debugPrint("알림 설정 로드 실패: $e");
