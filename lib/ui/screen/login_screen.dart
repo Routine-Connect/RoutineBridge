@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:routine_app/util/api_error_handler.dart';
 import '../../provider/auth_provider.dart';
 import '../../provider/user_provider.dart';
 import '../theme/app_colors.dart';
@@ -59,30 +60,29 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() { _isLoading = true; });
 
-    // Provider의 login 함수 호출 (내부적으로 Service가 돌아감)
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final errorMessage = await authProvider.login(email, password);
-
-    if (!mounted) return; 
-    
-    setState(() { _isLoading = false; });
-
-    if (errorMessage == null) {
-      // 성공 시에는 유저 정보를 불러오는 로직을 실행한 후 메인 화면으로 이동
+  // ApiErrorHandler가 에러를 잡아서 스낵바를 띄워줌
+  await ApiErrorHandler.execute(
+    context,
+    () async {
+      // 💡 여기서 에러가 터지면 ApiErrorHandler가 catch로 넘겨서 스낵바 띄움!
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      await authProvider.login(email, password);
+      
+      // 💡 로그인 성공 후 유저 프로필까지 가져오기
       await Provider.of<UserProvider>(context, listen: false).loadMyProfile();
-
+    },
+    onSuccess: () {
+      // 💡 진짜 성공했을 때만 실행되는 로직!
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const MainScreen()),
       );
-    } else {
-      // 실패 시 커스텀 에러 스낵바 표시
-      CustomSnackBar.show(
-        context, 
-        message: errorMessage, 
-        isError: true,
-      );
-    }
-  }
+    },
+  );
+
+  // ApiErrorHandler가 에러를 잡았든 말든, 최종적으로 로딩은 꺼야 함
+  if (mounted) setState(() { _isLoading = false; });
+}
 
   @override
   Widget build(BuildContext context) {

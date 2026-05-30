@@ -31,8 +31,7 @@ class AuthProvider with ChangeNotifier {
       return null; // 성공했으므로 에러 메시지는 null 반환
       
     } catch (e) {
-      // ❌ Service에서 에러를 던지면 여기서 잡아서 화면에 보여줄 메시지만 반환
-      return e.toString().replaceAll('Exception: ', '');
+      rethrow; // 에러는 화면에서 처리하도록 던져줍니다.
     }
   }
 

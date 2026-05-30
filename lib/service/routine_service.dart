@@ -41,8 +41,8 @@ Future<Map<String, dynamic>> getMonthlyRoutines(String token, int year, int mont
       });
       return data;
     } else {
-      throw Exception('월간 데이터를 불러오지 못했습니다.');
-    }
+        throw Exception(responseData['error']?['message'] ?? '월간 데이터를 불러오지 못했습니다.');
+      }
   } catch (e) {
     throw Exception('서버 연결 실패: $e');
   }

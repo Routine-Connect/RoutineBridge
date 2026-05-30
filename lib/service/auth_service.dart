@@ -27,7 +27,8 @@ class AuthService {
         throw Exception(responseData['error']?['message'] ?? '로그인에 실패했습니다.');
       }
     } catch (e) {
-      // 서버가 꺼져있거나 인터넷이 끊긴 경우
+      // 이미 Exception인 경우 그대로 던지고, 아니면 네트워크 에러로 처리
+      if (e is Exception) rethrow; 
       throw Exception('서버와 연결할 수 없습니다.');
     }
   }
