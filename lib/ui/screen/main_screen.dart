@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:routine_app/ui/widget/app_modal.dart';
 import '../theme/app_colors.dart';
 import 'home_screen.dart';
 import 'mypage_screen.dart';
 import 'statistics_screen.dart';
 import '../../provider/statistics_provider.dart';
-import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,6 +16,12 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  
+  // 🚀 1. 스와이프를 담당할 핵심 컨트롤러 선언!
+  late PageController _pageController;
+
+  bool _isFirstStatsLoad = true;
+  bool _isFirstMyPageLoad = true;
 
   // 💡 화면 갈아끼우기용 배열
   static const List<Widget> _pages = [
@@ -27,27 +33,53 @@ class _MainScreenState extends State<MainScreen> {
   // 💡 상단바 제목 갈아끼우기용 배열
   final List<String> _titles = ['홈', '통계', '프로필'];
 
+  @override
+  void initState() {
+    super.initState();
+    // 🚀 2. 페이지 컨트롤러 초기화 (첫 시작은 0번 홈 화면)
+    _pageController = PageController(initialPage: _currentIndex);
+  }
+
+  @override
+  void dispose() {
+    // 🚀 3. 메모리 누수 방지
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  // 🚀 4. 하단 바 아이콘을 "터치"했을 때 실행될 함수
   void _onTap(int index) {
     if (_currentIndex == index) return;
+    
+    // PageView를 쓰면 탭 했을 때 알아서 _onPageChanged가 불리기 때문에
+    // 여기서는 애니메이션 이동 명령만 내리면 됨!
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
 
-    // 🚀 [수정] 무조건적인 호출 대신 더티 플래그(_isDirty)가 true일 때만 서버 통신하도록 제어
+  // 🚀 5. 화면이 완전히 "스와이프" 되거나 탭 이동이 끝났을 때 실행될 함수
+  void _onPageChanged(int index) {
+    setState(() => _currentIndex = index);
+
+    // 💡 네가 짜둔 '더티 플래그(isDirty) 최적화 로직'을 여기로 옮김!
+    // 이렇게 하면 손가락으로 밀어서 넘어가든, 아이콘을 터치해서 넘어가든 완벽하게 작동함.
     if (index == 1) {
       final statsProvider = context.read<StatisticsProvider>();
-      // 데이터 변경이 감지되었을 때만 API를 호출하여 최적화
-      if (statsProvider.isDirty) {
-        statsProvider.loadSummaryOnly(); // 숫자 최신화
-        statsProvider.loadFullStats();   // 그래프/달력 최신화
+      if (statsProvider.isDirty || _isFirstStatsLoad) {
+        statsProvider.loadSummaryOnly(); 
+        statsProvider.loadFullStats();   
+        _isFirstStatsLoad = false;
       }
-    }
-    else if (index == 2) {
+    } else if (index == 2) {
       final statsProvider = context.read<StatisticsProvider>();
-      // 프로필 탭 진입 시에도 변경사항이 있을 때만 요약 수치 갱신
-      if (statsProvider.isDirty) {
+      if (statsProvider.isDirty || _isFirstMyPageLoad) {
         statsProvider.loadAllTimeStreak(); 
+        _isFirstMyPageLoad = false;
       }
     }
-    
-    setState(() => _currentIndex = index);
   }
 
   @override
@@ -62,21 +94,17 @@ class _MainScreenState extends State<MainScreen> {
         backgroundColor: AppColors.background.withOpacity(0.94),
         surfaceTintColor: Colors.transparent,
         shape: const Border(
-          bottom: BorderSide(
-            color: AppColors.dividerFaint,
-            width: 1.0,
-          ),
+          bottom: BorderSide(color: AppColors.dividerFaint, width: 1.0),
         ),
         toolbarHeight: 64,
         leadingWidth: 72,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: Center(
-          ),
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 12),
+          child: Center(),
         ),
         centerTitle: true,
         title: Text(
-          _titles[_currentIndex], // 💡 현재 탭에 맞춰 제목 변경 (홈/통계/프로필)
+          _titles[_currentIndex], 
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
@@ -86,7 +114,6 @@ class _MainScreenState extends State<MainScreen> {
         actions: [
           IconButton(
             onPressed: () {
-              // 🚀 달력 아이콘 누르면 날짜 선택 모달 띄우기
               AppModals.showDatePickerModal(context);
             },
             icon: Icon(Icons.calendar_today_outlined, color: Theme.of(context).colorScheme.primary),
@@ -95,10 +122,14 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
       
-      body: IndexedStack(
-        index: _currentIndex,
+      // 🚀 6. 기존 IndexedStack을 버리고 PageView로 교체!
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: _onPageChanged,
+        physics: const BouncingScrollPhysics(), // 끝에 도달하면 '띠용'하는 애플 감성 스크롤
         children: _pages,
       ),
+
       bottomNavigationBar: _StitchBottomNavBar(
         currentIndex: _currentIndex,
         onTap: _onTap,
@@ -122,21 +153,18 @@ class _StitchBottomNavBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.background.withOpacity(0.94),
         border: const Border(
-          top: BorderSide(
-            color: AppColors.dividerFaint,
-            width: 1.0,
-          ),
+          top: BorderSide(color: AppColors.dividerFaint, width: 1.0),
         ),
       ),
       child: SafeArea(
-        top: false, // 상단은 무시
+        top: false, 
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8), // 얇고 예쁜 하단바 두께 형성
+          padding: const EdgeInsets.symmetric(vertical: 8), 
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _NavItem(
-                icon: Icons.home_outlined,
+                icon: Icons.home_rounded,
                 label: '홈',
                 isSelected: currentIndex == 0,
                 onTap: () => onTap(0),
@@ -148,7 +176,7 @@ class _StitchBottomNavBar extends StatelessWidget {
                 onTap: () => onTap(1),
               ),
               _NavItem(
-                icon: Icons.person_outline,
+                icon: Icons.person,
                 label: '프로필',
                 isSelected: currentIndex == 2,
                 onTap: () => onTap(2),
@@ -176,14 +204,13 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 💡 GestureDetector 대신 InkWell을 쓰면 터치할 때 예쁜 물결 효과(Ripple)가 생깁니다.
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
         child: Column(
-          mainAxisSize: MainAxisSize.min, // 💡 최소 크기로 압축
+          mainAxisSize: MainAxisSize.min, 
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(

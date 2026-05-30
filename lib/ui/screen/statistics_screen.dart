@@ -167,7 +167,7 @@ class _MonthlySummaryCard extends StatelessWidget {
 }
 
 // ============================================================================
-// 2. 월간 루틴 달력 
+// 2. 월간 루틴 달력 (월요일 시작 버전)
 // ============================================================================
 class _RoutineCalendar extends StatelessWidget {
   const _RoutineCalendar();
@@ -179,16 +179,18 @@ class _RoutineCalendar extends StatelessWidget {
     final currentMonth = statsProvider.currentMonth;
     final isLoading = statsProvider.isLoading;
 
-    final List<String> weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    // 🚀 1. 헤더 텍스트를 한글 '월~일'로 변경
+    final List<String> weekDays = ['월', '화', '수', '목', '금', '토', '일'];
     
-    // 🚀 실제 달력을 그리기 위한 빈칸(여백) 및 데이터 계산 로직
     List<int> calendarData = [];
     int year = currentMonth.year;
     int month = currentMonth.month;
 
-    // 이번 달 1일이 무슨 요일인지 알아냅니다
     DateTime firstDay = DateTime(year, month, 1);
-    int paddingDays = firstDay.weekday % 7; 
+    
+    // 🚀 2. [핵심 공식 변경] 월요일(1)이 0번째 칸이 되도록 수학 공식 수정!
+    // (weekday가 1(월)이면 0빈칸, 7(일)이면 6빈칸)
+    int paddingDays = firstDay.weekday - 1; 
 
     // 1일이 시작하기 전까지 빈칸(0) 채우기
     for (int i = 0; i < paddingDays; i++) {
@@ -212,22 +214,18 @@ class _RoutineCalendar extends StatelessWidget {
       }
     }
 
-    // 🚀 [추가] 스와이프 방향을 감지해서 Provider의 달을 바꿔주는 함수
     void handleSwipe(DragEndDetails details) {
       if (details.primaryVelocity == null) return;
-      
       if (details.primaryVelocity! > 0) {
-        // 오른쪽으로 스와이프 ➔ 이전 달
         statsProvider.changeMonth(DateTime(year, month - 1, 1));
       } else if (details.primaryVelocity! < 0) {
-        // 왼쪽으로 스와이프 ➔ 다음 달
         statsProvider.changeMonth(DateTime(year, month + 1, 1));
       }
     }
 
     return GestureDetector(
       onHorizontalDragEnd: handleSwipe,
-      behavior: HitTestBehavior.opaque, // 🚀 달력의 빈 여백을 스와이프해도 인식되도록 설정
+      behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
@@ -238,16 +236,14 @@ class _RoutineCalendar extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🚀 [수정] 헤더 부분에 좌우 화살표를 추가하고 UX 개선
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // 이전 달 버튼
                 IconButton(
                   icon: const Icon(Icons.chevron_left, size: 28),
                   onPressed: () => statsProvider.changeMonth(DateTime(year, month - 1, 1)),
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(), // 기본 패딩 제거로 깔끔하게 배치
+                  constraints: const BoxConstraints(),
                 ),
                 Container(
                   padding: const EdgeInsets.only(bottom: 4),
@@ -255,14 +251,12 @@ class _RoutineCalendar extends StatelessWidget {
                     border: Border(bottom: BorderSide(color: Theme.of(context).colorScheme.primaryContainer, width: 4)),
                   ),
                   child: Text(
-                    // 🚀 달을 막 넘기다 보면 연도를 헷갈리므로 'yyyy년 M월'로 표시 변경
                     '$year년 $month월',
                     style: const TextStyle(
                       fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.onSurface, letterSpacing: -0.5,
                     ),
                   ),
                 ),
-                // 다음 달 버튼
                 IconButton(
                   icon: const Icon(Icons.chevron_right, size: 28),
                   onPressed: () => statsProvider.changeMonth(DateTime(year, month + 1, 1)),
@@ -272,6 +266,7 @@ class _RoutineCalendar extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
+            
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: weekDays.map((day) {
@@ -280,8 +275,10 @@ class _RoutineCalendar extends StatelessWidget {
                   child: Text(
                     day, textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 10, fontWeight: FontWeight.w800,
-                      color: day == 'SUN' ? AppColors.logoutCoral : AppColors.onSurface,
+                      fontSize: 12, // 💡 한글이라 살짝 키웠어
+                      fontWeight: FontWeight.w800,
+                      // 🚀 3. '일'요일일 때만 빨간색으로 변경
+                      color: day == '일' ? AppColors.logoutCoral : AppColors.onSurface,
                     ),
                   ),
                 );
@@ -307,7 +304,8 @@ class _RoutineCalendar extends StatelessWidget {
                   if (calendarData[index] == 0) return const SizedBox(); 
                   
                   int dayNumber = index - paddingDays + 1;
-                  bool isSunday = index % 7 == 0;
+                  // 🚀 4. 일요일 판별 로직 변경 (7번째 칸마다 일요일)
+                  bool isSunday = (index + 1) % 7 == 0;
                   
                   return _DayCell(
                     day: dayNumber.toString(),

@@ -796,7 +796,6 @@ class _CustomCalendarModalState extends State<_CustomCalendarModal> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: weekDays.map((day) {
                 Color color = Colors.grey;
-                if (day == '토') color = Color(0xFFF87171);
                 if (day == '일') color = Color(0xFFF87171);
                 return Expanded(child: Center(child: Text(day, style: TextStyle(color: color, fontWeight: FontWeight.bold))));
               }).toList(),
@@ -824,7 +823,6 @@ class _CustomCalendarModalState extends State<_CustomCalendarModal> {
 
                 // 주말 색상 처리
                 Color textColor = Theme.of(context).colorScheme.onSurface;
-                if (currentItemDate.weekday == 6) textColor = Color(0xFFF87171);
                 if (currentItemDate.weekday == 7) textColor = Color(0xFFF87171);
 
                 return GestureDetector(
