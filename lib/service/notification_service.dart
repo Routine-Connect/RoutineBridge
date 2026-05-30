@@ -107,6 +107,7 @@ class NotificationService {
         '$title 시작해볼까요?', 
         scheduledDate,
         platformDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // 절전 모드에서도 알림이 정해진 시간에 울리도록 강제함
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time, 

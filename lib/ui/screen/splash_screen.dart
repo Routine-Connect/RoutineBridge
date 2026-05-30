@@ -53,8 +53,8 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _initializeApp() async {
-    // 알림 권한 요청
-    await Permission.notification.request();
+    // 🚀 1. 앱 켜질 때 필요한 권한 3종 세트 강제 획득! (알림, 배터리 제한 해제, 정밀 알람)
+    await _checkAndRequestPermissions();
 
     // 쿼카 인사를 충분히 볼 수 있도록 최소 1.5초 대기
     await Future.delayed(const Duration(milliseconds: 1500));
@@ -76,6 +76,19 @@ class _SplashScreenState extends State<SplashScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
+    }
+  }
+
+  // 안드로이드 14 알림 씹힘 방지 권한 요청 함수
+  Future<void> _checkAndRequestPermissions() async {
+    // 1. 일반 알림 권한 (헤드업 배너)
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+    }
+
+    // 2. 정밀 알람 권한 (안드로이드 12 이상 스케줄러 필수 권한)
+    if (await Permission.scheduleExactAlarm.isDenied) {
+      await Permission.scheduleExactAlarm.request();
     }
   }
 
