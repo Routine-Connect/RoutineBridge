@@ -4,6 +4,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_shadow.dart';
 import '../theme/app_icon.dart';
 import 'custom_snackbar.dart';
+import '../../util/api_error_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../provider/user_provider.dart';
@@ -174,11 +175,18 @@ class AppModals {
                         if (isEditMode)
                           IconButton(
                             onPressed: () async {
-                              await context.read<RoutineProvider>().deleteRoutine(routine!['id']);
-                              if (context.mounted) {
-                                Navigator.pop(context); // 창 닫기
-                                CustomSnackBar.show(context, message: '루틴이 삭제되었습니다.');
-                              }
+                              await ApiErrorHandler.execute(
+                                context,
+                                () async {
+                                  await context.read<RoutineProvider>().deleteRoutine(routine!['id']);
+                                },
+                                onSuccess: () {
+                                  if (context.mounted) {
+                                    Navigator.pop(context);
+                                    CustomSnackBar.show(context, message: '루틴이 삭제되었습니다.');
+                                  }
+                                },
+                              );
                             },
                             icon: const Icon(Icons.delete_outline, color: AppColors.error),
                           ),
@@ -340,31 +348,35 @@ class AppModals {
                           final int? userId = user?.id; 
                           if (userId == null) return;
 
-                          setState(() => isSubmitting = true); 
+                          setState(() => isSubmitting = true);
 
-                          try {
-                            String formattedTime = '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+                          await ApiErrorHandler.execute(
+                            context,
+                            () async {
+                              String formattedTime = '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
 
-                            // 🚀 [핵심] 이제 Provider 메서드에 isAlarmEnabled 값을 같이 넘겨줍니다!
-                            if (routine != null) {
-                              await context.read<RoutineProvider>().updateRoutine(
-                                routine['id'], userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime, isAlarmEnabled
-                              );
-                            } else {
-                              await context.read<RoutineProvider>().addRoutine(
-                                userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime, isAlarmEnabled
-                              );
-                            }
-                            
-                            if (context.mounted) {
-                              Navigator.pop(context); 
-                              CustomSnackBar.show(context, message: (routine != null) ? '루틴이 수정되었습니다!' : '새 루틴이 추가되었습니다!');
-                            }
-                          } catch (e) {
-                            if (context.mounted) CustomSnackBar.show(context, message: '실패: $e', isError: true);
-                          } finally {
-                            if (context.mounted) setState(() => isSubmitting = false); 
-                          }
+                              if (routine != null) {
+                                await context.read<RoutineProvider>().updateRoutine(
+                                  routine['id'], userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime, isAlarmEnabled,
+                                );
+                              } else {
+                                await context.read<RoutineProvider>().addRoutine(
+                                  userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime, isAlarmEnabled,
+                                );
+                              }
+                            },
+                            onSuccess: () {
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                CustomSnackBar.show(
+                                  context,
+                                  message: (routine != null) ? '루틴이 수정되었습니다!' : '새 루틴이 추가되었습니다!',
+                                );
+                              }
+                            },
+                          );
+
+                          if (context.mounted) setState(() => isSubmitting = false);
                         },
                         
                         child: isSubmitting 

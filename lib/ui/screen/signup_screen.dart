@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../service/auth_service.dart';
+import '../../util/api_error_handler.dart';
 import '../theme/app_colors.dart';
 import '../widget/custom_snackbar.dart';
 
@@ -48,30 +49,20 @@ class _SignupScreenState extends State<SignupScreen> {
 
     setState(() => _isLoading = true);
 
-    try {
-      // 🚀 3. Provider 없이 통신 서비스(AuthService)를 직접 호출
-      final authService = AuthService();
-      await authService.signup(email, password, nickname, _selectedGender);
+    await ApiErrorHandler.execute(
+      context,
+      () async {
+        final authService = AuthService();
+        await authService.signup(email, password, nickname, _selectedGender);
+      },
+      onSuccess: () {
+        if (!mounted) return;
+        CustomSnackBar.show(context, message: '🎉 환영합니다! 회원가입이 완료되었습니다.');
+        Navigator.of(context).pop();
+      },
+    );
 
-      if (!mounted) return;
-
-      // 4. 성공 시: 스낵바 띄우고 로그인 화면으로 복귀
-      CustomSnackBar.show(context, message: '🎉 환영합니다! 회원가입이 완료되었습니다.');
-      Navigator.of(context).pop(); 
-
-    } catch (e) {
-      // 5. 실패 시: 백엔드에서 던진 에러 메시지 스낵바로 출력
-      if (!mounted) return;
-      CustomSnackBar.show(
-        context, 
-        message: e.toString().replaceAll('Exception: ', ''), 
-        isError: true,
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+    if (mounted) setState(() => _isLoading = false);
   }
 
   @override

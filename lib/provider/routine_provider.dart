@@ -144,7 +144,11 @@ class RoutineProvider with ChangeNotifier {
       notifyListeners();
       if (context.mounted) {
         context.read<StatisticsProvider>().markAsDirty();
-        CustomSnackBar.show(context, message: '네트워크 에러로 체크가 취소되었습니다.', isError: true);
+        CustomSnackBar.show(
+          context,
+          message: e.toString().replaceAll('Exception: ', ''),
+          isError: true,
+        );
       }
     }
   }

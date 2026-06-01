@@ -12,6 +12,7 @@ import '../../provider/auth_provider.dart';
 import '../../provider/user_provider.dart';
 import '../widget/app_modal.dart';
 import '../widget/custom_snackbar.dart';
+import '../../util/api_error_handler.dart';
 import 'login_screen.dart';
 
 class MyPageScreen extends StatefulWidget {
@@ -110,12 +111,15 @@ class _ProfileSection extends StatelessWidget {
                 final picker = ImagePicker();
                 final pickedFile = await picker.pickImage(source: ImageSource.gallery);
                 if (pickedFile != null && context.mounted) {
-                  try {
-                    await context.read<UserProvider>().updateProfileImage(File(pickedFile.path));
-                    CustomSnackBar.show(context, message: '프로필 이미지가 변경되었습니다.');
-                  } catch (e) {
-                    CustomSnackBar.show(context, message: e.toString().replaceAll('Exception: ', ''), isError: true);
-                  }
+                  await ApiErrorHandler.execute(
+                    context,
+                    () async {
+                      await context.read<UserProvider>().updateProfileImage(File(pickedFile.path));
+                    },
+                    onSuccess: () {
+                      CustomSnackBar.show(context, message: '프로필 이미지가 변경되었습니다.');
+                    },
+                  );
                 }
               },
               child: Container(
@@ -145,12 +149,15 @@ class _ProfileSection extends StatelessWidget {
                 final newNickname = await AppModals.showNicknameEditDialog(context, currentNickname: currentNickname);
                 if (!context.mounted) return;
                 if (newNickname != null && newNickname.isNotEmpty && newNickname != currentNickname) {
-                  try {
-                    await context.read<UserProvider>().updateNickname(newNickname);
-                    CustomSnackBar.show(context, message: '닉네임이 성공적으로 변경되었습니다.');
-                  } catch (e) {
-                    CustomSnackBar.show(context, message: e.toString().replaceAll('Exception: ', ''), isError: true);
-                  }
+                  await ApiErrorHandler.execute(
+                    context,
+                    () async {
+                      await context.read<UserProvider>().updateNickname(newNickname);
+                    },
+                    onSuccess: () {
+                      CustomSnackBar.show(context, message: '닉네임이 성공적으로 변경되었습니다.');
+                    },
+                  );
                 }
               },
               child: Container(
@@ -274,12 +281,15 @@ class _SettingsSection extends StatelessWidget {
             final newPassword = await AppModals.showPasswordEditDialog(context);
             if (!context.mounted) return;
             if (newPassword != null && newPassword.isNotEmpty) {
-              try {
-                await context.read<UserProvider>().updatePassword(newPassword);
-                CustomSnackBar.show(context, message: '비밀번호가 안전하게 변경되었습니다.');
-              } catch (e) {
-                CustomSnackBar.show(context, message: e.toString().replaceAll('Exception: ', ''), isError: true);
-              }
+              await ApiErrorHandler.execute(
+                context,
+                () async {
+                  await context.read<UserProvider>().updatePassword(newPassword);
+                },
+                onSuccess: () {
+                  CustomSnackBar.show(context, message: '비밀번호가 안전하게 변경되었습니다.');
+                },
+              );
             }
           },
         ),
