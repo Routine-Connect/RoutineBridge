@@ -2,15 +2,14 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // 🚀 스토리지 임포트!
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../model/user.dart';
 import '../model/NotificationSettings.dart';
+import '../util/api_error_handler.dart';
 
 class UserService {
   final String baseUrl = 'https://nonextendible-kandace-gratifyingly.ngrok-free.dev/api/users';
-  
-  // 🚀 스토리지 객체(변수) 생성!
   final _secureStorage = const FlutterSecureStorage();
 
   // GET api/users/me - 프로필 정보 조회
@@ -33,11 +32,11 @@ class UserService {
       if (response.statusCode == 200 && responseData['success'] == true) {
         return User.fromJson(responseData['data']);
       } else {
-        throw Exception(responseData['error']?['message'] ?? '정보를 불러오지 못했습니다.');
+        ApiErrorHandler.throwApiError(responseData, '정보를 불러오지 못했습니다.');
       }
     } catch (e) {
       debugPrint('유저 정보 조회 실패: $e');
-      throw Exception('서버와 연결할 수 없습니다.');
+      ApiErrorHandler.rethrowIfApiException(e);
     }
   }
 
@@ -45,7 +44,7 @@ class UserService {
   Future<void> updateProfile(String token, String? nickname, String? password) async {
     try {
       final url = Uri.parse('$baseUrl/me');
-      
+
       final Map<String, dynamic> bodyData = {};
       if (nickname != null) bodyData['nickname'] = nickname;
       if (password != null) bodyData['password'] = password;
@@ -54,7 +53,7 @@ class UserService {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token', 
+          'Authorization': 'Bearer $token',
         },
         body: jsonEncode(bodyData),
       );
@@ -62,10 +61,10 @@ class UserService {
       final responseData = jsonDecode(utf8.decode(response.bodyBytes));
 
       if (response.statusCode != 200 || responseData['success'] != true) {
-        throw Exception(responseData['error']?['message'] ?? '프로필 수정에 실패했습니다.');
+        ApiErrorHandler.throwApiError(responseData, '프로필 수정에 실패했습니다.');
       }
     } catch (e) {
-      throw Exception('서버와 연결할 수 없습니다.');
+      ApiErrorHandler.rethrowIfApiException(e);
     }
   }
 
@@ -74,9 +73,9 @@ class UserService {
     try {
       final url = Uri.parse('$baseUrl/me/image');
       var request = http.MultipartRequest('POST', url);
-      
+
       request.headers['Authorization'] = 'Bearer $token';
-      
+
       var multipartFile = await http.MultipartFile.fromPath('file', imageFile.path);
       request.files.add(multipartFile);
 
@@ -85,55 +84,64 @@ class UserService {
       var responseData = jsonDecode(utf8.decode(response.bodyBytes));
 
       if (response.statusCode == 200 && responseData['success'] == true) {
-        return responseData['data']; 
+        return responseData['data'];
       } else {
-        throw Exception(responseData['error']?['message'] ?? '이미지 업로드에 실패했습니다.');
+        ApiErrorHandler.throwApiError(responseData, '이미지 업로드에 실패했습니다.');
       }
     } catch (e) {
-      throw Exception('서버와 연결할 수 없습니다.');
+      ApiErrorHandler.rethrowIfApiException(e);
     }
   }
 
-  // GET /api/users/me/notifications - 알림 설정 가져오기 
+  // GET /api/users/me/notifications - 알림 설정 가져오기
   Future<NotificationSettings> getNotificationSettings() async {
-    final url = Uri.parse('$baseUrl/me/notifications');
-    final token = await _secureStorage.read(key: 'jwt_token');
+    try {
+      final url = Uri.parse('$baseUrl/me/notifications');
+      final token = await _secureStorage.read(key: 'jwt_token');
 
-    final response = await http.get(
-      url,
-      headers: {'Authorization': 'Bearer $token'},
-    );
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Bearer $token'},
+      );
 
-    debugPrint("🔔 [GET 알림 설정] 상태코드: ${response.statusCode}");
-    debugPrint("🔔 [GET 알림 설정] 응답 바디: ${response.body}");
+      debugPrint("🔔 [GET 알림 설정] 상태코드: ${response.statusCode}");
+      debugPrint("🔔 [GET 알림 설정] 응답 바디: ${response.body}");
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> decoded = jsonDecode(response.body);
-      
-      final Map<String, dynamic> realData = decoded['data'] ?? decoded; 
-      
-      return NotificationSettings.fromJson(realData);
-    } else {
-      throw Exception('알림 설정을 불러오는데 실패했습니다.');
+      final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        final Map<String, dynamic> realData = responseData['data'] ?? responseData;
+        return NotificationSettings.fromJson(realData);
+      } else {
+        ApiErrorHandler.throwApiError(responseData, '알림 설정을 불러오는데 실패했습니다.');
+      }
+    } catch (e) {
+      ApiErrorHandler.rethrowIfApiException(e);
     }
   }
 
-  // PUT /api/users/me/notifications - 알림 설정 저장하기 
+  // PUT /api/users/me/notifications - 알림 설정 저장하기
   Future<void> updateNotificationSettings(NotificationSettings settings) async {
-    final url = Uri.parse('$baseUrl/me/notifications');
-    final token = await _secureStorage.read(key: 'jwt_token');
+    try {
+      final url = Uri.parse('$baseUrl/me/notifications');
+      final token = await _secureStorage.read(key: 'jwt_token');
 
-    final response = await http.put(
-      url,
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(settings.toJson()),
-    );
+      final response = await http.put(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(settings.toJson()),
+      );
 
-    if (response.statusCode != 200) {
-      throw Exception('알림 설정을 업데이트하는데 실패했습니다.');
+      final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+
+      if (response.statusCode != 200 || responseData['success'] != true) {
+        ApiErrorHandler.throwApiError(responseData, '알림 설정을 업데이트하는데 실패했습니다.');
+      }
+    } catch (e) {
+      ApiErrorHandler.rethrowIfApiException(e);
     }
   }
 }
