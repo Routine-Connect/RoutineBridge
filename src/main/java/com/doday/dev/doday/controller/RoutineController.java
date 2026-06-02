@@ -103,4 +103,12 @@ public class RoutineController {
         return ApiResponse.success(null);
     }
 
+    @ApiOperation(value = "루틴 알람 토글", notes = "루틴 알람 ON/OFF")
+    @PatchMapping("/{id}/alarm")
+    public ApiResponse<Void> toggleAlarm(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        routineService.toggleAlarm(id, userId);
+        return ApiResponse.success(null);
+    }
+
 }

@@ -216,4 +216,18 @@ public class RoutineService {
         }
     }
 
+    public void toggleAlarm(Long id, Long userId) {
+        Routine existing = routineMapper.findById(id);
+
+        if (existing == null) {
+            throw new IllegalArgumentException(ErrorCode.ROUTINE_NOT_FOUND.getMessage());
+        }
+        if (!existing.getUserId().equals(userId)) {
+            throw new IllegalArgumentException(ErrorCode.ROUTINE_FORBBIDEN.getMessage());
+        }
+        
+        // 현재값 반전
+        existing.setIsAlarmEnabled(!existing.getIsAlarmEnabled());
+        routineMapper.update(existing);
+    }
 }
