@@ -195,6 +195,12 @@ class RoutineProvider with ChangeNotifier {
     final token = await _getToken();
     int mappedIconId = AppIcons.routineIcons.indexOf(icon) + 1;
     final routineData = { "userId": userId, "title": title, "iconId": mappedIconId == 0 ? 20 : mappedIconId, "daysOfWeek": daysOfWeek.join(','), "alarmTime": "$alarmTime:00", "isActive": true, "isAlarmEnabled": isAlarmEnabled, };
+    
+    debugPrint("================[ 📤 백엔드 전송 데이터 확인 ]================");
+    debugPrint("🚀 [POST] /api/routines 에 보내는 원본 데이터:");
+    debugPrint(jsonEncode(routineData));
+    debugPrint("========================================================");
+    
     await _routineService.createRoutine(token, routineData);
     await _refreshAllData();
   }
@@ -278,6 +284,95 @@ class RoutineProvider with ChangeNotifier {
       // 실패 시에도 버튼은 원래대로 돌려줘야 유저가 다시 시도 가능
       _isReordering = false;
       notifyListeners();
+    }
+  }
+
+  // 🚀 [완벽 수정] 진짜 낙관적 업데이트가 적용된 알림 토글 함수
+  Future<void> toggleRoutineAlarm(int routineId, bool isAlarmEnabled, String? alarmTime, Map<String, dynamic> routineRaw) async {
+    // 💡 [롤백용 백업] 에러가 났을 때를 대비해 과거 상태를 기억해둠
+    bool previousAlarmEnabled = false;
+    String? previousAlarmTime;
+
+    // =========================================================
+    // 1. [진짜 낙관적 업데이트] 무조건 화면(UI)부터 즉시 바꾼다!!! ⚡️
+    // =========================================================
+    for (var monthKey in _monthlyCache.keys) {
+      for (var dateKey in _monthlyCache[monthKey]!.keys) {
+        final dailyList = _monthlyCache[monthKey]![dateKey]!;
+        for (var i = 0; i < dailyList.length; i++) {
+          if (dailyList[i]['id'] == routineId) {
+            var item = dailyList[i];
+            // 과거 상태 백업
+            previousAlarmEnabled = dailyList[i]['isAlarmEnabled'] ?? dailyList[i]['is_alarm_enabled'] ?? false;
+            previousAlarmTime = dailyList[i]['alarmTime'] ?? dailyList[i]['alarm_time'];
+
+            // 새로운 상태 즉시 덮어쓰기
+           item['isAlarmEnabled'] = item['is_alarm_enabled'] = isAlarmEnabled;
+            if (alarmTime != null) {
+              item['alarmTime'] = item['alarm_time'] = alarmTime;
+            }
+          }
+        }
+      }
+    }
+    
+    _updateCurrentRoutines(); 
+    notifyListeners(); // 🚀 유저는 버튼을 누르자마자 변경된 화면을 보게 됨! (딜레이 0초)
+
+    // =========================================================
+    // 2. 백그라운드 작업 (알림 스케줄러 동기화 & 백엔드 통신) 📡
+    // =========================================================
+    try {
+      final token = await _getToken();
+
+      // 로컬 스케줄러 즉시 동기화
+      if (isAlarmEnabled && alarmTime != null) {
+        await _notificationService.scheduleDailyRoutineNotification(
+          routineId: routineId,
+          title: routineRaw['title'] ?? '루틴',
+          alarmTime: alarmTime,
+        );
+      } else {
+        await _notificationService.cancelNotification(routineId);
+      }
+
+      // 서버에 변경 사항 몰래 전송 (유저는 이 시간을 체감하지 못함)
+      await _routineService.patchRoutineAlarm(token, routineId, isAlarmEnabled, alarmTime);
+
+    } catch (e) {
+      // =========================================================
+      // 3. [에러 복구] 서버 통신 실패 시 화면을 몰래 원상복구 (Rollback) 🛠️
+      // =========================================================
+      for (var monthKey in _monthlyCache.keys) {
+        for (var dateKey in _monthlyCache[monthKey]!.keys) {
+          final dailyList = _monthlyCache[monthKey]![dateKey]!;
+          for (var i = 0; i < dailyList.length; i++) {
+            if (dailyList[i]['id'] == routineId) {
+              var item = dailyList[i]; // 변수로 빼기
+
+              item['isAlarmEnabled'] = item['is_alarm_enabled'] = previousAlarmEnabled;
+              if (previousAlarmTime != null) {
+                item['alarmTime'] = item['alarm_time'] = previousAlarmTime;
+              }
+            }
+          }
+        }
+      }
+      _updateCurrentRoutines();
+      notifyListeners(); // 🚨 실패했으므로 스위치를 다시 원래대로 돌려놓음
+      
+      // 스케줄러도 원상복구
+      if (previousAlarmEnabled && previousAlarmTime != null) {
+        await _notificationService.scheduleDailyRoutineNotification(
+          routineId: routineId,
+          title: routineRaw['title'] ?? '루틴',
+          alarmTime: previousAlarmTime,
+        );
+      } else {
+        await _notificationService.cancelNotification(routineId);
+      }
+
+      rethrow; // ApiErrorHandler가 에러 스낵바를 띄우도록 에러를 위로 던짐!
     }
   }
 

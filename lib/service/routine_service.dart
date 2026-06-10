@@ -137,4 +137,31 @@ class RoutineService {
       ApiErrorHandler.rethrowIfApiException(e);
     }
   }
+
+  // PATCH /api/routines/{id}/alarm - 알림 상태 단독 변경
+  Future<void> patchRoutineAlarm(String token, int routineId, bool isAlarmEnabled, String? alarmTime) async {
+    try {
+      final url = Uri.parse('$baseUrl/$routineId/alarm');
+      final response = await http.patch(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'isAlarmEnabled': isAlarmEnabled,  // 👈 대소문자 주의!
+          if (alarmTime != null) 'alarmTime': alarmTime, // 👈 대소문자 주의!
+        }),
+      );
+
+      final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+
+      if (response.statusCode != 200 || responseData['success'] != true) {
+        // 🚀 어제 만든 에러 핸들러로 백엔드 에러 메시지 캡처!
+        ApiErrorHandler.throwApiError(responseData, '알림 상태 변경에 실패했습니다.');
+      }
+    } catch (e) {
+      ApiErrorHandler.rethrowIfApiException(e);
+    }
+  }
 }
