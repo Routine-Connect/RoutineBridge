@@ -103,7 +103,7 @@ class NotificationService {
     try {
       await _localNotifications.zonedSchedule(
         routineId, 
-        '🔔루틴 시간이에요!', 
+        '루틴 시간이에요!', 
         '$title 시작해볼까요?', 
         scheduledDate,
         platformDetails,
