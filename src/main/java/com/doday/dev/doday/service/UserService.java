@@ -114,6 +114,11 @@ public class UserService {
                 throw new IllegalArgumentException(ErrorCode.FILE_SIZE_EXCEEDED.getMessage());
             }
 
+            // 파일 검증
+            if (!isValidImageFile(file)) {
+                throw new IllegalArgumentException(ErrorCode.INVALID_FILE_TYPE.getMessage());
+            }
+
 
             // webp 파일 명
             String fileName = "user_" + userId + ".webp";
@@ -166,5 +171,21 @@ public class UserService {
         }
         user.setGender(gender);
         userMapper.update(user);
+    }
+
+    // 파일 업로드 검증
+    private boolean isValidImageFile(MultipartFile file) throws IOException {
+        byte[] bytes = file.getBytes();
+
+        // JPG 검사 FF D8 FF
+        if (bytes[0] == (byte) 0xFF && bytes[1] == (byte) 0xD8 && bytes[2] == (byte) 0xFF) {
+            return true;
+        }
+        // PNG 검사 89 50 4E 47
+        if (bytes[0] == (byte) 0x89 && bytes[1] == (byte) 0x50
+                && bytes[2] == (byte) 0x4E && bytes[3] == (byte) 0x47) {
+            return true;
+        }
+        return false;
     }
 }
