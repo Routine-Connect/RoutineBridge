@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -59,5 +60,16 @@ public class UserController {
     public ApiResponse<User> getMe(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         return ApiResponse.success(userService.getMe(userId));
+    }
+
+    @ApiOperation(value = "성별 설정", notes = "소셜 로그인 후 성별 설정")
+    @PatchMapping("/me/gender")
+    public ApiResponse<Void> updateGender(
+            @RequestBody Map<String, String> body,
+            HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        String gender = body.get("gender");
+        userService.updateGender(userId, gender);
+        return ApiResponse.success(null);
     }
 }

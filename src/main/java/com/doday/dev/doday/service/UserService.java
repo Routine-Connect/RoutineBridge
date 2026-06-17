@@ -158,4 +158,13 @@ public class UserService {
         user.setPassword(null);
         return user;
     }
+
+    public void updateGender(Long userId, String gender) {
+        User user = userMapper.findById(userId);
+        if (user == null) {
+            throw new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage());
+        }
+        user.setGender(gender);
+        userMapper.update(user);
+    }
 }
