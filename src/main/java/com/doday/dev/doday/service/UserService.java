@@ -40,6 +40,9 @@ public class UserService {
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
+    @Autowired
+    private LoginAttemptSerivce loginAttemptSerivce;
+
 
     // 회원가입
     public void signup(SignupRequestDto dto) {
@@ -60,6 +63,11 @@ public class UserService {
 
     // 로그인
     public String login(LoginRequestDto dto) {
+
+        if (loginAttemptSerivce.isBlocked(dto.getEmail())) {
+            throw new IllegalArgumentException(ErrorCode.ACCOUNT_LOCKED.getMessage());
+        }
+
         User existing = userMapper.findByEmail(dto.getEmail());
         if (existing == null) {
             throw new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage());

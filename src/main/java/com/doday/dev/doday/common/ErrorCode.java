@@ -21,6 +21,7 @@ public enum ErrorCode {
     TOKEN_EXPIRED("A001", "토큰이 만료되었습니다"),
     TOKEN_INVALID("A002", "유효하지 않은 토큰입니다"),
     UNAUTHORIZED("A003", "로그인이 필요합니다"),
+    ACCOUNT_LOCKED("U004", "5회 로그인 실패로 10분간 로그인이 제한됩니다."),
 
     // 공통
     INVALID_INPUT("C001", "입력값이 올바르지 않습니다"),
