@@ -1,5 +1,7 @@
 package com.doday.dev.doday.common;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -9,6 +11,9 @@ import javax.servlet.http.HttpServletResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // 입력값 검증 실패
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -33,7 +38,7 @@ public class GlobalExceptionHandler {
     // 서버 에러
     @ExceptionHandler(Exception.class)
     public ApiResponse<Void> handleException(Exception e) {
-        e.printStackTrace();
+        logger.error("서버 오류 발생", e);
         return ApiResponse.fail(
                 ErrorCode.INTERNAL_SERVER_ERROR.getCode(),
                 ErrorCode.INTERNAL_SERVER_ERROR.getMessage()
