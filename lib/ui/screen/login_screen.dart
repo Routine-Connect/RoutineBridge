@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import '../widget/custom_snackbar.dart';
 import 'main_screen.dart';
 import 'signup_screen.dart';
+import 'gender_onboarding_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -38,8 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // 🚀 2. 이메일 형식(정규표현식) 검사
-    // 올바른 이메일 형태(예: user@domain.com)인지 프론트에서 먼저 거릅니다.
+    // 🚀 2. 이메일 형식 검사
     final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
     if (!emailRegex.hasMatch(email)) {
       CustomSnackBar.show(context, message: '올바른 이메일 형식을 입력해주세요.', isError: true);
@@ -52,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // 🚀 4. 비밀번호 최소 길이 검사 (백엔드 설정에 맞게 수정하세요. 보통 6~8자리)
+    // 🚀 4. 비밀번호 최소 길이 검사
     if (password.length < 4) {
       CustomSnackBar.show(context, message: '비밀번호는 4자리 이상입니다.', isError: true);
       return;
@@ -60,29 +60,51 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() { _isLoading = true; });
 
-  // ApiErrorHandler가 에러를 잡아서 스낵바를 띄워줌
-  await ApiErrorHandler.execute(
-    context,
-    () async {
-      // 💡 여기서 에러가 터지면 ApiErrorHandler가 catch로 넘겨서 스낵바 띄움!
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.login(email, password);
-      
-      // 💡 로그인 성공 후 유저 프로필까지 가져오기
-      await Provider.of<UserProvider>(context, listen: false).loadMyProfile();
-    },
-    onSuccess: () {
-      // 💡 진짜 성공했을 때만 실행되는 로직!
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MainScreen()),
-      );
-    },
-  );
+    await ApiErrorHandler.execute(
+      context,
+      () async {
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        await authProvider.login(email, password);
+        
+        await Provider.of<UserProvider>(context, listen: false).loadMyProfile();
+      },
+      onSuccess: () {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      },
+    );
 
-  // ApiErrorHandler가 에러를 잡았든 말든, 최종적으로 로딩은 꺼야 함
-  if (mounted) setState(() { _isLoading = false; });
-}
+    if (mounted) setState(() { _isLoading = false; });
+  }
+
+  // 🚀 카카오 로그인 버튼 눌렀을 때 실행될 함수
+  Future<void> _loginWithKakao() async {
+    await ApiErrorHandler.execute(
+      context,
+      () async {
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        // Provider한테 카카오 로그인 시키고 결과를 받아옴
+        String result = await authProvider.loginWithKakao();
+        
+        if (result == 'NEW_USER') {
+          // 🚀 신규 유저면 아까 만든 '성별 온보딩 화면'으로 이동!
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const GenderOnboardingScreen()),
+          );
+        } else if (result == 'EXISTING_USER') {
+          // 🚀 기존 유저면 유저 정보 로드하고 바로 '홈 화면'으로 이동!
+          await Provider.of<UserProvider>(context, listen: false).loadMyProfile();
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+          );
+        }
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           
           // 로그인 폼 영역
-          Center(                                     
+          Center(                                    
             child: Container(
               width: 320,
               padding: const EdgeInsets.all(24),
@@ -149,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 32),
                   
-                  // 로그인 버튼
+                  // 🚀 1. 일반 이메일 로그인 버튼
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -164,8 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _isLoading ? null : _loginToServer,
                       child: _isLoading 
                           ? const SizedBox(
-                              width: 24, 
-                              height: 24, 
+                              width: 24, height: 24, 
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
                             )
                           : const Text(
@@ -174,10 +195,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                     ),
                   ),
-                  
                   const SizedBox(height: 16),
                   
-                  // 🚀 회원가입 유도 영역
+                  // 회원가입 유도 영역
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -187,7 +207,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          // 회원가입 화면으로 부드럽게 이동
                           Navigator.of(context).push(
                             MaterialPageRoute(builder: (context) => const SignupScreen()),
                           );
@@ -201,6 +220,49 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  
+                  // 🚀 2. '또는' 구분선 (UI 디테일)
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: Colors.black.withOpacity(0.2), thickness: 1)),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12.0),
+                        child: Text('또는', style: TextStyle(color: Colors.black54, fontSize: 12)),
+                      ),
+                      Expanded(child: Divider(color: Colors.black.withOpacity(0.2), thickness: 1)),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // 🚀 3. 카카오 소셜 로그인 버튼
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFEE500), // 카카오 공식 브랜드 노란색
+                        foregroundColor: Colors.black87, // 카카오 공식 글자색
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: _loginWithKakao,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // 카카오 아이콘 (일단 기본 말풍선 아이콘 사용, 나중에 진짜 이미지로 바꿔도 됨)
+                          const Icon(Icons.chat_bubble_rounded, size: 20), 
+                          const SizedBox(width: 8),
+                          const Text(
+                            '카카오로 시작하기',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
