@@ -74,6 +74,17 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // 🚀 성별 업데이트 후 내 정보 리로드
+  Future<void> updateGender(String token, String gender) async {
+    final token = await _storage.read(key: 'jwt_token');
+    if (token == null) throw Exception('로그인이 필요합니다.');
+
+    await _userService.updateGender(token, gender);
+    
+    // 성별이 업데이트되었으니, 내 프로필 정보를 백엔드에서 다시 가져와서 앱 상태 최신화!
+    await loadMyProfile(); 
+  }
+
   // 🚀 4. 알림 상태 변경
   NotificationSettings? _notificationSettings;
   NotificationSettings? get notificationSettings => _notificationSettings;
@@ -120,7 +131,7 @@ class UserProvider with ChangeNotifier {
        // 실패하면 서버에서 원래 데이터를 다시 가져와서 원상복구
        await loadNotificationSettings(); 
        
-       // 🚀 [선배의 추가 코드] 로컬 스토리지도 원상복구
+       // 🚀로컬 스토리지도 원상복구
        if (_notificationSettings != null) {
          await _storage.write(
            key: 'isRoutineNotiEnabled', 

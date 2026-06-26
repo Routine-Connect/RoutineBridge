@@ -93,6 +93,35 @@ class UserService {
     }
   }
 
+  // PATCH /api/users/me/gender - 성별 설정
+  Future<void> updateGender(String token, String gender) async {
+    try {
+      final url = Uri.parse('$baseUrl/me/gender'); // 백엔드 주소에 맞게 확인!
+      final response = await http.patch(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'gender': gender, // 'M' 또는 'F'
+        }),
+      );
+
+      // 204(No Content) 성공일 때는 바디가 없어서 jsonDecode 하면 앱 터짐 방어 코드 추가
+      if (response.statusCode == 204) return;
+
+      final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+
+      // 상태 코드가 200이 아니거나, 백엔드 응답의 success 플래그가 false일 때
+      if (response.statusCode != 200 || responseData['success'] != true) {
+        ApiErrorHandler.throwApiError(responseData, '성별 설정에 실패했습니다.');
+      }
+    } catch (e) {
+      // 발생한 에러가 우리가 만든 ApiException이면 화면단으로 넘겨서 스낵바 띄우게 함
+      ApiErrorHandler.rethrowIfApiException(e);
+    }
+  }
   // GET /api/users/me/notifications - 알림 설정 가져오기
   Future<NotificationSettings> getNotificationSettings() async {
     try {
