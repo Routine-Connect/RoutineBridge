@@ -56,6 +56,11 @@ public class StatsService {
             int totalForDay = (int) routines.stream()
                     .filter(r -> Boolean.TRUE.equals(r.getIsActive()))
                     .filter(r -> r.getDaysOfWeek().contains(dayOfWeek))
+                    .filter(r -> {
+                        // 루틴 생성일 이전 날짜는 제외
+                        String createdDate = r.getCreatedAt().substring(0, 10);
+                        return !date.isBefore(LocalDate.parse(createdDate));
+                    })
                     .count();
 
             if (totalForDay == 0) {
@@ -66,7 +71,6 @@ public class StatsService {
                 dailyResult.put(dateStr, pct);
             }
 
-            // 이번달 총개수 / 완료 개수 집계
             totalRoutineCount += totalForDay;
             completedRoutineCount += doneCount.getOrDefault(dateStr, 0);
         }
@@ -109,6 +113,10 @@ public class StatsService {
             int totalForDay = (int) routines.stream()
                     .filter(r -> Boolean.TRUE.equals(r.getIsActive()))
                     .filter(r -> r.getDaysOfWeek().contains(dayOfWeek))
+                    .filter(r -> {
+                        String createdDate = r.getCreatedAt().substring(0, 10);
+                        return !date.isBefore(LocalDate.parse(createdDate));
+                    })
                     .count();
 
             if (totalForDay == 0) {

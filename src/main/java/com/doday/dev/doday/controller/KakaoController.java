@@ -24,9 +24,9 @@ public class KakaoController {
 
     @ApiOperation(value = "카카오 로그인", notes = "카카오 액세스 토큰으로 로그인")
     @PostMapping("/kakao")
-    public ApiResponse<String> kakaoLogin(@RequestBody Map<String, String> body) {
+    public ApiResponse<Map<String, Object>> kakaoLogin(@RequestBody Map<String, String> body) {
         String accessToken = body.get("accessToken");
-        String jwt = kakaoService.kakaoLogin(accessToken);
-        return ApiResponse.success(jwt);
+        Map<String, Object> result = kakaoService.kakaoLogin(accessToken);
+        return ApiResponse.success(result);
     }
 }
