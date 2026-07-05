@@ -47,12 +47,11 @@ class _MainScreenState extends State<MainScreen> {
     super.dispose();
   }
 
-  // 🚀 4. 하단 바 아이콘을 "터치"했을 때 실행될 함수
+  // 4. 하단 바 터치 시 UI 이동(애니메이션) 명령만 내림
   void _onTap(int index) {
     if (_currentIndex == index) return;
     
-    // PageView를 쓰면 탭 했을 때 알아서 _onPageChanged가 불리기 때문에
-    // 여기서는 애니메이션 이동 명령만 내리면 됨!
+    // PageView가 알아서 _onPageChanged를 호출하도록 위임
     _pageController.animateToPage(
       index,
       duration: const Duration(milliseconds: 300),
@@ -68,14 +67,14 @@ class _MainScreenState extends State<MainScreen> {
     // 이렇게 하면 손가락으로 밀어서 넘어가든, 아이콘을 터치해서 넘어가든 완벽하게 작동함.
     if (index == 1) {
       final statsProvider = context.read<StatisticsProvider>();
-      if (statsProvider.isDirty || _isFirstStatsLoad) {
+      if (statsProvider.isStatsDirty || _isFirstStatsLoad) {
         statsProvider.loadSummaryOnly(); 
         statsProvider.loadFullStats();   
         _isFirstStatsLoad = false;
       }
     } else if (index == 2) {
       final statsProvider = context.read<StatisticsProvider>();
-      if (statsProvider.isDirty || _isFirstMyPageLoad) {
+      if (statsProvider.isMyPageDirty || _isFirstMyPageLoad) {
         statsProvider.loadAllTimeStreak(); 
         _isFirstMyPageLoad = false;
       }

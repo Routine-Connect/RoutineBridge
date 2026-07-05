@@ -25,9 +25,15 @@ class StatisticsProvider with ChangeNotifier {
   
   DateTime _currentMonth = DateTime.now(); 
   
-  bool _isDirty = true;    
+  bool _isStatsDirty = true;   // 통계 탭용 더티 플래그
+  bool _isMyPageDirty = true;  // 마이페이지용 더티 플래그
+
   bool _isFetching = false; 
   bool get isLoading => _isFetching;
+
+  // Getter도 분리
+  bool get isStatsDirty => _isStatsDirty;
+  bool get isMyPageDirty => _isMyPageDirty;
 
   // 🚀 1. 유저 가입일을 담아둘 변수
   DateTime? _userCreatedAt; 
@@ -67,20 +73,25 @@ class StatisticsProvider with ChangeNotifier {
   }
 
   void markAsDirty() {
-    _isDirty = true;
+    _isStatsDirty = true;
+    _isMyPageDirty = true;
   }
 
   Map<String, dynamic>? get allTimeStreak => _allTimeStreak;
-  bool get isDirty => _isDirty;
 
-  // 가입일 기준 전체 기간 스트릭 로드 API 연동 - myPage에서 사용
+  // --- 마이페이지 전체 스트릭 함수 ---
   Future<void> loadAllTimeStreak() async {
+    // 💡 더티 상태가 아니면 굳이 다시 통신하지 않음
+    if (!_isMyPageDirty) return; 
+
     try {
       final token = await _storage.read(key: 'jwt_token') ?? '';
       if (token.isEmpty) return;
 
-      // 💡 통신 레이어 호출 (StatisticsService에 구현 필수)
       _allTimeStreak = await _statisticsService.getAllTimeStreak(token);
+      
+      // 🚀 통신 성공 후 마이페이지 더티 플래그 해제!
+      _isMyPageDirty = false;
       notifyListeners();
     } catch (e) {
       debugPrint('❌ 전체 스트릭 로드 에러: $e');
@@ -165,7 +176,7 @@ class StatisticsProvider with ChangeNotifier {
 
   // 🚀 [수정] 통계 탭 최초 진입 시, 주간 데이터와 함께 '3개월치'를 한 번에 긁어옵니다.
   Future<void> loadFullStats() async {
-    if (!_isDirty || _isFetching) return;
+    if (!_isStatsDirty || _isFetching) return;
     _isFetching = true;
 
     try {
@@ -184,8 +195,8 @@ class StatisticsProvider with ChangeNotifier {
         _fetchMonthData(DateTime(_currentMonth.year, _currentMonth.month + 1, 1), forceRefresh: true),
       ]);
 
-      // 🚀 통신이 끝났으므로 깃발을 내립니다. 다음번엔 탭 전환을 해도 무지성 API 낭비를 차단합니다.
-      _isDirty = false;
+      // 🚀 통신이 끝났으므로 false로 변경
+      _isStatsDirty = false;
       debugPrint('✅ 통계 3개월치 로드 완료 및 Dirty Flag 해제 완료!');
     } catch (e) {
       debugPrint('❌ 전체 통계 데이터 로드 에러: $e');
@@ -213,7 +224,8 @@ class StatisticsProvider with ChangeNotifier {
     _weeklyStats.clear();
     _monthlyCache.clear(); // 🚀 캐시 창고도 비워줌
     _currentMonth = DateTime.now();
-    _isDirty = true;
+    _isStatsDirty = true;
+    _isMyPageDirty = true;
     _isFetching = false;
     notifyListeners();
   }
