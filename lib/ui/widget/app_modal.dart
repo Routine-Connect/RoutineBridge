@@ -178,7 +178,7 @@ class AppModals {
                               await ApiErrorHandler.execute(
                                 context,
                                 () async {
-                                  await context.read<RoutineProvider>().deleteRoutine(routine!['id']);
+                                  await context.read<RoutineProvider>().deleteRoutine(context, routine!['id']);
                                 },
                                 onSuccess: () {
                                   if (context.mounted) {
@@ -357,11 +357,11 @@ class AppModals {
 
                               if (routine != null) {
                                 await context.read<RoutineProvider>().updateRoutine(
-                                  routine['id'], userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime, isAlarmEnabled,
+                                  context, routine['id'], userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime, isAlarmEnabled,
                                 );
                               } else {
                                 await context.read<RoutineProvider>().addRoutine(
-                                  userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime, isAlarmEnabled,
+                                  context, userId, nameController.text.trim(), selectedIcon, selectedDays, formattedTime, isAlarmEnabled,
                                 );
                               }
                             },

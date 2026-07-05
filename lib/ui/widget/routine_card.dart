@@ -73,7 +73,7 @@ class RoutineCard extends StatelessWidget {
                           // 선택한 아이콘이 있고, 화면이 열려있다면 즉시 서버에 업데이트 요청
                           if (pickedIcon != null && context.mounted) {
                             await provider.updateRoutine(
-                              routineId, userId, title, pickedIcon, daysRaw.split(','), timeRaw.isNotEmpty ? timeRaw : '09:00:00', isAlarmEnabled
+                              context, routineId, userId, title, pickedIcon, daysRaw.split(','), timeRaw.isNotEmpty ? timeRaw : '09:00:00', isAlarmEnabled
                             );
                           }
                         },
