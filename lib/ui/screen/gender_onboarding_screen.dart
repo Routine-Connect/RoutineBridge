@@ -118,9 +118,9 @@ class _GenderOnboardingScreenState extends State<GenderOnboardingScreen> {
                 curve: Curves.easeOutBack,
                 child: Row(
                   children: [
-                    Expanded(child: _buildGenderCard('M', '남자', Icons.male_rounded)),
+                    Expanded(child: _buildGenderCard('m', '남자', Icons.male_rounded)),
                     const SizedBox(width: 16),
-                    Expanded(child: _buildGenderCard('F', '여자', Icons.female_rounded)),
+                    Expanded(child: _buildGenderCard('f', '여자', Icons.female_rounded)),
                   ],
                 ),
               ),
