@@ -293,9 +293,22 @@ class _SettingsSection extends StatelessWidget {
             }
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         const _SettingTile(icon: Icons.support_agent, title: '고객센터', showChevron: true),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
+        _SettingTile(
+          icon: Icons.description, 
+          title: '라이센스', 
+          showChevron: true, 
+          onTap: () {
+            showLicensePage(
+              context: context,
+              applicationName: 'Doday',
+              applicationVersion: '1.0.0',
+            );
+          },
+        ),
+        const SizedBox(height: 8),
         _SettingTile(
           icon: Icons.logout, title: '로그아웃', isDestructive: true, showChevron: true,
           onTap: () async {

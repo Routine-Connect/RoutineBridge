@@ -36,12 +36,25 @@ class AppModals {
                 const SizedBox(height: 16),
                 TextField(
                   controller: controller,
+                  style: TextStyle(color: AppColors.onSurface), 
                   decoration: InputDecoration(
                     hintText: '새로운 닉네임을 입력하세요',
                     hintStyle: const TextStyle(color: AppColors.onSurfaceVariant),
-                    filled: true, fillColor: AppColors.surfaceContainer,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    filled: true,
+                    fillColor: AppColors.surfaceContainer, 
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.primary, width: 2),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -397,60 +410,77 @@ class AppModals {
 
   // 🚀 4. 비밀번호 변경 모달 
   static Future<String?> showPasswordEditDialog(BuildContext context) async {
-    final TextEditingController newPasswordController = TextEditingController();
-    final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController newPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
 
-    return showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: AppColors.surfaceContainerLowest,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('비밀번호 변경', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.onSurface)),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: newPasswordController,
-                  obscureText: true,
-                  decoration: InputDecoration(hintText: '새로운 비밀번호', filled: true, fillColor: AppColors.surfaceContainer, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: confirmPasswordController,
-                  obscureText: true,
-                  decoration: InputDecoration(hintText: '비밀번호 확인', filled: true, fillColor: AppColors.surfaceContainer, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소', style: TextStyle(color: AppColors.onSurfaceVariant))),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: AppColors.onPrimary),
-                      onPressed: () {
-                        if (newPasswordController.text != confirmPasswordController.text) {
-                          CustomSnackBar.show(context, message: '비밀번호가 일치하지 않습니다.', isError: true);
-                          return;
-                        }
-                        Navigator.pop(context, newPasswordController.text);
-                      },
-                      child: const Text('저장', style: TextStyle(fontWeight: FontWeight.bold)),
+  return showDialog<String>(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: AppColors.surfaceContainerLowest,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20), // 상단 여백 24, 나머지 20으로 축소
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('비밀번호 변경', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.onSurface)),
+              const SizedBox(height: 16),
+              _buildSlimTextField(newPasswordController, '새로운 비밀번호'),
+              const SizedBox(height: 10), // 입력창 사이 간격 축소
+              _buildSlimTextField(confirmPasswordController, '비밀번호 확인'),
+              const SizedBox(height: 20), // 버튼 위 간격 축소
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('취소', style: TextStyle(color: AppColors.onSurfaceVariant)),
+                  ),
+                  const SizedBox(width: 4),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: AppColors.onPrimary,
+                      elevation: 0, // 입체감 제거로 더 가벼운 느낌
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                  ],
-                ),
-              ],
-            ),
+                    onPressed: () {
+                      if (newPasswordController.text != confirmPasswordController.text) {
+                        CustomSnackBar.show(context, message: '비밀번호가 일치하지 않습니다.', isError: true);
+                        return;
+                      }
+                      Navigator.pop(context, newPasswordController.text);
+                    },
+                    child: const Text('저장', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ],
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
+
+// 🛠 중복 로직을 줄여주는 헬퍼 위젯
+static Widget _buildSlimTextField(TextEditingController controller, String hint) {
+  return TextField(
+    controller: controller,
+    obscureText: true,
+    decoration: InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: AppColors.onSurfaceVariant),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), // 높이 슬림하게
+      filled: true,
+      fillColor: AppColors.surfaceContainer, // 배경색 유지
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+    ),
+  );
+}
 
   // 🚀 5. 알림 설정 메뉴
   static Future<void> showNotificationSettingsBottomSheet(BuildContext context) async {

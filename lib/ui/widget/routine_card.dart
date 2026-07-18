@@ -45,48 +45,36 @@ class RoutineCard extends StatelessWidget {
     final bool isAlarmEnabled = rawData['is_alarm_enabled'] == true || rawData['isAlarmEnabled'] == true;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      // 🚀 1. 카드 전체 영역 터치 시: 루틴 수정(통합 창) 바텀시트 호출
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque, // 여백을 터치해도 인식하도록 설정
-        onTap: () {
-          AppModals.showRoutineFormBottomSheet(context, routine: rawData);
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: completed ? AppColors.surfaceContainerLow.withOpacity(0.5) : AppColors.surfaceContainerLowest, 
-            borderRadius: BorderRadius.circular(16), 
-            boxShadow: AppShadows.getPlushShadow(context),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Opacity(
-                  opacity: completed ? 0.5 : 1.0,
-                  child: Row(
-                    children: [
-                      // 🚀 2. 아이콘 영역 터치 시: 아이콘 픽커 바텀시트 호출
-                      GestureDetector(
-                        onTap: () async {
-                          final IconData? pickedIcon = await AppModals.showIconPickerBottomSheet(context);
-                          // 선택한 아이콘이 있고, 화면이 열려있다면 즉시 서버에 업데이트 요청
-                          if (pickedIcon != null && context.mounted) {
-                            await provider.updateRoutine(
-                              context, routineId, userId, title, pickedIcon, daysRaw.split(','), timeRaw.isNotEmpty ? timeRaw : '09:00:00', isAlarmEnabled
-                            );
-                          }
-                        },
-                        child: Container(
-                          width: 40, height: 40, 
-                          decoration: BoxDecoration(
-                            color: currentBackgroundColor, 
-                            borderRadius: BorderRadius.circular(12)
-                          ), 
-                          child: Icon(icon, color: currentForegroundColor, size: 22)
-                        ),
-                      ),
-                      const SizedBox(width: 12),
+  padding: const EdgeInsets.only(bottom: 12),
+  // 🚀 카드 전체를 하나의 GestureDetector로 감싸서 어디를 눌러도 수정 모달이 뜸
+  child: GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTap: () {
+      AppModals.showRoutineFormBottomSheet(context, routine: rawData);
+    },
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: completed ? AppColors.surfaceContainerLow.withOpacity(0.5) : AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.getPlushShadow(context),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Opacity(
+              opacity: completed ? 0.5 : 1.0,
+              child: Row(
+                children: [
+                  Container(
+                    width: 40, height: 40,
+                    decoration: BoxDecoration(
+                      color: currentBackgroundColor,
+                      borderRadius: BorderRadius.circular(12)
+                    ),
+                    child: Icon(icon, color: currentForegroundColor, size: 22)
+                  ),
+                  const SizedBox(width: 12),
                       
                       // 🚀 타이틀 & 미니멀 알림 버튼 영역
                       Expanded(
