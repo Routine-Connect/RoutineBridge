@@ -54,20 +54,44 @@ lib/
 ┃
 ┗ 📂 util/                      # 공통 유틸리티
   ┗ 📄 api_error_handler.dart   # 전역 API 에러 처리기
-
+```
 
 ## 📱 앱 주요 화면
 
-| | | | |
-| :---: | :---: | :---: | :---: |
-| <img width="200" src="https://github.com/user-attachments/assets/1806a6f3-15ce-4c49-bcf6-ffa478bf8118"> | <img width="200" src="https://github.com/user-attachments/assets/5d7c2490-0d65-4274-be87-91426ec03487"> | <img width="200" src="https://github.com/user-attachments/assets/e9baaa6d-c6d1-4607-b430-c884de1b71b0"> | <img width="200" src="https://github.com/user-attachments/assets/ab473e85-7b44-424d-b94f-1c7939ad5844"> |
-| **스플래시 화면** | **로그인 화면** | **홈 화면 1** | **홈 화면 2** |
-| <img width="200" src="https://github.com/user-attachments/assets/c53303b2-5ea9-4c2f-904e-23c250a660da"> | <img width="200" src="https://github.com/user-attachments/assets/e03828c0-ecb0-4fb3-872d-ebbcbe4265d0"> | <img width="200" src="https://github.com/user-attachments/assets/03993607-503d-42ce-bbdd-c32f7a911c93"> | <img width="200" src="https://github.com/user-attachments/assets/891076dc-fd23-43a5-a652-f4fb59cd2651"> |
-| **통계 화면 1** | **통계 화면 2** | **마이페이지 1** | **마이페이지 2** |
+<table>
+  <tr>
+    <td align="center"><img width="200" src="https://github.com/user-attachments/assets/1806a6f3-15ce-4c49-bcf6-ffa478bf8118"></td>
+    <td align="center"><img width="200" src="https://github.com/user-attachments/assets/5d7c2490-0d65-4274-be87-91426ec03487"></td>
+    <td align="center"><img width="200" src="https://github.com/user-attachments/assets/e9baaa6d-c6d1-4607-b430-c884de1b71b0"></td>
+    <td align="center"><img width="200" src="https://github.com/user-attachments/assets/ab473e85-7b44-424d-b94f-1c7939ad5844"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>스플래시 화면</b></td>
+    <td align="center"><b>로그인 화면</b></td>
+    <td align="center"><b>홈 화면 1</b></td>
+    <td align="center"><b>홈 화면 2</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img width="200" src="https://github.com/user-attachments/assets/c53303b2-5ea9-4c2f-904e-23c250a660da"></td>
+    <td align="center"><img width="200" src="https://github.com/user-attachments/assets/e03828c0-ecb0-4fb3-872d-ebbcbe4265d0"></td>
+    <td align="center"><img width="200" src="https://github.com/user-attachments/assets/03993607-503d-42ce-bbdd-c32f7a911c93"></td>
+    <td align="center"><img width="200" src="https://github.com/user-attachments/assets/891076dc-fd23-43a5-a652-f4fb59cd2651"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>통계 화면 1</b></td>
+    <td align="center"><b>통계 화면 2</b></td>
+    <td align="center"><b>마이페이지 1</b></td>
+    <td align="center"><b>마이페이지 2</b></td>
+  </tr>
+</table>
 
 ## 🎥 앱 실행 데모
 
-| |
-| :---: |
-| <img width="400" src="https://github.com/user-attachments/assets/88000c1e-167c-43a3-811c-083880b83800"> |
-| **앱 스플래시 영상** |
+<table>
+  <tr>
+    <td align="center"><img width="400" src="https://github.com/user-attachments/assets/88000c1e-167c-43a3-811c-083880b83800"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>앱 스플래시 영상</b></td>
+  </tr>
+</table>
