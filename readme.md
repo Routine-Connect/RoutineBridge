@@ -186,7 +186,8 @@
 
 ## 🏗️ 시스템 아키텍처
 
-![System Architecture](./docs/architecture.png)
+![System Architecture](https://github.com/user-attachments/assets/ad2dc319-da12-429a-b073-32bffd5fc73e)
+
 
 ---
 
