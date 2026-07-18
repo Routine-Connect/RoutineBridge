@@ -34,7 +34,7 @@ class ThemeProvider with ChangeNotifier {
   // 테마 적용
   ThemeData get themeData {
     return ThemeData(
-      fontFamily: 'Pretendard',
+      fontFamily: 'GowunDodum-Regular',
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.surfaceContainerLowest, 
       colorScheme: ColorScheme.light(

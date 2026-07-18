@@ -44,6 +44,12 @@ flutter:
   assets:
     - assets/images/
     - .env
+  
+  fonts:
+  - family: GowunDodum-Regular
+    fonts:
+      - asset: assets/fonts/GowunDodum-Regular.ttf
+        weight: 400
 
 flutter_launcher_icons:
   android: true
