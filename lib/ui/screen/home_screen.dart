@@ -376,73 +376,84 @@ class _HomeWeekCalendarState extends State<HomeWeekCalendar> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest, 
-        borderRadius: BorderRadius.circular(16), 
-        boxShadow: AppShadows.getPlushShadow(context)
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 8, bottom: 16),
-            child: Text(
-              DateFormat('yyyy년 M월').format(displayMonthDate),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.onSurface),
-            ),
+  decoration: BoxDecoration(
+    color: Theme.of(context).colorScheme.surfaceContainerLowest,
+    borderRadius: BorderRadius.circular(16),
+    boxShadow: AppShadows.getPlushShadow(context),
+  ),
+  child: Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      // 1. 상단 붉은 헤더 영역 (전체 모서리 곡률과 일치)
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical:6),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer, // 부드러운 붉은색
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
           ),
-          
-          SizedBox(
-            height: 90, 
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() => _currentPageIndex = index);
-                final int weekOffset = index - 500;
-                final DateTime visibleDate = _baseMonday.add(Duration(days: weekOffset * 7 + 3)); 
-                
-                context.read<RoutineProvider>().fetchMonthData(visibleDate);
-              },
-              itemBuilder: (context, pageIndex) {
-                final int weekOffset = pageIndex - 500;
-                final DateTime weekStartDate = _baseMonday.add(Duration(days: weekOffset * 7));
+        ),
+        child: Text(
+          DateFormat('yyyy년 M월').format(displayMonthDate),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      ),
+      
+      // 2. 캘린더 본체 영역
+      Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SizedBox(
+          height: 75,
+          child: PageView.builder(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() => _currentPageIndex = index);
+              final int weekOffset = index - 500;
+              final DateTime visibleDate = _baseMonday.add(Duration(days: weekOffset * 7 + 3));
+              context.read<RoutineProvider>().fetchMonthData(visibleDate);
+            },
+            itemBuilder: (context, pageIndex) {
+              final int weekOffset = pageIndex - 500;
+              final DateTime weekStartDate = _baseMonday.add(Duration(days: weekOffset * 7));
 
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(7, (dayIndex) {
-                    final date = weekStartDate.add(Duration(days: dayIndex));
-                    final bool isSelected = DateUtils.isSameDay(selectedDate, date);
-                    final bool isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(7, (dayIndex) {
+                  final date = weekStartDate.add(Duration(days: dayIndex));
+                  final bool isSelected = DateUtils.isSameDay(selectedDate, date);
+                  final bool isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+                  DayCompletionStatus completionStatus = _getCompletionStatus(routineProvider, date);
 
-                    DayCompletionStatus completionStatus = _getCompletionStatus(routineProvider, date);
-
-                    return Expanded(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          routineProvider.changeDateAndFetch(date);
-                        },
-                        child: _DayColumn(
-                          date: date,
-                          label: DateFormat('E', 'ko_KR').format(date),
-                          day: date.day.toString(),
-                          isSelected: isSelected,
-                          isWeekend: isWeekend,
-                          isDisabled: false, 
-                          completionStatus: completionStatus, 
-                        ),
+                  return Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => routineProvider.changeDateAndFetch(date),
+                      child: _DayColumn(
+                        date: date,
+                        label: DateFormat('E', 'ko_KR').format(date),
+                        day: date.day.toString(),
+                        isSelected: isSelected,
+                        isWeekend: isWeekend,
+                        isDisabled: false,
+                        completionStatus: completionStatus,
                       ),
-                    );
-                  }),
-                );
-              },
-            ),
+                    ),
+                  );
+                }),
+              );
+            },
           ),
-        ],
+        ),
       ),
-    );
+    ],
+  ),
+);
   }
 
   // 🚀 캐시된 월간 데이터를 기반으로 완료 상태(세모/동그라미)를 계산하는 함수
