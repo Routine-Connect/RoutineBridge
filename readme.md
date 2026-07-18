@@ -1,6 +1,6 @@
-<div align="center">
 
-<img src="https://via.placeholder.com/120x120/C49A6C/ffffff?text=🐾" width="120" height="120" style="border-radius: 20px"/>
+
+<img src="https://github.com/user-attachments/assets/252a4860-f339-4ef9-a0c8-cb1562a0dc22" width="120" height="120" style="border-radius: 20px"/>
 
 # DoDay 두데이
 
