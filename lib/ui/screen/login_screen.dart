@@ -253,13 +253,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // 카카오 아이콘 (일단 기본 말풍선 아이콘 사용, 나중에 진짜 이미지로 바꿔도 됨)
-                          const Icon(Icons.chat_bubble_rounded, size: 20), 
-                          const SizedBox(width: 8),
-                          const Text(
-                            '카카오로 시작하기',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                          Image.asset(
+                            'assets/images/kakao_login.webp',
+                            width: 200, // 카카오 가이드라인에 최적화된 심볼 크기
+                            height: 100,
                           ),
+                          const SizedBox(width: 8),
                         ],
                       ),
                     ),
