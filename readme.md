@@ -33,10 +33,13 @@
 
 ## 👨‍💻 팀 소개
 
-| 역할 | 이름 | 담당 |
-|------|------|------|
-| Backend | 문광희 | Spring MVC, REST API, DB 설계, 인프라 |
-| Frontend | Flutter 개발자 | Flutter 앱 (iOS / Android) |
+## 🙆🏼‍♂️ Doday Team
+### Developers
+|Banckend Dev & Front Dev|App Dev & Front Dev|
+|:---:|:---:|
+|<img src="https://avatars.githubusercontent.com/u/94667528?v=4" width="100">|<img src="https://avatars.githubusercontent.com/u/83564922?v=4" width="100">|
+|[문광희](https://github.com/MoonGwangHee)|[조민국](https://github.com/adward27)
+|Project Reader|App Developer|
 
 ---
 
