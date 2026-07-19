@@ -225,7 +225,7 @@
 | 레포 | 설명 |
 |------|------|
 | [doday-app](https://github.com/Routine-Connect/doday/tree/frontend) | Flutter 앱 (협업 중) |
-| [doday-landing](https://github.com/Routine-Connect/doday-landing) | React 랜딩페이지 |
+| [doday-landing](https://github.com/Routine-Connect/doday_web) | React 랜딩페이지 |
 | [doday-share](https://github.com/Routine-Connect/doday-share) | React 공유페이지 |
 
 ---
