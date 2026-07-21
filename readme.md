@@ -78,7 +78,7 @@
 | Server | AWS EC2 |
 | Static | AWS S3 + CloudFront |
 | Container | Docker · docker-compose |
-| Domain | 배포 예정 |
+| Domain | doday-quokka.co.kr |
 
 ### Frontend / App
 | 분류 | 기술 |
