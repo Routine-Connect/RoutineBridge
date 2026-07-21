@@ -20,9 +20,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String uri = request.getRequestURI();
+        String method = request.getMethod();
 
         // 인증 제외 경로 (회원가입, 로그인, Swagger)
         if (isExcluded(uri)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if ("OPTIONS".equalsIgnoreCase(method)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -56,6 +62,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return uri.equals("/api/users/signup") ||
                 uri.equals("/api/users/login") ||
                 uri.startsWith("/swagger-ui") ||
+                uri.startsWith("/api/share/") ||
+                uri.startsWith("/api/auth/email") ||
                 uri.equals("/api/auth/kakao") ||
                 uri.startsWith("/v2/api-docs") ||
                 uri.startsWith("/webjars") ;

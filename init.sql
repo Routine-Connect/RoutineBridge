@@ -1,6 +1,9 @@
 CREATE DATABASE IF NOT EXISTS doday;
 USE doday;
 
+SET NAMES utf8mb4;
+ALTER DATABASE doday CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS Users (
                                      id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                      email VARCHAR(100) NOT NULL UNIQUE,
@@ -19,7 +22,7 @@ CREATE TABLE IF NOT EXISTS Routines (
                                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                         user_id BIGINT NOT NULL,
                                         title VARCHAR(100) NOT NULL,
-    days_of_week VARCHAR(20) NOT NULL,
+    days_of_week VARCHAR(255) NOT NULL,
     alarm_time TIME,
     is_active BOOLEAN DEFAULT TRUE,
     icon_id INT DEFAULT 1,

@@ -9,6 +9,8 @@ services:
       MYSQL_DATABASE: doday
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
     ports:
       - "3307:3306"
     volumes:

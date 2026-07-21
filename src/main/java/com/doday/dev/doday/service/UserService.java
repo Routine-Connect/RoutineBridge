@@ -30,6 +30,9 @@ public class UserService {
     private UserMapper userMapper;
 
     @Autowired
+    private EmailService emailService;
+
+    @Autowired
     private JwtUtil jwtUtil;
 
     @Value("${upload.dir}")
@@ -47,6 +50,11 @@ public class UserService {
     // 회원가입
     public void signup(SignupRequestDto dto) {
 
+        // 이메일 인증 확인
+        if (!emailService.isVerified(dto.getEmail())) {
+            throw new IllegalArgumentException("이메일 인증이 필요합니다.");
+        }
+
         // 이메일 중복 체크
         User existing = userMapper.findByEmail(dto.getEmail());
         if (existing != null) {
@@ -59,6 +67,9 @@ public class UserService {
         user.setNickname(dto.getNickname());
         user.setGender(dto.getGender());
         userMapper.insert(user);
+
+        // 인증 캐시 제거
+        emailService.clearVerified(dto.getEmail());
     }
 
     // 로그인
