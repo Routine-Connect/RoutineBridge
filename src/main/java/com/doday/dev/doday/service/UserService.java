@@ -19,9 +19,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.FileImageOutputStream;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 
 @Service
 public class UserService {
@@ -31,6 +29,9 @@ public class UserService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private S3Service s3Service;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -111,64 +112,53 @@ public class UserService {
     // 프로필 이미지 업로드
     public String uploadProfileImage(Long userId, MultipartFile file) {
         try {
-            // 저장 경로 설정
-            File dir = new File(uploadDir);
-            if (!dir.exists()) dir.mkdirs();
-
-            // 파일명 고유하게 설정
             String originalName = file.getOriginalFilename();
             if (originalName == null) {
                 throw new IllegalArgumentException(ErrorCode.INVALID_INPUT.getMessage());
             }
 
-
             // 확장자 검사
             String ext = originalName.substring(originalName.lastIndexOf(".")).toLowerCase();
-            if (ext.equals("jpg") || ext.equals("png") || ext.equals("jpeg")) {
+            if (!ext.equals(".jpg") && !ext.equals(".jpeg") && !ext.equals(".png")) {
                 throw new IllegalArgumentException(ErrorCode.INVALID_FILE_TYPE.getMessage());
             }
 
-            // 파일 크기 검사 (10MB) 제한
-            if (file.getSize() > 10 * 1024 * 1024) {
+            // 파일 크기 검사 (5MB)
+            if (file.getSize() > 5 * 1024 * 1024) {
                 throw new IllegalArgumentException(ErrorCode.FILE_SIZE_EXCEEDED.getMessage());
             }
 
-            // 파일 검증
+            // Magic Byte 검증
             if (!isValidImageFile(file)) {
                 throw new IllegalArgumentException(ErrorCode.INVALID_FILE_TYPE.getMessage());
             }
 
-
-            // webp 파일 명
-            String fileName = "user_" + userId + ".webp";
-
-            // 기존 파일 삭제
-            File existingFile = new File(uploadDir + fileName);
-            if (existingFile.exists()) existingFile.delete();
-
-            // 이미지 읽기
+            // WebP 변환
             BufferedImage image = ImageIO.read(file.getInputStream());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-            // webp 변환 후 저장
             ImageWriter writer = ImageIO.getImageWritersByMIMEType("image/webp").next();
             WebPWriteParam writeParam = new WebPWriteParam(writer.getLocale());
             writeParam.setCompressionMode(WebPWriteParam.MODE_DEFAULT);
-
-
-            // 파일 저장
-            File dest = new File(uploadDir + fileName);
-            writer.setOutput(new FileImageOutputStream(dest));
+            writer.setOutput(ImageIO.createImageOutputStream(baos));
             writer.write(null, new IIOImage(image, null, null), writeParam);
             writer.dispose();
 
-            // 풀 URL로 DB에 저장
-            String imagePath = serverUrl + "/uploads/profile/" + fileName;
+            // S3 업로드
+            String fileName = "profile/user_" + userId + ".webp";
+            byte[] webpBytes = baos.toByteArray();
+            InputStream inputStream = new ByteArrayInputStream(webpBytes);
+            String imageUrl = s3Service.upload(fileName, inputStream, webpBytes.length, "image/webp");
+
+            // DB에 S3 URL 저장
             User user = userMapper.findById(userId);
-            user.setProfileImage(imagePath);
+            user.setProfileImage(imageUrl);
             userMapper.update(user);
 
+            return imageUrl;
 
-            return imagePath;
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (IOException e) {
             throw new RuntimeException("이미지 업로드 실패: " + e.getMessage());
         }
