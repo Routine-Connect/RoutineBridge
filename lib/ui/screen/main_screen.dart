@@ -6,6 +6,7 @@ import 'home_screen.dart';
 import 'mypage_screen.dart';
 import 'statistics_screen.dart';
 import '../../provider/statistics_provider.dart';
+import '../../provider/routine_provider.dart'; // 🚀 RoutineProvider 임포트 추가
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -60,12 +61,16 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   // 🚀 5. 화면이 완전히 "스와이프" 되거나 탭 이동이 끝났을 때 실행될 함수
-  void _onPageChanged(int index) {
+  void _onPageChanged(int index) async {
     setState(() => _currentIndex = index);
 
     // 💡 네가 짜둔 '더티 플래그(isDirty) 최적화 로직'을 여기로 옮김!
     // 이렇게 하면 손가락으로 밀어서 넘어가든, 아이콘을 터치해서 넘어가든 완벽하게 작동함.
     if (index == 1) {
+      // 🚀 통계 탭으로 넘어갈 때 대기 중인 잔여 디바운스 API 즉시 전송!
+      await context.read<RoutineProvider>().flushPendingChecks();
+      if (!mounted) return;
+
       final statsProvider = context.read<StatisticsProvider>();
       if (statsProvider.isStatsDirty || _isFirstStatsLoad) {
         statsProvider.loadSummaryOnly(); 

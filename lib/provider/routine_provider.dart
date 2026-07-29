@@ -8,12 +8,17 @@ import 'statistics_provider.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert';
 import '../service/notification_service.dart';
+import 'dart:async';
 
 class RoutineProvider with ChangeNotifier {
   final RoutineService _routineService = RoutineService();
   final NotificationService _notificationService = NotificationService();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   String _lastCheeredDateKey = ''; 
+
+  // 🚀 디바운싱 타이머 및 대기 중인 API 콜백 창고
+  final Map<int, Timer> _debounceTimers = {};
+  final Map<int, Future<void> Function()> _pendingApiCalls = {};
 
   DateTime _selectedDate = DateTime.now();
   
@@ -32,6 +37,25 @@ class RoutineProvider with ChangeNotifier {
   
   // 🚀 [수정] 이제 변수 _routines를 그대로 반환합니다.
   List<dynamic> get routines => _routines;
+
+  // 🚀 [추가] 통계 페이지 이동 시 대기 중인 모든 디바운스 API를 즉시 전송하는 함수
+  Future<void> flushPendingChecks() async {
+    if (_pendingApiCalls.isEmpty) return;
+
+    // 진행 중인 모든 타이머 취소
+    for (var timer in _debounceTimers.values) {
+      timer.cancel();
+    }
+    _debounceTimers.clear();
+
+    // 대기 중이던 API 리스트 복사 후 큐 비우기
+    final calls = List<Future<void> Function()>.from(_pendingApiCalls.values);
+    _pendingApiCalls.clear();
+
+    // 대기 중이던 API들을 즉시 병렬 처리 전송
+    debugPrint('⚡ [Flush] 대기 중인 디바운스 API ${calls.length}개를 즉시 처리합니다.');
+    await Future.wait(calls.map((call) => call()));
+  }
 
   // 🚀 [추가] 캐시 창고와 현재 선택된 날짜의 리스트를 동기화하는 내부 함수
   void _updateCurrentRoutines() {
@@ -116,7 +140,7 @@ class RoutineProvider with ChangeNotifier {
 
     bool currentStatus = _routines[index]['is_completed'] ?? _routines[index]['isCompleted'] ?? false;
     bool hasOtherCompleted = _routines.any((r) => 
-         r['id'] != routineId && (r['is_completed'] ?? r['isCompleted'] ?? false) == true
+        r['id'] != routineId && (r['is_completed'] ?? r['isCompleted'] ?? false) == true
     );
 
     // 1. 낙관적 업데이트 (변수와 캐시 둘 다 수정)
@@ -124,33 +148,59 @@ class RoutineProvider with ChangeNotifier {
     _routines[index]['isCompleted'] = !currentStatus; 
     notifyListeners();
 
-    if (context.mounted) {
-      context.read<StatisticsProvider>().markAsDirty();
-    }
-
     // 쿼카 응원 로직
     if (!currentStatus && !hasOtherCompleted && _lastCheeredDateKey != dateKey) {
       if (context.mounted) CustomSnackBar.showCheer(context);
       _lastCheeredDateKey = dateKey; 
     }
 
-    try {
-      final token = await _getToken();
-      await _routineService.checkRoutine(token, routineId, dateKey);
-    } catch (e) {
-      // 실패 시 롤백
-      _routines[index]['is_completed'] = currentStatus; 
-      _routines[index]['isCompleted'] = currentStatus; 
-      notifyListeners();
-      if (context.mounted) {
-        context.read<StatisticsProvider>().markAsDirty();
-        CustomSnackBar.show(
-          context,
-          message: e.toString().replaceAll('Exception: ', ''),
-          isError: true,
-        );
+    // 🚀 실제 실행할 API 요청 클로저 정의
+    Future<void> executeApiCall() async {
+      try {
+        final token = await _getToken();
+        // 실제 API 호출!
+        debugPrint('⏳ [API 통신] 루틴 체크 요청: 루틴ID=$routineId, 날짜=$dateKey');
+        await _routineService.checkRoutine(token, routineId, dateKey);
+
+        // 🚀 API 성공 후 통계 Dirty 마크
+        if (context.mounted) {
+          context.read<StatisticsProvider>().markAsDirty();
+        }
+      } catch (e) {
+        // 실패 시 롤백 (여기서도 낙관적 업데이트 취소)
+        // ⚠️ 현재 인덱스의 값 자체를 뒤집어주는 방식으로 롤백
+        final rollbackIndex = _routines.indexWhere((r) => r['id'] == routineId);
+        if (rollbackIndex != -1) {
+          _routines[rollbackIndex]['is_completed'] = currentStatus; 
+          _routines[rollbackIndex]['isCompleted'] = currentStatus; 
+          notifyListeners();
+        }
+
+        if (context.mounted) {
+          CustomSnackBar.show(
+            context,
+            message: e.toString().replaceAll('Exception: ', ''),
+            isError: true,
+          );
+        }
       }
     }
+
+    // 🚀 [추가] 해당 루틴에 걸려있던 이전 통신 예약 취소
+    if (_debounceTimers[routineId]?.isActive ?? false) {
+      _debounceTimers[routineId]!.cancel();
+    }
+
+    _pendingApiCalls[routineId] = executeApiCall;
+
+    // 🚀 [추가] 0.3초 대기 후 API 통신 진행 (각 루틴별 개별 디바운싱)
+    _debounceTimers[routineId] = Timer(const Duration(milliseconds: 300), () async {
+      final call = _pendingApiCalls.remove(routineId);
+      _debounceTimers.remove(routineId);
+      if (call != null) {
+        await call();
+      }
+    });
   }
 
   Future<void> _refreshAllData() async {
@@ -160,6 +210,20 @@ class RoutineProvider with ChangeNotifier {
 
     final String? globalNotiRaw = await _storage.read(key: 'isRoutineNotiEnabled');
     bool isGlobalNotiEnabled = globalNotiRaw == null ? true : (globalNotiRaw == 'true');
+
+    // 하루치 _routines가 아닌, 캐시 전체에서 중복 없는 유일한 루틴 추출
+    final Map<int, dynamic> uniqueRoutinesMap = {};
+    _monthlyCache.forEach((month, dailyData) {
+      dailyData.forEach((date, routineList) {
+        for (var routine in routineList) {
+          if (routine['id'] != null) {
+            uniqueRoutinesMap[routine['id']] = routine;
+          }
+        }
+      });
+    });
+
+    final allUniqueRoutines = uniqueRoutinesMap.values.toList();
 
     for (var routine in _routines) {
       int id = routine['id'];
@@ -181,7 +245,7 @@ class RoutineProvider with ChangeNotifier {
     }
   }
 
-  // 추가/삭제/수정 로직은 동일... (생략하되 내부에서 _refreshAllData 호출 유지)
+  // 추가/삭제/수정 로직은 동일... (내부에서 _refreshAllData 호출 유지)
   Future<void> addRoutine(BuildContext context, int userId, String title, IconData icon, List<String> daysOfWeek, String alarmTime, bool isAlarmEnabled) async {
     final token = await _getToken();
     int mappedIconId = AppIcons.routineIcons.indexOf(icon) + 1;
@@ -305,7 +369,7 @@ class RoutineProvider with ChangeNotifier {
             previousAlarmTime = dailyList[i]['alarmTime'] ?? dailyList[i]['alarm_time'];
 
             // 새로운 상태 즉시 덮어쓰기
-           item['isAlarmEnabled'] = item['is_alarm_enabled'] = isAlarmEnabled;
+            item['isAlarmEnabled'] = item['is_alarm_enabled'] = isAlarmEnabled;
             if (alarmTime != null) {
               item['alarmTime'] = item['alarm_time'] = alarmTime;
             }
