@@ -32,7 +32,7 @@ class NotificationService {
 
     await _localNotifications.initialize(initSettings);
 
-    // 🚨 [복구된 핵심 코드] 정밀 알람 & 푸시 권한 요청 (이거 없으면 제시간에 안 울림!)
+    // 🚨 Android 알람 & 푸시 권한 요청
     final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
         _localNotifications.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
@@ -41,9 +41,22 @@ class NotificationService {
       await androidImplementation.requestNotificationsPermission();
       await androidImplementation.requestExactAlarmsPermission();
     }
+
+    // 🚨 iOS 푸시 권한 요청 (누락 부분 보완)
+    final IOSFlutterLocalNotificationsPlugin? iosImplementation =
+        _localNotifications.resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>();
+
+    if (iosImplementation != null) {
+      await iosImplementation.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
   }
 
-  // 🚀 2. 튼튼한 한국 시간 변환 함수 (새로 추가)
+  // 🚀 2. 튼튼한 한국 시간 변환 함수
   tz.TZDateTime _createScheduledDate(String timeStr) {
     final now = tz.TZDateTime.now(tz.local);
     int hour = 9;
@@ -69,7 +82,7 @@ class NotificationService {
     return scheduledDate;
   }
 
-  // 🚀 3. 루틴 알림 매일 반복 예약 스케줄러
+  // 🚀 3. 루틴 알림 매일 반복 예약 스케줄러 (Fallback 예외 처리 포함)
   Future<void> scheduleDailyRoutineNotification({
     required int routineId,
     required String title,
@@ -77,15 +90,13 @@ class NotificationService {
   }) async {
     await cancelNotification(routineId);
 
-    // 🚀 방금 만든 튼튼한 함수 사용!
     final scheduledDate = _createScheduledDate(alarmTime);
 
-    // 🚨 [가장 중요한 수정] 채널 ID를 v2로 변경하고 소리/진동 강제 켜기!
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'doday_routine_channel_v2', // 👈 무조건 새 이름이어야 폰이 속음!!
+      'doday_routine_channel_v2',
       '루틴 알림',
       channelDescription: 'Doday 루틴 시간에 맞춰 푸시 알림을 보냅니다.',
-      importance: Importance.max, // 화면 가리는 헤드업 배너용
+      importance: Importance.max,
       priority: Priority.high,
       playSound: true,          // 소리 켜기
       enableVibration: true,    // 진동 켜기
@@ -101,20 +112,38 @@ class NotificationService {
     );
 
     try {
+      // 1차 시도: 정밀 알람 (exactAllowWhileIdle)
       await _localNotifications.zonedSchedule(
         routineId, 
         '루틴 시간이에요!', 
         '$title 시작해볼까요?', 
         scheduledDate,
         platformDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // 절전 모드에서도 알림이 정해진 시간에 울리도록 강제함
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time, 
       );
-      print('🔔 [알림 예약 성공] 루틴 ID: $routineId / 예약시간: $scheduledDate');
+      print('🔔 [정밀 알림 예약 성공] 루틴 ID: $routineId / 예약시간: $scheduledDate');
     } catch (e) {
-      print('❌ [알림 예약 실패] 권한 문제 또는 스케줄러 에러: $e');
+      // 2차 시도: OS 정책으로 정밀 알람 권한이 차단된 경우, 앱이 튕기거나 실패하지 않고 일반 알람으로 예외 처리
+      print('⚠️ [정밀 알람 거부됨] 일반 알람 모드로 자동 전환: $e');
+      try {
+        await _localNotifications.zonedSchedule(
+          routineId, 
+          '루틴 시간이에요!', 
+          '$title 시작해볼까요?', 
+          scheduledDate,
+          platformDetails,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.time, 
+        );
+        print('🔔 [일반 알림 예약 성공 (Fallback)] 루틴 ID: $routineId / 예약시간: $scheduledDate');
+      } catch (fallbackError) {
+        print('❌ [알림 예약 최종 실패] 루틴 ID: $routineId / 에러: $fallbackError');
+      }
     }
   }
 
