@@ -1,14 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../util/api_error_handler.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class RoutineService {
-  final String baseUrl = 'https://nonextendible-kandace-gratifyingly.ngrok-free.dev/api/routines';
+  final String baseUrl = '${dotenv.env['BASE_URL']}';
 
   // GET /api/routines/monthly-daily?year=yyyy&month=m
   Future<Map<String, dynamic>> getMonthlyRoutines(String token, int year, int month) async {
     try {
-      final url = Uri.parse('$baseUrl/monthly-daily?year=$year&month=$month');
+      final url = Uri.parse('$baseUrl/api/routines/monthly-daily?year=$year&month=$month');
       final response = await http.get(url, headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -46,7 +47,7 @@ class RoutineService {
   // POST /api/routines - 루틴 생성
   Future<void> createRoutine(String token, Map<String, dynamic> routineData) async {
     try {
-      final url = Uri.parse(baseUrl);
+      final url = Uri.parse('$baseUrl/api/routines');
       final response = await http.post(url,
         headers: {
           'Content-Type': 'application/json',
@@ -67,7 +68,7 @@ class RoutineService {
   // PUT /api/routines/{id} - 루틴 수정
   Future<void> updateRoutine(String token, int id, Map<String, dynamic> routineData) async {
     try {
-      final url = Uri.parse('$baseUrl/$id');
+      final url = Uri.parse('$baseUrl/api/routines/$id');
       final response = await http.put(url,
         headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
         body: jsonEncode(routineData),
@@ -85,7 +86,7 @@ class RoutineService {
   // DELETE /api/routines/{id} - 루틴 삭제
   Future<void> deleteRoutine(String token, int id) async {
     try {
-      final url = Uri.parse('$baseUrl/$id');
+      final url = Uri.parse('$baseUrl/api/routines/$id');
       final response = await http.delete(url,
         headers: {'Authorization': 'Bearer $token'},
       );
@@ -102,7 +103,7 @@ class RoutineService {
   // PUT /api/routines/order - 루틴 순서 저장
   Future<void> updateOrder(String token, List<Map<String, dynamic>> orderData) async {
     try {
-      final url = Uri.parse('$baseUrl/order');
+      final url = Uri.parse('$baseUrl/api/routines/order');
       final response = await http.put(
         url,
         headers: {
@@ -124,7 +125,7 @@ class RoutineService {
   // POST /api/routines/{id}/check?date={date} - 루틴 완료 체크
   Future<void> checkRoutine(String token, int id, String date) async {
     try {
-      final url = Uri.parse('$baseUrl/$id/check?date=$date');
+      final url = Uri.parse('$baseUrl/api/routines/$id/check?date=$date');
       final response = await http.post(url,
         headers: {'Authorization': 'Bearer $token'},
       );
@@ -141,7 +142,7 @@ class RoutineService {
   // PATCH /api/routines/{id}/alarm - 알림 상태 단독 변경
   Future<void> patchRoutineAlarm(String token, int routineId, bool isAlarmEnabled, String? alarmTime) async {
     try {
-      final url = Uri.parse('$baseUrl/$routineId/alarm');
+      final url = Uri.parse('$baseUrl/api/routines/$routineId/alarm');
       final response = await http.patch(
         url,
         headers: {

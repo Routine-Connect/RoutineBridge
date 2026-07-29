@@ -3,15 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../util/api_error_handler.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AuthService {
-  final String baseUrl = 'https://nonextendible-kandace-gratifyingly.ngrok-free.dev/api';
+  final String baseUrl = '${dotenv.env['BASE_URL']}';
   final _storage = const FlutterSecureStorage();
 
   // POST /api/users/login - 로그인
   Future<String> fetchLoginToken(String email, String password) async {
     try {
-      final url = Uri.parse('$baseUrl/users/login');
+      final url = Uri.parse('$baseUrl/api/users/login');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -33,7 +34,7 @@ class AuthService {
   // POST /api/users/signup - 회원가입
   Future<void> signup(String email, String password, String nickname, String gender) async {
     try {
-      final url = Uri.parse('$baseUrl/users/signup');
+      final url = Uri.parse('$baseUrl/api/users/signup');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -67,7 +68,7 @@ class AuthService {
   // POST /api/auth/kakao - 카카오 로그인
   Future<Map<String, dynamic>> loginWithKakao(String kakaoAccessToken) async {
     try {
-      final url = Uri.parse('$baseUrl/auth/kakao');
+      final url = Uri.parse('$baseUrl/api/auth/kakao');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},

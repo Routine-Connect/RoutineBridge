@@ -3,19 +3,19 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../model/user.dart';
 import '../model/NotificationSettings.dart';
 import '../util/api_error_handler.dart';
 
 class UserService {
-  final String baseUrl = 'https://nonextendible-kandace-gratifyingly.ngrok-free.dev/api/users';
+  final String baseUrl = '${dotenv.env['BASE_URL']}';
   final _secureStorage = const FlutterSecureStorage();
 
   // GET api/users/me - 프로필 정보 조회
   Future<User> getMyProfile(String token) async {
     try {
-      final url = Uri.parse('$baseUrl/me');
+      final url = Uri.parse('$baseUrl/api/users/me');
       final response = await http.get(
         url,
         headers: {
@@ -43,7 +43,7 @@ class UserService {
   // POST api/users/me - 프로필 정보 수정
   Future<void> updateProfile(String token, String? nickname, String? password) async {
     try {
-      final url = Uri.parse('$baseUrl/me');
+      final url = Uri.parse('$baseUrl/api/users/me');
 
       final Map<String, dynamic> bodyData = {};
       if (nickname != null) bodyData['nickname'] = nickname;
@@ -71,7 +71,7 @@ class UserService {
   // POST api/users/me/image - 프로필 이미지 업로드
   Future<String> uploadProfileImage(String token, File imageFile) async {
     try {
-      final url = Uri.parse('$baseUrl/me/image');
+      final url = Uri.parse('$baseUrl/api/users/me/image');
       var request = http.MultipartRequest('POST', url);
 
       request.headers['Authorization'] = 'Bearer $token';
@@ -96,7 +96,7 @@ class UserService {
   // PATCH /api/users/me/gender - 성별 설정
   Future<void> updateGender(String token, String gender) async {
     try {
-      final url = Uri.parse('$baseUrl/me/gender'); // 백엔드 주소에 맞게 확인!
+      final url = Uri.parse('$baseUrl/api/users/me/gender'); // 백엔드 주소에 맞게 확인!
       final response = await http.patch(
         url,
         headers: {
@@ -125,7 +125,7 @@ class UserService {
   // GET /api/users/me/notifications - 알림 설정 가져오기
   Future<NotificationSettings> getNotificationSettings() async {
     try {
-      final url = Uri.parse('$baseUrl/me/notifications');
+      final url = Uri.parse('$baseUrl/api/users/me/notifications');
       final token = await _secureStorage.read(key: 'jwt_token');
 
       final response = await http.get(
@@ -152,7 +152,7 @@ class UserService {
   // PUT /api/users/me/notifications - 알림 설정 저장하기
   Future<void> updateNotificationSettings(NotificationSettings settings) async {
     try {
-      final url = Uri.parse('$baseUrl/me/notifications');
+      final url = Uri.parse('$baseUrl/api/users/me/notifications');
       final token = await _secureStorage.read(key: 'jwt_token');
 
       final response = await http.put(
