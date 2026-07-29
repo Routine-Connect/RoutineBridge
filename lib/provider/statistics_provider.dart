@@ -42,6 +42,9 @@ class StatisticsProvider with ChangeNotifier {
   void setUserCreatedAt(DateTime createdAt) {
     _userCreatedAt = createdAt;
   }
+  // 링크 공유 데이터
+  bool _isSharing = false;
+  bool get isSharing => _isSharing;
 
   // 기본 Getter
   int get currentStreak => _currentStreak;
@@ -110,48 +113,54 @@ class StatisticsProvider with ChangeNotifier {
     notifyListeners(); // 화면 즉시 전환 (캐시에 있으면 딜레이 0초)
   }
 
-  // 🚀 단일 월 통계 데이터 로드 (캐싱 로직) - forceRefresh 플래그 주입 가능하도록 확장
+  // 🚀 단일 월 통계 데이터 로드 (캐싱 및 날짜 제한 로직 포함)
   Future<void> _fetchMonthData(DateTime date, {bool forceRefresh = false}) async {
     final monthKey = DateFormat('yyyy-MM').format(date);
     
-    // 🚀 [수정] 강제 새로고침(forceRefresh)이 아닐 때만 기존 캐시를 신뢰하고 통신 차단
+    // 강제 새로고침(forceRefresh)이 아닐 때만 기존 캐시 신뢰
     if (!forceRefresh && _monthlyCache.containsKey(monthKey)) return;
 
-    // _userCreatedAt을 사용해 과거 데이터 호출차단
-    if (_userCreatedAt != null) {
-      final targetMonth = DateTime(date.year, date.month, 1);
-      final joinMonth = DateTime(_userCreatedAt!.year, _userCreatedAt!.month, 1);
 
-      if (targetMonth.isAfter(currentMonth)) {
+    // 🛡️ API 호출 방어 로직 (미래 & 가입일 이전 차단)
+    final targetMonth = DateTime(date.year, date.month, 1);
+    final now = DateTime.now();
+    final currentRealMonth = DateTime(now.year, now.month, 1);
+
+    // 1. 미래 날짜 차단 (현재 실제 월보다 미래인 경우)
+    if (targetMonth.isAfter(currentRealMonth)) {
       debugPrint('⏳ $monthKey는 미래이므로 통계 API를 호출하지 않습니다.');
       return; 
     }
-  }
 
-    // 3. 🚀 [복구됨] 진짜 서버와 통신해서 데이터를 가져오는 로직!
+    // 2. 가입일 이전 날짜 차단
+    if (_userCreatedAt != null) {
+      final joinMonth = DateTime(_userCreatedAt!.year, _userCreatedAt!.month, 1);
+      if (targetMonth.isBefore(joinMonth)) {
+        debugPrint('⏳ $monthKey는 가입일 이전이므로 통계 API를 호출하지 않습니다.');
+        return;
+      }
+    }
+    // -------------------------------------------------------------
+
+    // 3. 진짜 서버와 통신해서 데이터를 가져오는 로직
     try {
       final token = await _storage.read(key: 'jwt_token') ?? '';
       if (token.isEmpty) return;
 
-      // 백엔드 서비스 호출!
       final monthlyData = await _statisticsService.fetchMonthlyStats(token, date.year, date.month);
 
-      // 이번엔 진짜 백엔드가 준 데이터를 까봅니다.
-      debugPrint('📊 $monthKey 백엔드 진짜 원본 데이터: $monthlyData');
+      debugPrint('📊 $monthKey 백엔드 통계 데이터 로드 완료');
 
-      // 캐시 창고에 예쁘게 포장해서 저장
       _monthlyCache[monthKey] = {
         'daily': monthlyData['daily'] as Map<String, double>? ?? {},
         'totalRoutineCount': monthlyData['totalRoutineCount'] ?? 0,
         'completedRoutineCount': monthlyData['completedRoutineCount'] ?? 0,
       };
       
-      debugPrint('✅ $monthKey 캐시 로드 성공!');
-      
     } catch (e) {
       debugPrint('❌ $monthKey 통계 데이터 로드 에러: $e');
     } finally {
-      notifyListeners(); // 데이터가 들어왔으니 화면에 쏴줍니다!
+      notifyListeners(); 
     }
   }
 
@@ -214,6 +223,36 @@ class StatisticsProvider with ChangeNotifier {
       _monthlyCache[monthKey]!['totalRoutineCount'] = newTotal;
       _monthlyCache[monthKey]!['completedRoutineCount'] = newCompleted;
       notifyListeners(); // 퍼센트 바가 즉시 부드럽게 갱신됩니다!
+    }
+  }
+
+  // 🚀 공유 URL 가져오기
+  Future<String?> getShareUrl(String authToken) async {
+    _isSharing = true;
+    notifyListeners();
+
+    try {
+      final data = await _statisticsService.fetchShareToken(authToken);
+      // 서버에서 반환하는 키값(예: shareUrl 또는 token)에 맞게 추출
+      final String? shareUrl = data['shareUrl'] ?? data['url']; 
+      return shareUrl;
+    } catch (e) {
+      debugPrint('❌ 공유 URL 발급 실패: $e');
+      rethrow;
+    } finally {
+      _isSharing = false;
+      notifyListeners();
+    }
+  }
+
+  // 🚀 외부 사용자가 공유 링크로 들어왔을 때 데이터 조회
+  Future<Map<String, dynamic>?> loadSharedData(String shareToken) async {
+    try {
+      final data = await _statisticsService.fetchSharedData(shareToken);
+      return data; // { nickname, streak, totalCompletedCount }
+    } catch (e) {
+      debugPrint('❌ 공유 데이터 조회 실패: $e');
+      return null;
     }
   }
 

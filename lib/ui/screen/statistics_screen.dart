@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart'; // 🚀 주간 그래프용 패키지
+import 'package:share_plus/share_plus.dart';
 import 'package:routine_app/provider/user_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_shadow.dart';
@@ -529,18 +530,16 @@ class _WeeklyGraphCard extends StatelessWidget {
 }
 
 // ============================================================================
-// 4. 나의 기록 공유하기 (실시간 currentStreak 및 0일 방어 로직 적용)
+// 4. 나의 기록 공유하기 (🚀 Share.share 공유 탭 연동 완료)
 // ============================================================================
 class _ShareStreakCard extends StatelessWidget {
   const _ShareStreakCard();
 
   @override
   Widget build(BuildContext context) {
-    // 🚀 1. StatisticsProvider에서 실시간 현재 연속 기록(currentStreak) 가져오기
     final statsProvider = context.watch<StatisticsProvider>();
     final int currentStreak = statsProvider.currentStreak;
 
-    // 🚀 2. 0일 때와 1 이상일 때 보여줄 문구를 다르게 설정합니다.
     final bool isZero = currentStreak == 0;
     final String subtitleText = isZero ? '오늘부터 시작해볼까요?' : '$currentStreak일째 성공 중!';
     final String titleText = isZero ? 'START TODAY' : '$currentStreak DAY STREAK';
@@ -554,7 +553,6 @@ class _ShareStreakCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // 서브 타이틀 (n일째 성공 중! or 오늘부터 시작해볼까요?)
           Text(
             subtitleText,
             style: const TextStyle(
@@ -564,7 +562,6 @@ class _ShareStreakCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          // 메인 타이틀 (n DAY STREAK or START TODAY)
           Text(
             titleText,
             style: const TextStyle(
@@ -575,7 +572,7 @@ class _ShareStreakCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          // 공유하기 버튼
+          // 🚀 공유하기 버튼 (InkWell onTap 연동)
           Container(
             width: double.infinity,
             height: 56,
@@ -593,8 +590,17 @@ class _ShareStreakCard extends StatelessWidget {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () {
-                  // TODO: 추후 공유하기 기능 연동
+                onTap: () async {
+                  // 🚀 공유 문구 동적 생성
+                  final String shareMessage = isZero
+                      ? '[루틴 앱] 오늘부터 새로운 습관 만들기를 시작했어요! 같이 루틴 도전해요! 🚀'
+                      : '[루틴 앱] 🔥 지금 $currentStreak일째 연속으로 루틴을 실천하고 있어요!';
+
+                  // 🚀 시스템 공유 모달 호출
+                  await Share.share(
+                    shareMessage,
+                    subject: '나의 루틴 달성 기록',
+                  );
                 },
                 borderRadius: BorderRadius.circular(999),
                 child: const Center(
