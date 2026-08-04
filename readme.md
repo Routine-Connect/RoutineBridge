@@ -99,56 +99,7 @@
 
 ## 📡 API 명세
 
-### 👤 User API
-| Method | URL | 설명 | 인증 |
-|--------|-----|------|------|
-| POST | /api/users/signup | 회원가입 | ❌ |
-| POST | /api/users/login | 로그인 | ❌ |
-| GET | /api/users/me | 프로필 조회 | ✅ |
-| PUT | /api/users/me | 프로필 수정 | ✅ |
-| POST | /api/users/me/image | 프로필 이미지 업로드 | ✅ |
-| PATCH | /api/users/me/gender | 성별 설정 | ✅ |
-| GET | /api/users/me/notifications | 알림 설정 조회 | ✅ |
-| PUT | /api/users/me/notifications | 알림 설정 변경 | ✅ |
-
-### 📅 Routine API
-| Method | URL | 설명 | 인증 |
-|--------|-----|------|------|
-| GET | /api/routines | 루틴 목록 조회 | ✅ |
-| GET | /api/routines/{id} | 루틴 단건 조회 | ✅ |
-| POST | /api/routines | 루틴 생성 | ✅ |
-| PUT | /api/routines/{id} | 루틴 수정 | ✅ |
-| DELETE | /api/routines/{id} | 루틴 삭제 | ✅ |
-| GET | /api/routines/today | 오늘의 루틴 조회 | ✅ |
-| GET | /api/routines/daily?date= | 특정 날짜 루틴 조회 | ✅ |
-| GET | /api/routines/monthly-daily?year=&month= | 한달치 루틴 조회 | ✅ |
-| POST | /api/routines/{id}/check?date= | 루틴 완료 토글 | ✅ |
-| PUT | /api/routines/order | 루틴 순서 변경 | ✅ |
-| PATCH | /api/routines/{id}/alarm | 루틴 알람 토글 | ✅ |
-
-### 📊 Stats API
-| Method | URL | 설명 | 인증 |
-|--------|-----|------|------|
-| GET | /api/stats/monthly?year=&month= | 월간 달성률 통계 | ✅ |
-| GET | /api/stats/weekly | 주간 달성률 통계 | ✅ |
-| GET | /api/stats/streak | 이번달 스트릭 조회 | ✅ |
-| GET | /api/stats/streak/all | 전체 기간 스트릭 조회 | ✅ |
-| GET | /api/stats/share/token | 공유 토큰 발급 | ✅ |
-
-### 📆 Calendar API
-| Method | URL | 설명 | 인증 |
-|--------|-----|------|------|
-| GET | /api/calendar/monthly?year=&month= | 월간 캘린더 루틴 목록 | ✅ |
-
-### 🔗 Share API
-| Method | URL | 설명 | 인증 |
-|--------|-----|------|------|
-| GET | /api/share/{token} | 공유 데이터 조회 | ❌ |
-
-### 🔐 Auth API
-| Method | URL | 설명 | 인증 |
-|--------|-----|------|------|
-| POST | /api/auth/kakao | 카카오 소셜 로그인 | ❌ |
+- https://api.doday-quokka.co.kr/swagger-ui.html
 
 ---
 

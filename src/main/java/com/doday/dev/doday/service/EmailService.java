@@ -35,7 +35,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom("noreply@doday.app");
+            helper.setFrom("noreply@doday-quokka.co.kr");
             helper.setTo(email);
             helper.setSubject("[DoDay] 이메일 인증 코드");
             helper.setText(
@@ -51,7 +51,8 @@ public class EmailService {
             );
             mailSender.send(message);
         } catch (Exception e) {
-            throw new RuntimeException("이메일 발송에 실패했습니다.");
+            e.printStackTrace();
+            throw new RuntimeException("이메일 발송에 실패했습니다: " + e.getMessage());
         }
     }
 
@@ -83,7 +84,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom("Moderator@doday.app");
+            helper.setFrom("Moderator@doday-quokka.co.kr");
             helper.setTo(email);
             helper.setSubject("[DoDay] 임시 비밀번호 발급");
             helper.setText(
