@@ -51,6 +51,7 @@ public class EmailService {
             );
             mailSender.send(message);
         } catch (Exception e) {
+            System.out.println("이메일 발송 오류: " + e.getClass().getName() + " - " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException("이메일 발송에 실패했습니다: " + e.getMessage());
         }
